@@ -2,32 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --background: 26 100% 99%;
+    --foreground: 0 0% 13%;
+
+    --primary: 27 33% 42%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 200 39% 43%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+
+    --error: 3 100% 89%;
+    --error-foreground: 0 0% 9%;
+
+    --info: 213 84% 74%;
+    --info-foreground: 0 0% 9%;
+
+    --success: 120 60% 67%;
+    --success-foreground: 0 0% 9%;
+
+    --warning: 60 97% 79%;
+    --warning-foreground: 0 0% 9%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 4%;
+
+    --radius: 0.5rem;
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer base {
+  * {
+    @apply border-border;
   }
+
+  html,
+  body {
+    max-width: 100%;
+
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: 16px;
+  }
+
+  .mask-gradient {
+    mask-image: linear-gradient(to left, black 0%, transparent 90%);
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* For IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  p:not([class]) {
+    @apply mb-2;
+  }
+
+
 }
