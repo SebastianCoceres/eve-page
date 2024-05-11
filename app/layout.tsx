@@ -9,6 +9,12 @@ const roboto_condensed = Roboto_Condensed({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Evelyn Bogado",
   description: "Vibra alto con un marketing consciente",
+  authors: [{ name: "Evelyn Bogado" }, { name: "Sebastian Coceres", url: "https://sebastiancoceres.dev" }],
+  creator: "Sebastian Coceres",
+  keywords: ["Evelyn Bogado", "Marketing conciente", "Marketing responsable", "Crecimiento empresarial", "Marketing digital"],
+  icons: {
+    icon: "/logo-sin-fondo.png",
+  }
 };
 export default function RootLayout({
   children,
