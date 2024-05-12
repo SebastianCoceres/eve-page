@@ -14,10 +14,10 @@ export const Intro = () => {
     const scope = useAccordionAnimation(isInView);
 
     return (
-        <section id="focus" className="snap-always snap-center flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
+        <section id="focus" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
             <div ref={scope} className="container md:max-w-6xl mx-auto text-xl md:text-2xl">
                 <div ref={ref}>
-                    <MotionAccordion type="single" defaultValue={"item-1"}>
+                    <MotionAccordion type="single" defaultValue={"item-1"} collapsible>
                         <MotionAccordionItem value="item-1" className="accordionItem my-8">
                             <MotionAccordionTrigger>¿Qué es el marketing consciente?</MotionAccordionTrigger>
                             <MotionAccordionContent>

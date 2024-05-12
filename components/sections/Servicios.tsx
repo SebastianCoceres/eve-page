@@ -62,19 +62,19 @@ export const SobreMi = () => {
         })
     }, [api])
     return (
-        <section id="services" className="snap-always snap-center flex flex-col justify-center items-center flex-fill min-h-screen  bg-primary/10">
-            <div ref={ref} className="container md:max-w-6xl mx-auto ">
-                <Heading is="h2" className="text-primary text-6xl">Conoce lo que puedo ofrecerte</Heading>
+        <section id="services" className=" flex flex-col justify-center items-center flex-fill min-h-screen  bg-primary/10">
+            <div ref={ref} className="container md:max-w-6xl mx-auto">
+                <Heading is="h2" className="text-primary">Conoce lo que puedo ofrecerte</Heading>
                 <Carousel setApi={setApi} opts={{ loop: true, align: 'center' }}>
                     <CarouselContent >
                         {services.map((service, index) => (
-                            <CarouselItem key={index} className="flex p-8 basis-full md:basis-1/2">
+                            <CarouselItem key={index} className="flex basis-full md:basis-1/2">
                                 <div className="flex flex-col -mx-4 flex-1 p-4 border bg-background rounded-lg overflow-hidden">
                                     <div className="relative aspect-[3/1]">
                                         <Image src={service.image} alt={service.title} fill></Image>
                                     </div>
                                     <div className="flex-1 p-4">
-                                        <Heading is="h3" className="text-primary text-2xl relative z-10 ">
+                                        <Heading is="h3" className="text-primary relative z-10 ">
                                             {service.title}
                                         </Heading>
                                         <hr className="w-1/3 my-2 border-b border-primary/50" />
@@ -86,8 +86,8 @@ export const SobreMi = () => {
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
+                    <CarouselPrevious className="absolute top-auto -bottom-1 left-4 translate-y-full"/>
+                    <CarouselNext className="absolute top-auto -bottom-1 right-4 translate-y-full"/>
                 </Carousel>
                 <div className="py-2 text-center text-sm text-primary">
                     {current} / {count}

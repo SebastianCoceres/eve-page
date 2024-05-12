@@ -57,10 +57,10 @@ export const Contacto = () => {
     }
 
     return (
-        <section id="contact" className="snap-always snap-center flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
+        <section id="contact" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
             <div ref={ref} className="container md:max-w-6xl mx-auto text-xl md:text-2xl">
-                <Heading is="h2" className="text-secondary text-6xl">¡Estoy aquí para ti!</Heading>
-                <Heading is="h3" className="text-secondary text-3xl">Hablemos de tu proyecto:</Heading>
+                <Heading is="h2" className="text-secondary">¡Estoy aquí para ti!</Heading>
+                <Heading is="h3" className="text-secondary">Hablemos de tu proyecto:</Heading>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <FormField

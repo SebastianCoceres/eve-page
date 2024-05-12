@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function Home() {
 
   return (
-    <div id="wrapper" className="min-h-screen max-h-screen overflow-y-scroll scrollbar-hide snap-y snap-mandatory scroll-smooth scroll-pe-[2em]">
+    <>
       <header className="fixed top-0 left-0 right-0 z-50">
         <Navbar />
       </header>
@@ -28,6 +28,6 @@ export default function Home() {
         <Contacto />
       </main >
       <Footer />
-    </div>
+    </>
   );
 }

@@ -4,7 +4,6 @@ import React from 'react'
 
 import { cn } from "@/lib/utils"
 import Link from 'next/link'
-import { motion } from 'framer-motion';
 
 interface NavbarContextType {
     isOpen: boolean;
@@ -37,7 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({
     };
     return (
         <NavbarContext.Provider value={{ isOpen, toggleMenu }}>
-            <nav className={cn("relative md:bg-background/10 p-8 flex justify-center items-center", className)} {...props}>
+            <nav className={cn("relative md:bg-background/10 p-4 flex justify-center items-center", className)} {...props}>
                 {children}
             </nav>
         </NavbarContext.Provider>
@@ -99,13 +98,15 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
     Icon = undefined,
     ...props
 }) => {
+    const { toggleMenu } = useNavbarContext();
     return (
         <li className={cn("hover:text-secondary", className)} {...props}>
             <Link className="font-bold text-inherit flex items-center justify-center gap-2 text-3xl md:text-2xl" href={href} onClick={(e) => {
                 e.preventDefault();
+                toggleMenu();
                 const target = e.target
-                if( !target ) return
-                if( target instanceof HTMLAnchorElement ) {
+                if (!target) return
+                if (target instanceof HTMLAnchorElement) {
                     document.querySelector(target.hash)?.scrollIntoView({ behavior: 'smooth' })
                 }
             }}>
