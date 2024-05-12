@@ -13,11 +13,11 @@ export const SobreMi = () => {
             <div ref={ref} className="container md:max-w-6xl mx-auto">
                 <Heading is="h2" className="text-secondary">Sobre mí</Heading>
                 <div className="flex flex-wrap items-center -mx-4">
-                    <div className="w-full sm:w-1/2 px-4 mb-4 flex flex-col items-center">
-                        <UndrawArtThinking className="w-full p-4 aspect-video" />
-                        <Button asChild variant={"secondary"}>
+                    <div className="w-full sm:w-1/2 px-4 mb-4 flex flex-col items-center ">
+                        <UndrawArtThinking className="w-full p-4 max-h-[250px]" />
+                        {/* <Button asChild variant={"secondary"}>
                             <Link href="/sobre-mi">Quiero conocerte más</Link>
-                        </Button>
+                        </Button> */}
                     </div>
                     <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-3xl text-center text-balance">
                         <p className="mb-4">

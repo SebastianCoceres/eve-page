@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/AccordionWithMotion";
 import { useAccordionAnimation } from "@/hooks/useAccordionAnimation";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
+import { Heading } from "@/components/ui/Heading";
 
 
 export const Intro = () => {
@@ -15,11 +16,11 @@ export const Intro = () => {
 
     return (
         <section id="focus" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
-            <div ref={scope} className="container md:max-w-6xl mx-auto text-xl md:text-2xl">
+            <div ref={scope} className="container md:max-w-6xl mx-auto">
                 <div ref={ref}>
                     <MotionAccordion type="single" defaultValue={"item-1"} collapsible>
                         <MotionAccordionItem value="item-1" className="accordionItem my-8">
-                            <MotionAccordionTrigger>¿Qué es el marketing consciente?</MotionAccordionTrigger>
+                            <MotionAccordionTrigger><span className="md:text-2xl">¿Qué es el marketing consciente?</span></MotionAccordionTrigger>
                             <MotionAccordionContent>
                                 <p>
                                     El marketing consciente se enfoca en valores éticos, autenticidad y responsabilidad social. Se centra en la transparencia y el bienestar tanto personal como colectivo.
@@ -30,7 +31,7 @@ export const Intro = () => {
                             </MotionAccordionContent>
                         </MotionAccordionItem>
                         <MotionAccordionItem value="item-2" className="accordionItem my-8">
-                            <MotionAccordionTrigger>¿Por que elegirlo?</MotionAccordionTrigger>
+                            <MotionAccordionTrigger><span className="md:text-2xl">¿Por que elegirlo?</span></MotionAccordionTrigger>
                             <MotionAccordionContent>
                                 <p>
                                     Elegirlo es optar por una forma de promoción que va más allá de la simple venta de productos o servicios. Al adoptar el enfoque del marketing consciente, te comprometes a construir una marca auténtica y significativa que resuene con tu audiencia de manera genuina. Al priorizar la conexión emocional, puedes establecer relaciones más profundas y duraderas con tus clientes, lo que conduce a una lealtad más sólida y un mayor compromiso.
@@ -41,7 +42,7 @@ export const Intro = () => {
                             </MotionAccordionContent>
                         </MotionAccordionItem>
                         <MotionAccordionItem value="item-3" className="accordionItem my-8 border-none">
-                            <MotionAccordionTrigger>¿En qué se diferencia del marketing tradicional?</MotionAccordionTrigger>
+                            <MotionAccordionTrigger><span className="md:text-2xl">¿En qué se diferencia del marketing tradicional?</span></MotionAccordionTrigger>
                             <MotionAccordionContent>
                                 <p>
                                     Mientras que el marketing tradicional se centra principalmente en la venta de productos o servicios mediante estrategias persuasivas y a menudo intrusivas, el marketing consciente prioriza la integridad y la conexión genuina con la audiencia. En lugar de buscar simplemente aumentar las ventas a cualquier costo, el marketing consciente se preocupa por el bienestar tanto de los consumidores como de la sociedad en general.

@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui/Logo";
 import Heading from "@/components/ui/Heading";
 import { Button } from "@/components/ui/Button";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
+import Link from "next/link";
 
 
 export const Hero = () => {
@@ -29,10 +30,10 @@ export const Hero = () => {
                         </Heading>
                     </div>
                     <Button size={"xl"} className={"mt-4"} rounded={"full"}>
-                        Contactame
+                        <Link href="#contact">Contáctame</Link>
                     </Button>
                     <Button variant={"outline"} size={"xl"} className={"mt-4 text-primary"} rounded={"full"}>
-                        Quiero conocerte más
+                        <Link href="#about">Quiero conocerte más</Link>
                     </Button>
                 </div>
             </div>

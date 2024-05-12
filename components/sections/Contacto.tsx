@@ -58,7 +58,7 @@ export const Contacto = () => {
 
     return (
         <section id="contact" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
-            <div ref={ref} className="container md:max-w-6xl mx-auto text-xl md:text-2xl">
+            <div ref={ref} className="container md:max-w-6xl mx-auto">
                 <Heading is="h2" className="text-secondary">¡Estoy aquí para ti!</Heading>
                 <Heading is="h3" className="text-secondary">Hablemos de tu proyecto:</Heading>
                 <Form {...form}>
@@ -103,7 +103,7 @@ export const Contacto = () => {
                                     <FormItem>
                                         <FormLabel className="sr-only">Mensaje</FormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="Cuenta tu historia" {...field} />
+                                            <Textarea placeholder="Cuéntame tu historia" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

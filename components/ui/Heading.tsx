@@ -28,3 +28,4 @@ const Heading: React.FC<_Heading> = ({ is = 'h1', ref, className, children }) =>
 };
 
 export default Heading;
+export { Heading };
