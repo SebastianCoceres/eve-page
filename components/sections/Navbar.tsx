@@ -47,7 +47,7 @@ export function NavbarSection() {
         setHasbg(latest > 100)
     })
     return (
-        <Navbar className={cn('flex justify-between md:justify-center items-center transition-colors', hasbg ? 'bg-background' : 'bg-transparent')}>
+        <Navbar className={cn('flex justify-between md:justify-center items-center transition-colors', hasbg ? '!bg-background' : 'bg-transparent')}>
             <div className='w-36 md:hidden'>
                 <span className="sr-only">Evelyn Bogado</span>
                 <Logo />

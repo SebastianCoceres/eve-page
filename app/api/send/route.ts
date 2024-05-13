@@ -1,4 +1,3 @@
-import { EmailTemplate } from '@/components/ui/EmailTemplate';
 import nodemailer from 'nodemailer';
 
 
@@ -12,7 +11,7 @@ export async function POST(req: Request) {
         }
     })
 
-    const { email, username, message } = await req.json();
+    const { email, username, message, asunto } = await req.json();
     if (!email || !username || !message) {
         return Response.json({ error: 'Missing required fields' });
     }
@@ -24,6 +23,7 @@ export async function POST(req: Request) {
         html: `
             <p>Username: ${username}</p>
             <p>Email: ${email}</p>
+            ${asunto ? `<p>Me interesa: ${asunto}</p>` : ''}
             <p>Message: ${message}</p>
         `
     })

@@ -4,7 +4,7 @@ const sacramento = Sacramento({ subsets: ["latin"], weight: "400" });
 
 export const Footer = () => {
     return (
-        <footer className="p-4 bg-background -translate-y-[100%]">
+        <footer className="p-4 bg-background">
             <div className="flex items-center justify-between text-primary">
                 <div className={`${sacramento.className} text-2xl`}>
                     <Link href={"/"}><small className="text-xs">© 2024</small>. Evelyn Bogado.</Link>

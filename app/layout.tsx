@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Roboto_Condensed } from "next/font/google";
 import "./globals.css";
 import { NavbarProvider } from "@/stores/nav-providers";
-import { Toaster } from "@/components/ui/Toaster"
+import { Toaster } from "@/components/ui/Toaster";
+import Script from 'next/script';
 
 const roboto_condensed = Roboto_Condensed({ subsets: ["latin"] });
 

@@ -31,7 +31,7 @@ export const Intro = () => {
                             </MotionAccordionContent>
                         </MotionAccordionItem>
                         <MotionAccordionItem value="item-2" className="accordionItem my-8">
-                            <MotionAccordionTrigger><span className="md:text-2xl">¿Por que elegirlo?</span></MotionAccordionTrigger>
+                            <MotionAccordionTrigger><span className="md:text-2xl">¿Por qué elegirlo?</span></MotionAccordionTrigger>
                             <MotionAccordionContent>
                                 <p>
                                     Elegirlo es optar por una forma de promoción que va más allá de la simple venta de productos o servicios. Al adoptar el enfoque del marketing consciente, te comprometes a construir una marca auténtica y significativa que resuene con tu audiencia de manera genuina. Al priorizar la conexión emocional, puedes establecer relaciones más profundas y duraderas con tus clientes, lo que conduce a una lealtad más sólida y un mayor compromiso.

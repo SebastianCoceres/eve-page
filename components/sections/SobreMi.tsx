@@ -14,12 +14,12 @@ export const SobreMi = () => {
                 <Heading is="h2" className="text-secondary">Sobre mí</Heading>
                 <div className="flex flex-wrap items-center -mx-4">
                     <div className="w-full sm:w-1/2 px-4 mb-4 flex flex-col items-center ">
-                        <UndrawArtThinking className="w-full p-4 max-h-[250px]" />
+                        <UndrawArtThinking className="w-full p-4 max-h-[250px] md:max-h-[100%]" />
                         {/* <Button asChild variant={"secondary"}>
                             <Link href="/sobre-mi">Quiero conocerte más</Link>
                         </Button> */}
                     </div>
-                    <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-3xl text-center text-balance">
+                    <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-xl text-balance">
                         <p className="mb-4">
                             ¡Hola! Soy Evelyn Bogado y estoy aquí para ayudarte a explorar el mundo del marketing consciente.
                         </p>
@@ -27,7 +27,7 @@ export const SobreMi = () => {
                             ¡Construyamos juntos una presencia digital que refleje tus valores y conecte de verdad con tu audiencia!
                         </p>
                         <Link href="https://www.instagram.com/evelyn.digitalmkt/" target="_blank" rel="noopener noreferrer" className="flex justify-center group">
-                            <Instagram className="scale-75 md:scale-100"/>
+                            <Instagram className="scale-50" />
                         </Link>
                     </div>
                 </div>

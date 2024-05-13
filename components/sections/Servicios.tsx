@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 
 
 
-const services = [
+export const services = [
     {
         title: 'Consultoría en marketing digital',
         description: '<p>Brindo asesoramiento estratégico para <strong>potenciar tu presencia en línea</strong> y alcanzar de manera efectiva a tu público objetivo. Mediante un enfoque personalizado, <strong>trabajaremos juntos</strong> para identificar oportunidades de crecimiento y desarrollar estrategias que impulsen <strong>el éxito de tu negocio en el mundo digital</strong>.',
@@ -37,7 +37,7 @@ const services = [
     },
     {
         title: 'Otros servicios',
-        description: '<p>Ofrezco una amplia gama de servicios <strong>adaptados a las necesidades específicas de cada cliente</strong>. Mi enfoque es trabajar estrechamente contigo para entender tus objetivos y desafíos únicos. Te proporciono soluciones a medida que <strong>impulsan el crecimiento y el éxito de tu negocio </strong>.</p> <p>Mi versatilidad me permite abordar una amplia variedad de proyectos, garantizando <strong>resultados excepcionales </strong> en cada uno.</p>',
+        description: '<p>Ofrezco una amplia gama de servicios <strong>adaptados a las necesidades específicas de cada cliente</strong>. Mi enfoque es trabajar estrechamente contigo para entender tus objetivos y desafíos únicos. Te proporciono soluciones a medida que <strong>impulsan el crecimiento y el éxito de tu negocio.</strong></p> <p>Mi versatilidad me permite abordar una amplia variedad de proyectos, garantizando <strong>resultados excepcionales </strong> en cada uno.</p>',
         image: '/undraw_random_thoughts_re_cob6.svg'
     },
 
