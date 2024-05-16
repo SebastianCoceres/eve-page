@@ -19,7 +19,7 @@ export const SobreMi = () => {
                             <Link href="/sobre-mi">Quiero conocerte más</Link>
                         </Button> */}
                     </div>
-                    <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-xl text-balance">
+                    <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-xl text-center text-balance">
                         <p className="mb-4">
                             ¡Hola! Soy Evelyn Bogado y estoy aquí para ayudarte a explorar el mundo del marketing consciente.
                         </p>
@@ -27,7 +27,7 @@ export const SobreMi = () => {
                             ¡Construyamos juntos una presencia digital que refleje tus valores y conecte de verdad con tu audiencia!
                         </p>
                         <Link href="https://www.instagram.com/evelyn.digitalmkt/" target="_blank" rel="noopener noreferrer" className="flex justify-center group">
-                            <Instagram className="scale-50" />
+                            <Instagram className="w-full aspect-[2/1] sm:scale-50" />
                         </Link>
                     </div>
                 </div>

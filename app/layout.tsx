@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Roboto_Condensed } from "next/font/google";
 import "./globals.css";
-import { NavbarProvider } from "@/stores/nav-providers";
+import { NavbarProvider } from "@/stores/nav/nav-providers";
+import { ServiceProvider } from "@/stores/service/service-provider";
 import { Toaster } from "@/components/ui/Toaster";
-import Script from 'next/script';
 
 const roboto_condensed = Roboto_Condensed({ subsets: ["latin"] });
 
@@ -25,9 +25,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${roboto_condensed.className}`}>
-        <NavbarProvider>
-          {children}
-        </NavbarProvider>
+        <ServiceProvider>
+          <NavbarProvider>
+            {children}
+          </NavbarProvider>
+        </ServiceProvider>
         <Toaster />
       </body>
     </html>

@@ -1,10 +1,9 @@
 'use client'
-import { services } from "@/components/sections/Servicios";
+import { Services } from "@/components/sections/Servicios";
 import { Button } from "@/components/ui/Button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -19,8 +18,10 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
+import { useServicesStore } from "@/stores/service/service-provider";
+import { useEffect, useState } from "react";
 
-const servicesMap = Object.fromEntries(services.map((service) => ([service.title, service.title])))
+const servicesMap = Object.fromEntries(Services.map((service) => ([service.key, service.key])))
 const formSchema = z.object({
     username: z.string().min(2, { message: "Debe contener al menos 2 caracteres" }).max(50, { message: "Número máximo de caracteres excedido" }),
     email: z.string().email({ message: "El correo electrónico es inválido" }),
@@ -30,18 +31,18 @@ const formSchema = z.object({
 
 export const Contacto = () => {
     const { ref } = useIsInViewWithStore("contact")
+    const { selectedService } = useServicesStore(state => state)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             username: "",
             email: "",
-            asunto: "Otros servicios",
+            asunto: selectedService,
             message: "",
         },
         mode: "onChange",
     })
-
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const res = await fetch("/api/send", {
             method: "POST",
@@ -62,7 +63,7 @@ export const Contacto = () => {
     }
 
     return (
-        <section id="contact" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
+        <section id="contact" className=" flex flex-col justify-center items-center flex-fill pb-36 bg-background">
             <div ref={ref} className="container md:max-w-6xl mx-auto">
                 <Heading is="h2" className="text-secondary">¡Estoy aquí para ti!</Heading>
                 <Heading is="h3" className="text-secondary">Hablemos de tu proyecto:</Heading>
@@ -107,15 +108,15 @@ export const Contacto = () => {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="sr-only">Me interesa un servicio</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={selectedService ? servicesMap[selectedService] : undefined}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Me interesa..." />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent className="bg-white">
-                                            {services.map((service) => (
-                                                <SelectItem key={service.title} value={service.title}>{service.title}</SelectItem>
+                                            {Services.map((service) => (
+                                                <SelectItem key={service.key} value={service.key}>{service.title}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -144,7 +145,7 @@ export const Contacto = () => {
                     </form>
                 </Form>
             </div>
-        </section>
+        </section >
     )
 }
 

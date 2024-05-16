@@ -2,7 +2,7 @@
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { Navbar, NavigationList, NavigationItem, NavbarTrigger } from "@/components/ui/Navbar";
 import { Home, UserRound, HandHeart, Mail, Menu, X, Lightbulb } from "lucide-react";
-import { useNavbarStore } from '@/stores/nav-providers'
+import { useNavbarStore } from '@/stores/nav/nav-providers'
 import { Logo } from "@/components/ui/Logo";
 import { cn } from '@/lib/utils';
 import { useState } from 'react';

@@ -1,5 +1,5 @@
 import { NavbarKeys } from "@/components/sections/Navbar"
-import { useNavbarStore } from "@/stores/nav-providers"
+import { useNavbarStore } from "@/stores/nav/nav-providers"
 import { useInView } from "framer-motion"
 import { useRef, useEffect } from "react"
 
