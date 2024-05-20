@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -13,13 +14,13 @@ import Heading from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
+import { useServicesStore } from "@/stores/service/service-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/Select";
-import { useServicesStore } from "@/stores/service/service-provider";
-import { useEffect, useState } from "react";
 
 const servicesMap = Object.fromEntries(Services.map((service) => ([service.key, service.key])))
 const formSchema = z.object({
@@ -32,7 +33,6 @@ const formSchema = z.object({
 export const Contacto = () => {
     const { ref } = useIsInViewWithStore("contact")
     const { selectedService } = useServicesStore(state => state)
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -43,6 +43,11 @@ export const Contacto = () => {
         },
         mode: "onChange",
     })
+
+    useEffect(() => {
+        form.setValue("asunto", selectedService)
+    }, [selectedService])
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         const res = await fetch("/api/send", {
             method: "POST",
@@ -108,17 +113,19 @@ export const Contacto = () => {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="sr-only">Me interesa un servicio</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={selectedService ? servicesMap[selectedService] : undefined}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Me interesa..." />
-                                            </SelectTrigger>
+                                    <Select onValueChange={field.onChange} defaultValue={selectedService ? servicesMap[selectedService] : undefined} value={field.value}>
+                                        <FormControl onChange={field.onChange}>
+                                            <>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Me interesa..." />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white">
+                                                    {Services.map((service) => (
+                                                        <SelectItem key={service.key} value={service.key}>{service.title}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </>
                                         </FormControl>
-                                        <SelectContent className="bg-white">
-                                            {Services.map((service) => (
-                                                <SelectItem key={service.key} value={service.key}>{service.title}</SelectItem>
-                                            ))}
-                                        </SelectContent>
                                     </Select>
                                     <FormMessage />
                                 </FormItem>
@@ -135,8 +142,10 @@ export const Contacto = () => {
                                             <Textarea placeholder="Cuéntame tu historia" {...field} />
                                         </FormControl>
                                         <FormMessage />
+                                        <FormDescription>
+                                            Si prefieres, déjame tu número de teléfono y charlamos sobre tu proyecto.
+                                        </FormDescription>
                                     </FormItem>
-
                                 </>
                             )}
                         />
