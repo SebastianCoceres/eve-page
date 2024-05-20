@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     const info = await transporter.sendMail({
         from: process.env.GMAIL_APP_EMAIL,
-        to: process.env.GMAIL_APP_EMAIL,
+        to: "bogadoevelyn12@gmail.com",
         subject: 'Contacto',
         html: `
             <p>Username: ${username}</p>
