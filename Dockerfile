@@ -1,21 +1,23 @@
 # Usamos una imagen base de Node.js
 FROM node:22-alpine
-ARG GMAIL_APP_EMAIL=${GMAIL_APP_EMAIL}
-ENV GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
-# Establecemos el directorio de trabajo en /app
+
 WORKDIR /app
 
-# Copiamos el archivo package.json y package-lock.json al directorio de trabajo
-COPY package*.json ./
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# Copiamos el archivo package.json y pnpm-lock.yaml al directorio de trabajo
+COPY package.json pnpm-lock.yaml ./
 
 # Instalamos las dependencias del proyecto
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
 # Copiamos todo el contenido de la carpeta al directorio de trabajo
 COPY . .
 
-RUN npm run build
+RUN pnpm build
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["pnpm", "start"]
