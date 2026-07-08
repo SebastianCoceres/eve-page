@@ -1,21 +1,20 @@
 'use client'
-import { motion, useAnimate } from "framer-motion"
-import { useEffect } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
+import { useRef } from "react";
+
+gsap.registerPlugin(useGSAP, DrawSVGPlugin);
 
 function usePathAnimation() {
-    const [scope, animate] = useAnimate();
-    useEffect(() => {
-        const handleAnimate = async () => {
-            await animate([
-                ["path.arrowbody", { pathLength: 1 }, { duration: 1.2 }],
-                ["path.arrowhead", { pathLength: 1 }, { duration: 1 }]
-            ], {
-                repeat: Infinity,
-            })
-            handleAnimate()
-        }
-        handleAnimate()
-    }, [])
+    const scope = useRef<SVGGElement>(null);
+
+    useGSAP(() => {
+        const tl = gsap.timeline({ repeat: -1 })
+        tl.fromTo("path.arrowbody", { drawSVG: "0%" }, { drawSVG: "100%", duration: 1.2 })
+        tl.fromTo("path.arrowhead", { drawSVG: "0%" }, { drawSVG: "100%", duration: 1 })
+    }, { scope })
+
     return scope
 }
 
@@ -26,12 +25,10 @@ export const Instagram = ({ className }: { className?: string }) => {
         <svg className={className} viewBox="0 0 322 84" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path className="fill-secondary" fillRule="evenodd" clipRule="evenodd" d="M56.0808 2.99463H21.8586C10.0459 2.99463 0.469727 12.5708 0.469727 24.3835V58.6057C0.469727 70.4185 10.0459 79.9946 21.8586 79.9946H56.0808C67.8936 79.9946 77.4697 70.4185 77.4697 58.6057V24.3835C77.4697 12.5708 67.8936 2.99463 56.0808 2.99463ZM69.9835 58.6058C69.96 66.2743 63.7492 72.485 56.0807 72.5085H21.8585C14.1899 72.485 7.97919 66.2743 7.95571 58.6058V24.3835C7.97919 16.715 14.1899 10.5042 21.8585 10.4808H56.0807C63.7492 10.5042 69.96 16.715 69.9835 24.3835V58.6058ZM59.2892 25.4529C61.6518 25.4529 63.567 23.5377 63.567 21.1752C63.567 18.8126 61.6518 16.8974 59.2892 16.8974C56.9267 16.8974 55.0114 18.8126 55.0114 21.1752C55.0114 23.5377 56.9267 25.4529 59.2892 25.4529ZM38.9696 22.2447C28.3382 22.2447 19.7196 30.8632 19.7196 41.4947C19.7196 52.1262 28.3382 60.7447 38.9696 60.7447C49.6011 60.7447 58.2196 52.1262 58.2196 41.4947C58.231 36.3858 56.2066 31.4829 52.594 27.8703C48.9815 24.2578 44.0785 22.2333 38.9696 22.2447ZM27.2056 41.4947C27.2056 47.9917 32.4725 53.2586 38.9695 53.2586C45.4665 53.2586 50.7334 47.9917 50.7334 41.4947C50.7334 34.9977 45.4665 29.7308 38.9695 29.7308C32.4725 29.7308 27.2056 34.9977 27.2056 41.4947Z" />
             <g ref={scope}>
-                <motion.path
-                    initial={{ pathLength: 0 }}
+                <path
                     className={"arrowbody"}
                     d="M169.367 60.6415C129.676 80.9315 98.475 69.7983 87.8362 61.6955" stroke="black" strokeWidth="1.5" />
-                <motion.path
-                    initial={{ pathLength: 0 }}
+                <path
                     className={"arrowhead"}
                     d="M89.1722 67.8458L87.4697 61.4837L92.3859 60.1681" stroke="black" strokeWidth="1.5" />
             </g>
@@ -41,5 +38,4 @@ export const Instagram = ({ className }: { className?: string }) => {
         </svg >
     )
 }
-
 

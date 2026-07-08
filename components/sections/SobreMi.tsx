@@ -2,6 +2,7 @@
 import Heading from "@/components/ui/Heading";
 import { UndrawArtThinking } from "@/components/vectors/UndrawArtThinking2";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
+import { useSobreMiAnimation } from "@/hooks/useSobreMiAnimation";
 import Link from "next/link";
 import { Button } from "../ui/Button";
 import { Instagram } from "../vectors/Instragram";
@@ -12,7 +13,8 @@ export const SobreMi = () => {
     const [api, setApi] = useState<CarouselApi>()
     const [current, setCurrent] = useState(0)
     const [count, setCount] = useState(0)
-    const { ref } = useIsInViewWithStore("about")
+    const { ref, isInView } = useIsInViewWithStore("about")
+    const scope = useSobreMiAnimation(isInView)
 
     useEffect(() => {
         if (!api) {
@@ -27,17 +29,18 @@ export const SobreMi = () => {
         })
     }, [api])
     return (
-        <section id="about" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background py-16">
-            <div ref={ref} className="container md:max-w-6xl mx-auto">
+        <section id="about" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background py-20 md:py-32">
+            <div ref={scope} className="container md:max-w-6xl mx-auto">
+              <div ref={ref}>
                 <Heading is="h2" className="text-secondary">Sobre mí</Heading>
                 <div className="flex flex-wrap items-center -mx-4">
-                    <div className="w-full sm:w-1/2 px-4 mb-4 flex flex-col items-center ">
+                    <div className="w-full sm:w-1/2 px-4 mb-4 flex flex-col items-center sobre-mi-illustration">
                         <UndrawArtThinking className="w-full p-4 max-h-[250px] md:max-h-[100%]" />
                         {/* <Button asChild variant={"secondary"}>
                             <Link href="/sobre-mi">Quiero conocerte más</Link>
                         </Button> */}
                     </div>
-                    <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-xl text-balance">
+                    <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-xl text-balance sobre-mi-carousel">
                         <Carousel setApi={setApi} opts={{ loop: true, align: 'center' }}>
                             <CarouselContent >
                                 <CarouselItem className="flex flex-col justify-center items-center">
@@ -90,6 +93,7 @@ export const SobreMi = () => {
                         </Link>
                     </div>
                 </div>
+              </div>
             </div>
         </section>
     )

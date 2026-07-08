@@ -11,12 +11,12 @@ interface _Heading extends React.HTMLAttributes<HTMLHeadingElement> {
 const Heading: React.FC<_Heading> = ({ is = 'h1', ref, className, children }) => {
     const Component = is;
     const baseClasses = {
-        'h1': 'text-4xl md:text-6xl font-bold my-4',
-        'h2': 'text-3xl md:text-4xl font-semibold my-4',
-        'h3': 'text-2xl md:text-3xl font-semibold my-4',
-        'h4': 'text-xl md:text-2xl font-semibold my-4',
-        'h5': 'text-lg md:text-xl font-semibold my-4',
-        'h6': 'text-md md:text-lg font-semibold my-4',
+        'h1': 'text-5xl md:text-7xl font-extrabold my-4',
+        'h2': 'text-3xl md:text-5xl font-semibold my-4',
+        'h3': 'text-xl md:text-2xl font-medium my-4',
+        'h4': 'text-lg md:text-xl font-medium my-4',
+        'h5': 'text-base md:text-lg font-medium my-4',
+        'h6': 'text-sm md:text-base font-medium my-4',
     };
 
     const classes = cn(

@@ -15,7 +15,7 @@ export const Intro = () => {
     const scope = useAccordionAnimation(isInView);
 
     return (
-        <section id="focus" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
+        <section id="focus" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background py-20 md:py-32">
             <div ref={scope} className="container md:max-w-6xl mx-auto">
                 <div ref={ref}>
                     <Accordion type="single" defaultValue={"item-1"} collapsible>
