@@ -114,18 +114,16 @@ export const Contacto = () => {
                                 <FormItem>
                                     <FormLabel className="sr-only">Me interesa un servicio</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={selectedService ? servicesMap[selectedService] : undefined} value={field.value}>
-                                        <FormControl onChange={field.onChange}>
-                                            <>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Me interesa..." />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white">
-                                                    {Services.map((service) => (
-                                                        <SelectItem key={service.key} value={service.key}>{service.title}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Me interesa..." />
+                                            </SelectTrigger>
                                         </FormControl>
+                                        <SelectContent className="bg-white">
+                                            {Services.map((service) => (
+                                                <SelectItem key={service.key} value={service.key}>{service.title}</SelectItem>
+                                            ))}
+                                        </SelectContent>
                                     </Select>
                                     <FormMessage />
                                 </FormItem>

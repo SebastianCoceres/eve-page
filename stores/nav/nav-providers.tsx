@@ -14,7 +14,7 @@ export interface NavbarProviderProps {
 }
 
 export const NavbarProvider = ({ children }: NavbarProviderProps) => {
-    const storeRef = useRef<StoreApi<NavbarStore>>()
+    const storeRef = useRef<StoreApi<NavbarStore>>(undefined)
     if (!storeRef.current) {
         storeRef.current = createNavbarStore()
     }

@@ -14,7 +14,7 @@ export interface ServiceProviderProps {
 }
 
 export const ServiceProvider = ({ children }: ServiceProviderProps) => {
-    const storeRef = useRef<StoreApi<ServiceStore>>()
+    const storeRef = useRef<StoreApi<ServiceStore>>(undefined)
     if (!storeRef.current) {
         storeRef.current = createServiceStore()
     }

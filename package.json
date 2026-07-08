@@ -35,11 +35,11 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
     "@types/node": "^26",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "autoprefixer": "^10.5.2",
     "eslint": "^10",
     "eslint-config-next": "16.2.10",
     "postcss": "^8",
