@@ -51,14 +51,6 @@ export const SobreMi = () => {
                                 </CarouselItem>
                                 <CarouselItem className="flex flex-col justify-center items-center">
                                     <p>
-                                        Afortunadamente, en mi trayectoria me he cruzado con personas muy profesionales y generosas que me han guiado en este hermoso camino. Gracias a ellos, he podido adquirir valiosos conocimientos y experiencias que me han permitido crecer en este campo.
-                                    </p>
-                                    <p>
-                                        He trabajado con diversos clientes, desde el <strong>Museo de la Evolución Humana</strong> en Burgos, así como con la <strong>Televisión de Galicia</strong>.  Además, he participado en proyectos dedicados al cuidado del medio ambiente como <strong>LIFE SMART AgroMobility</strong>, y en sectores más comerciales con empresas de venta de ropa y accesorios.
-                                    </p>
-                                </CarouselItem>
-                                <CarouselItem className="flex flex-col justify-center items-center">
-                                    <p>
                                         Mi recorrido es amplio y variado, y me permite la adaptación a diferentes industrias y necesidades.
                                     </p>
                                     <p>
