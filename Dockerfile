@@ -1,10 +1,11 @@
 # Usamos una imagen base de Node.js
-FROM node:22-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 
 # Copiamos el archivo package.json y pnpm-lock.yaml al directorio de trabajo
