@@ -34,7 +34,8 @@
   --font-serif: var(--font-caslon-text), "Times New Roman", serif;
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 
-  --radius-xs: 2px;
+  /* Shape rule: pills for primary actions, 6px for form fields, one arch on the portrait, everything else square. */
+  --radius-field: 6px;
 
   /* Flat world: no box-shadows anywhere. */
   --shadow-*: initial;
