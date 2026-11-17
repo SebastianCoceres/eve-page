@@ -29,7 +29,8 @@ Patrones por caso de uso:
 - **Entrada del hero**: `hooks/useHeroAnimation.ts`, un `gsap.timeline()` de 0.3s `power2.out` (opacity + y 8px, stagger 0.06) y luego la imagen solo con opacity.
 - **Entrada de sección**: `hooks/useFadeStagger.ts`, opacity sola, 0.2s, `ScrollTrigger` con `once: true` sobre los hijos `.reveal`.
 - **Scroll a una sección**: `scrollToSection(id)` de `lib/scroll.ts` (`ScrollToPlugin`, 0.3s, offset del navbar; salto instantáneo con reduced motion).
-- **Micro-interacciones**: CSS a 150ms (color, fondo, subrayado). Nada de scrub, parallax ni bucles.
+- **Micro-interacciones**: CSS a 150ms (color, fondo, subrayado). Nada de scrub, parallax ni bucles fuera del gráfico del hero (ver "Gráfico del hero").
+- **Gráfico del hero**: `hooks/useHeroSeigaiha.ts` (intro, scrub y deriva ambiente; ver más abajo).
 
 Todo pasa por `gsap.matchMedia()` con `prefers-reduced-motion: no-preference`: con reduced motion se muestra todo sin animar.
 
@@ -37,7 +38,7 @@ Todo pasa por `gsap.matchMedia()` con `prefers-reduced-motion: no-preference`: c
 
 **No todo lo que trackea scroll necesita GSAP**: si el caso de uso es solo detectar si un elemento está en viewport (sin animar nada), usar `IntersectionObserver` nativo. Si es solo togglear una clase CSS en scroll (sin animar propiedades), un listener nativo de `scroll` alcanza. Reservar `ScrollTrigger` para cuando realmente se anima algo.
 
-**Registro de plugins**: centralizado en `lib/gsap.ts` (`ScrollTrigger`, `ScrollToPlugin`, `useGSAP`). Importar `gsap` desde ahí, no desde `gsap` directo.
+**Registro de plugins**: centralizado en `lib/gsap.ts` (`ScrollTrigger`, `ScrollToPlugin`, `DrawSVGPlugin`, `useGSAP`). Importar `gsap` desde ahí, no desde `gsap` directo.
 
 ## Convención de estilos
 
@@ -45,25 +46,15 @@ Tailwind v4. Los tokens viven en `app/globals.css`: valores hex en `:root` (dent
 
 **Nunca hardcodear colores en componentes**: siempre vía token semántico (`text-muted-foreground`, `bg-surface`, etc.), nunca hex sueltos. Si hace falta un token nuevo, se agrega en `globals.css` siguiendo el mismo patrón.
 
-Paleta "Cal y cobalto": una página encalada a mediodía. El blanco hace el trabajo; `surface` marca las bandas en sombra (Mi enfoque, el índice de Servicios, Footer). El cobalto vive solo en el botón primario, los enlaces y el focus ring (≤3% de la superficie, un botón primario por viewport como máximo). El naranja (`accent`) es solo el punto de 6px del servicio elegido: nunca texto, fondo ni borde. Sin gradientes, sin blur, sin sombras, sin bordes de más de 1px. **Regla de forma**: la única curva de la página es el arco de puerta encalada sobre el retrato del hero (medio círculo real: `rounded-t-[50%_40%]` sobre una caja 4:5); los botones primarios son píldoras (`rounded-full`; el focus ring sigue la forma); inputs, textarea, trigger y popover del select llevan 6px (`rounded-field`); todo lo demás (filetes, bandas, panel de servicios, toasts, grilla) va recto. Sin ilustraciones ni iconos decorativos: la única imagen es el retrato del hero, en color, dentro del arco, sin marco ni sombra. **Dark mode no está implementado**: no agregar overrides `.dark` sin pedido explícito.
+Paleta "Cal y cobalto": una página encalada a mediodía. El blanco hace el trabajo; `surface` marca las bandas en sombra (Mi enfoque, el índice de Servicios, Footer). El cobalto vive solo en el botón primario, los enlaces y el focus ring (≤3% de la superficie, un botón primario por viewport como máximo). El naranja (`accent`) es solo el punto de 6px del servicio elegido: nunca texto, fondo ni borde (fuera del sol del hero y su sello "EB"). Sin gradientes, sin blur, sin sombras, sin bordes de más de 1px. **Regla de forma**: sin arcos de marco: las curvas viven solo en el gráfico del hero (las ondas seigaiha y el disco del sol); los botones primarios son píldoras (`rounded-full`; el focus ring sigue la forma); inputs, textarea, trigger y popover del select llevan 6px (`rounded-field`); todo lo demás (filetes, bandas, panel de servicios, toasts, grilla) va recto. Sin ilustraciones ni iconos decorativos fuera del hero.
 
-**Logotipo** (`components/ui/Logo.tsx`, SVG inline con `fill="currentColor"` y viewBox recortado al arte): vive en el **hero**, como contenido visual del único `<h1>` (con el nombre en texto `sr-only`), en `text-foreground`, a 340px máx. en móvil y 560px en desktop, y en el **footer** a 24px de alto. **No va en el navbar**: la barra no lleva marca (links de sección a la izquierda y la píldora "Contacto" a la derecha en desktop; solo "Menú" a la derecha en móvil).
+### Gráfico del hero: "Seigaiha: el mar y el sol"
 
-Tipografía: **Libre Caslon Display** 400 (`font-display`) para los títulos; **Libre Caslon Text** (`font-serif`) para el lead y la itálica de énfasis; **Geist** (`font-sans`) para el cuerpo y la UI. Se cargan con `next/font/google` en `app/layout.tsx`. Utilidades de escala en `globals.css`: `text-display`, `text-title`, `text-subtitle`, `text-lead`, `text-eyebrow`. Cuerpo 16px / 1.6, medida máxima 65ch. Nunca mayúsculas.
+**Sin foto y sin marco**: el retrato se quitó de la página por decisión de la clienta (`public/fondo-hero.webp` queda en disco, sin uso), y la escena figurativa en arco se descartó. El hero es tipográfico arriba y, debajo, a sangre completa, un campo de ondas **seigaiha** (patrón textil japonés de escamas de arcos concéntricos) con un único **sol naranja** que asoma detrás, cortado por el borde derecho. Colores: fondo cal, líneas cobalto (`primary`, 1px, opacidad 0.62) y un solo disco `sun` (`sun-warm` solo como destino del scroll). Nada más. El texto nunca pisa las ondas: el campo empieza debajo del bloque de contenido. Sello cuadrado naranja "EB" (40px) en la esquina inferior derecha del campo, decorativo (`aria-hidden`).
 
-`Heading` (`components/ui/Heading.tsx`) separa elemento y aspecto: `is` elige la etiqueta (`h1`–`h6`) y `variant` el estilo (`display`, `title`, `subtitle`, `item`). Hay un solo `h1` (el logotipo del hero); los títulos de sección son `h2`.
+**Generador** (`lib/seigaiha.ts`, funciones puras): escamas de radio R (ancho 2R) con 4 arcos concéntricos; cada fila baja R/2 y se desplaza R (el ritmo clásico). Las filas se dibujan de atrás hacia adelante y cada escama lleva un disco completo opaco del color del fondo, así las filas cercanas tapan a las lejanas (silueta de abanico) y el sol queda oculto detrás sin rendijas. Geometría en píxeles CSS con viewBox 1:1 (trazo de 1px nítido a cualquier DPR); se recalcula con el ancho medido (ResizeObserver), sin deformar. Desktop: R=40 (escamas de 80px), 13 filas, 280px. Móvil: R=24 (48px), 15 filas, 192px; esas alturas coinciden con `--field-h` en `components/ui/HeroSeigaiha.tsx`. Cada fila se extiende dos escamas más allá de cada borde para poder derivar sin costuras. Son 2 paths por fila (relleno + trazo), unos 30 en total, así que el SVG va holgado a 60fps.
 
-### Retícula y spacing
-
-Solo dos breakpoints: `md` (768px) y `xl` (1280px); `sm`, `lg` y `2xl` están desactivados. `container` = máximo 1200px de contenido con gutter de 24px (<768) y 40px (≥768). Las secciones de contenido usan la utilidad `section-pad` (96 / 128 / 160px). No agregar `py-*` ad-hoc por sección. Todo sobre la grilla de 4/8pt; touch targets de 44px como mínimo.
-
-### Énfasis tipográfico
-
-En textos largos, las frases clave van en `<em>` con Libre Caslon Text itálica en `text-foreground` y el resto en `text-muted-foreground` (ver `SobreMi.tsx`). Los `<strong>` del copy de servicios van en Geist 500 `text-foreground`. No reescribir el copy para aplicar el patrón: solo envolver el texto existente.
-
-### Accesibilidad
-
-Skip link "Saltar al contenido" como primer foco (`app/page.tsx`). Focus ring de 2px cobalto con offset de 2px. El menú móvil (`components/ui/Navbar.tsx`) es un diálogo con focus trap, se cierra con Esc y devuelve el foco al botón "Menú". El submit del formulario usa `aria-disabled` mientras envía, nunca `disabled`.
+**Gramática de movimiento** (`hooks/useHeroSeigaiha.ts`): (1) intro, una sola vez, ~1.8s: las líneas de cada fila se dibujan desde su centro hacia afuera (DrawSVG "50% 50%"), con las filas escalonadas desde la del medio, como tinta que se expande, mientras el sol sube desde detrás de las olas (`expo.out`). (2) Scroll con scrub sobre el hero: el sol se hunde en el mar (lo ocultan los rellenos de las escamas) y se calienta un paso; las filas lejanas se retrasan un poco (parallax). (3) Ambiente: cada fila deriva en horizontal exactamente un período (2R) y vuelve a empezar, en sentidos alternos y a velocidades distintas y muy lentas; queda en pausa fuera de pantalla. Solo transforms. Con reduced motion no corre nada: se ve la composición final estática.
 
 ## State management
 
