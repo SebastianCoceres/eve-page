@@ -35,7 +35,7 @@ export function SeaField({ kind, className, children }: { kind: SeaKind; classNa
     }, [scope, kind]);
 
     return (
-        <div ref={scope} aria-hidden="true" className={cn("relative", className)}>
+        <div ref={scope} data-sea-field={kind} aria-hidden="true" className={cn("relative", className)}>
             {children}
             <svg
                 className={cn("relative block w-full", HEIGHT[kind])}

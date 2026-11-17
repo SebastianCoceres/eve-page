@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
-import { findZone, route, type Point, type Rect, type Zone } from "@/lib/sunPath";
+import { findZone, parkedScroll, route, type Point, type Rect, type Zone } from "@/lib/sunPath";
 
 const docRect = (element: Element): Rect => {
     const r = element.getBoundingClientRect();
@@ -30,12 +30,14 @@ function collectObstacles(): Rect[] {
 }
 
 // Where the day should be in each chapter: x as a fraction of the viewport width
-// (east to west), and how high in the viewport the sun sits when it arrives.
+// (east to west), how high in the viewport the sun sits when it arrives, and its
+// size by time of day: smallest at midday, larger toward the horizon (as a low
+// sun looks). Sizes are tried largest first and shrink only to fit a free zone.
 const CHAPTERS = [
-    { id: "focus", targetX: 0.82, height: 0.28 },
-    { id: "services", targetX: 0.72, height: 0.24 },
-    { id: "about", targetX: 0.2, height: 0.42 },
-    { id: "contact", targetX: 0.15, height: 0.52 },
+    { id: "focus", targetX: 0.82, height: 0.3, sizes: [180, 150, 120] },
+    { id: "services", targetX: 0.72, height: 0.26, sizes: [150, 130, 110] },
+    { id: "about", targetX: 0.2, height: 0.42, sizes: [200, 170, 140, 120] },
+    { id: "contact", targetX: 0.15, height: 0.52, sizes: [220, 180, 150, 120] },
 ] as const;
 
 /**
@@ -45,7 +47,7 @@ const CHAPTERS = [
  * computed from the real layout on every resize:
  * - it starts on the hero anchor, rising out of the hero sea;
  * - for each chapter it parks in that section's free zone (at least 48px from any
- *   text; see lib/sunPath);
+ *   text, fully below the navbar; see lib/sunPath), sized by the time of day;
  * - between chapters it travels only through whitespace: out to the side margin,
  *   along it, across the gap between sections, and in (MotionPath, sine.inOut);
  * - it ends on the footer anchor, setting into the footer sea, warming on the way.
@@ -121,19 +123,21 @@ export function useTravelingSun() {
                             viewportWidth: vw,
                             viewportHeight: vh,
                             targetX: chapter.targetX,
-                            sizes: [220, 180, 150, 120],
+                            sizes: [...chapter.sizes],
                         });
                         if (!zone) continue;
                         const gapY = (textBottom(previousRect) + textTop(rect)) / 2;
-                        const at = Math.min(maxScroll - 1, Math.max(previousTime + 1, zone.y - vh * chapter.height));
+                        const at = Math.min(maxScroll - 1, Math.max(previousTime + 1, parkedScroll(zone, chapter.height, vh)));
                         legs.push({ points: route(previous, zone, gapY, vw, contentLeft, contentRight), zone, at });
                         previous = zone;
                         previousRect = rect;
                         previousTime = at;
                     }
-                    const footer = document.querySelector("footer");
-                    const footerTop = footer ? docRect(footer).t : end.y;
-                    const gapY = (textBottom(previousRect) + footerTop) / 2;
+                    // The last leg crosses behind the footer sea (the scales' fills hide it), not
+                    // through the gap above the footer, which is too narrow for a sun at tablet widths.
+                    const footerSea = document.querySelector('[data-sea-field="footer"]');
+                    const seaRect = footerSea ? docRect(footerSea) : null;
+                    const gapY = seaRect ? (seaRect.t + seaRect.b) / 2 + end.d / 2 : end.y;
                     legs.push({ points: route(previous, end, gapY, vw, contentLeft, contentRight), zone: end, at: maxScroll });
                 } else {
                     // Phones: out by the right edge, peeking in at each section mark.
