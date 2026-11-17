@@ -1,8 +1,13 @@
-export const Logo = () => {
+import type { SVGProps } from "react";
+
+// Logotype "EVELYN BOGADO / PUBLICIDAD & MKT DIGITAL". Fills inherit currentColor so the
+// mark takes its color from a text token. The viewBox is cropped to the artwork so the
+// mark aligns flush with the text column.
+export const Logo = (props: SVGProps<SVGSVGElement>) => {
     return (
-        <svg id="Capa_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1041.9 207.5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="15 38 1009 157" fill="currentColor" focusable="false" {...props}>
             <g>
-                <g className="st0">
+                <g>
                     <path d="M15.8,41.2h64.5v8.3C70.8,46.3,45,43,28.1,43c-3.3,0-4.9,1.3-4.9,6.3v29.4c0,2.8,1.9,4.7,4.7,4.7h43.4v7.8
 			c-11-2.7-32.9-5.6-43.3-5.6c-2.8,0-4.7,1.3-4.7,4.1L23.2,126c0,5,1.6,6.3,4.9,6.3c16.9,0,42.7-3.3,52.2-6.4v8.3H15.8V41.2z"/>
                     <path d="M94.1,41.2l36.3,81.5c0.6,1.3,1.2,2,1.8,2c0.7,0,1.2-0.7,1.7-2.2l23.4-81.2h8.2l-32.9,93h-5l-41.5-93H94.1z" />
@@ -35,7 +40,7 @@ export const Logo = () => {
 			C938.2,115.6,955.7,134.2,977.2,134.2z"/>
                 </g>
             </g>
-            <g className="st0">
+            <g>
                 <path d="M261.5,172.3c0,2.8-1.1,4.9-3.3,6.4s-5.1,2.2-8.9,2.2h-4v12.9h-4.5v-29h10c3.1,0,5.7,0.7,7.7,2
 		C260.5,168.2,261.5,170,261.5,172.3z M245.3,179.6h4.1c1.5,0,2.7-0.3,3.7-0.8c1-0.5,1.8-1.2,2.2-2c0.8-1.5,1.3-2.9,1.3-4.2
 		c0-0.7-0.2-1.5-0.6-2.4c-0.7-1.9-2.3-3.2-4.6-3.8c-2.2,0-4.3,0.2-6.2,0.7V179.6z"/>
@@ -86,8 +91,7 @@ export const Logo = () => {
 		"/>
                 <path d="M771.4,193.8l13.8-29.7h0.7l13.8,29.7h-5.1l-3.5-7.9h-13.8l-3.4,7.9H771.4z M778,184.2h12.3l-6.1-14.2L778,184.2z" />
                 <path d="M804.2,193.8v-29h4.5v26.6c1.9,0.5,3.4,0.8,4.5,0.8l8.4-1.4l-0.6,2.9H804.2z" />
-            </g>
-            <polygon className="st1" points="-1087.1,481.4 -1083.8,481.4 -1083.8,481.4 " /></svg>
+            </g></svg>
     )
 }
 

@@ -2,7 +2,7 @@
 import Image from "next/image";
 import type { MouseEvent } from "react";
 import imagen from "@/public/fondo-hero.webp";
-import Heading from "@/components/ui/Heading";
+import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useHeroAnimation } from "@/hooks/useHeroAnimation";
@@ -27,8 +27,12 @@ export const Hero = () => {
                     <div className="grid gap-16 md:grid-cols-12 md:items-center md:gap-x-6">
                         <div className="md:col-span-7">
                             <p className="hero-reveal text-eyebrow">¡Hola! Soy Eve 👋</p>
-                            <Heading is="h1" className="hero-reveal mt-4">Evelyn Bogado</Heading>
-                            <p className="hero-reveal mt-8 max-w-[40ch] text-lead text-foreground">
+                            {/* The logotype is the hero's lead element; the h1 keeps a readable text name. */}
+                            <h1 className="hero-reveal mt-6 text-foreground">
+                                <span className="sr-only">Evelyn Bogado — Publicidad y marketing digital</span>
+                                <Logo aria-hidden="true" className="block h-auto w-full max-w-[340px] md:max-w-[560px]" />
+                            </h1>
+                            <p className="hero-reveal mt-10 max-w-[40ch] text-lead text-foreground">
                                 Vibra alto con un marketing consciente. Ayudo a marcas a crecer de forma auténtica y ética.
                             </p>
                             <div className="hero-reveal mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">

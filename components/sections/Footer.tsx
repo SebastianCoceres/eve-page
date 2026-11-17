@@ -12,7 +12,7 @@ export const Footer = () => {
             <div className="container grid items-center gap-6 py-12 md:grid-cols-3">
                 <a href="#home" className="inline-flex min-h-11 w-fit items-center text-foreground">
                     <span className="sr-only">Evelyn Bogado, volver al inicio</span>
-                    <span aria-hidden="true" className="block h-6 w-[121px] [&_svg]:size-full [&_svg]:fill-current">
+                    <span aria-hidden="true" className="block h-6 w-[154px] [&_svg]:size-full">
                         <Logo />
                     </span>
                 </a>
