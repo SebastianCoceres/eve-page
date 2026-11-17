@@ -36,7 +36,7 @@ Single-page landing in Spanish. Sections: Hero, Mi enfoque, Servicios, Sobre mí
 
 ## Evidence on Hand
 
-- One real portrait photo: `public/fondo-hero.webp`.
+- Portrait photo `public/fondo-hero.webp` exists but is intentionally NOT used: the client chose a no-photo, graphic-led site (code-generated seigaiha sea and traveling sun). Do not reintroduce it.
 - Logo: `public/logo-sin-fondo.png`, `public/logotipo.svg`.
 - No testimonials, client logos, case studies, or metrics exist. Do not fabricate any.
 
