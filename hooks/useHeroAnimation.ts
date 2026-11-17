@@ -1,15 +1,20 @@
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
 import { useRef } from "react";
+import { gsap, useGSAP } from "@/lib/gsap";
 
-gsap.registerPlugin(useGSAP);
-
+// Content is visible in the server-rendered markup; the entrance only runs when
+// JS is available and the visitor has not asked for reduced motion.
 export function useHeroAnimation() {
     const scope = useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
-        gsap.from(".hero-reveal", { opacity: 0, y: 30, duration: 0.5, stagger: 0.15 })
-    }, { scope })
+        const mm = gsap.matchMedia();
+        mm.add("(prefers-reduced-motion: no-preference)", () => {
+            gsap.timeline({ defaults: { ease: "power2.out" } })
+                .from(".hero-reveal", { opacity: 0, y: 8, duration: 0.3, stagger: 0.06 })
+                .from(".hero-image", { opacity: 0, duration: 0.3 }, "-=0.1");
+        });
+        return () => mm.revert();
+    }, { scope });
 
     return scope;
 }

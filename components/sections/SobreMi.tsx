@@ -1,99 +1,60 @@
 'use client'
+import type { ReactNode } from "react";
 import Heading from "@/components/ui/Heading";
-import { UndrawArtThinking } from "@/components/vectors/UndrawArtThinking2";
+import { useFadeStagger } from "@/hooks/useFadeStagger";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
-import { useSobreMiAnimation } from "@/hooks/useSobreMiAnimation";
-import Link from "next/link";
-import { Button } from "../ui/Button";
-import { Instagram } from "../vectors/Instragram";
-import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/Carousel";
-import { useEffect, useState } from "react";
+
+// Key phrases switch voice to the serif italic in full ink; the rest stays muted.
+const Em = ({ children }: { children: ReactNode }) => (
+    <em className="font-serif text-[1.0625em] italic text-foreground">{children}</em>
+)
 
 export const SobreMi = () => {
-    const [api, setApi] = useState<CarouselApi>()
-    const [current, setCurrent] = useState(0)
-    const [count, setCount] = useState(0)
-    const { ref, isInView } = useIsInViewWithStore("about")
-    const scope = useSobreMiAnimation(isInView)
+    const { ref } = useIsInViewWithStore("about")
+    const scope = useFadeStagger()
 
-    useEffect(() => {
-        if (!api) {
-            return
-        }
-
-        setCount(api.scrollSnapList().length)
-        setCurrent(api.selectedScrollSnap() + 1)
-
-        api.on("select", () => {
-            setCurrent(api.selectedScrollSnap() + 1)
-        })
-    }, [api])
     return (
-        <section id="about" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background py-20 md:py-32">
-            <div ref={scope} className="container md:max-w-6xl mx-auto">
-              <div ref={ref}>
-                <Heading is="h2" className="text-secondary">Sobre mí</Heading>
-                <div className="flex flex-wrap items-center -mx-4">
-                    <div className="w-full sm:w-1/2 px-4 mb-4 flex flex-col items-center sobre-mi-illustration">
-                        <UndrawArtThinking className="w-full p-4 max-h-[250px] md:max-h-[100%]" />
-                        {/* <Button asChild variant={"secondary"}>
-                            <Link href="/sobre-mi">Quiero conocerte más</Link>
-                        </Button> */}
+        <section id="about" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
+            <div ref={scope} className="container">
+                <div ref={ref} className="grid gap-y-8 xl:grid-cols-12 xl:gap-x-6">
+                    <div className="reveal xl:col-span-4">
+                        <Heading is="h2" className="xl:sticky xl:top-24">Sobre mí</Heading>
                     </div>
-                    <div className="w-full sm:w-1/2 px-4 mb-4 text-md md:text-xl text-balance sobre-mi-carousel">
-                        <Carousel setApi={setApi} opts={{ loop: true, align: 'center' }}>
-                            <CarouselContent >
-                                <CarouselItem className="flex flex-col justify-center items-center">
-                                    <p>
-                                        ¡Hola! Soy Eve, <strong>licenciada en Publicidad</strong> y especializada en <strong>marketing digital</strong>. Mi formación académica, junto con mi experiencia práctica, abarca tanto el mercado <strong>latinoamericano</strong> como el <strong>europeo</strong>.
-                                    </p>
-                                    <p>
-                                        Constantemente estoy en aprendizaje, por lo que siempre estoy realizando un curso nuevo. Entre ellos se destacan los de community management, UX/UI, programación web, diseño, entre otros. Estas competencias me han permitido desarrollarme plenamente en el vasto campo de la comunicación y el marketing digital.
-                                    </p>
 
-                                </CarouselItem>
-                                <CarouselItem className="flex flex-col justify-center items-center">
-                                    <p>
-                                        Mi recorrido es amplio y variado, y me permite la adaptación a diferentes industrias y necesidades.
-                                    </p>
-                                    <p>
-                                        Hoy, tengo la suerte de trabajar para mí misma, lo que me ha llevado a expandir mis horizontes y ofrecer mis servicios en el mercado español. Mi objetivo es cruzar fronteras y colaborar con quienes buscan <strong>potenciar su presencia digital</strong>. Estoy aquí para aportar toda mi experiencia y dedicación, orientándome siempre a las necesidades específicas de cada proyecto.
-                                    </p>
-                                </CarouselItem>
-                                <CarouselItem className="flex flex-col justify-center items-center">
-                                    <p>
-                                        Creo firmemente en la importancia de la <strong>transparencia, la innovación y el compromiso</strong>. Mi objetivo es ayudar a las marcas a contar su historia de manera auténtica y efectiva, conectando con su audiencia de una manera genuina.
-                                    </p>
-                                    <p>
-
-                                        Si buscas a alguien que combine profesionalidad con un trato cercano y personalizado, estaré encantada de ayudarte a alcanzar tus metas.  <strong>¡Conectemos y hagamos crecer tu marca juntos!
-                                        </strong>
-                                    </p>
-
-                                </CarouselItem>
-                            </CarouselContent>
-                            <div className="flex justify-between items-center mt-4">
-                                <div className="flex gap-4">
-                                    <CarouselPrevious className="static" />
-                                    <CarouselNext className="static" />
-                                </div>
-                                <div className="py-2 text-center text-sm text-primary">
-                                    {current} / {count}
-                                </div>
-                            </div>
-                        </Carousel>
-                        {/* <p className="mb-4">
-                            ¡Hola! Soy Evelyn Bogado y estoy aquí para ayudarte a explorar el mundo del marketing consciente.
+                    <div className="max-w-[65ch] text-muted-foreground xl:col-span-7 xl:col-start-5 [&>p+p]:mt-6">
+                        <p className="reveal">
+                            ¡Hola! Soy Eve, <Em>licenciada en Publicidad</Em> y especializada en <Em>marketing digital</Em>. Mi formación académica, junto con mi experiencia práctica, abarca tanto el mercado <Em>latinoamericano</Em> como el <Em>europeo</Em>.
                         </p>
-                        <p className="mb-4">
-                            ¡Construyamos juntos una presencia digital que refleje tus valores y conecte de verdad con tu audiencia!
-                        </p> */}
-                        <Link href="https://www.instagram.com/evelyn.digitalmkt/" target="_blank" rel="noopener noreferrer" className="flex justify-center group">
-                            <Instagram className="w-full aspect-[2/1] sm:scale-50" />
-                        </Link>
+                        <p className="reveal">
+                            Constantemente estoy en aprendizaje, por lo que siempre estoy realizando un curso nuevo. Entre ellos se destacan los de community management, UX/UI, programación web, diseño, entre otros. Estas competencias me han permitido desarrollarme plenamente en el vasto campo de la comunicación y el marketing digital.
+                        </p>
+                        <p className="reveal">
+                            Mi recorrido es amplio y variado, y me permite la adaptación a diferentes industrias y necesidades.
+                        </p>
+                        <p className="reveal">
+                            Hoy, tengo la suerte de trabajar para mí misma, lo que me ha llevado a expandir mis horizontes y ofrecer mis servicios en el mercado español. Mi objetivo es cruzar fronteras y colaborar con quienes buscan <Em>potenciar su presencia digital</Em>. Estoy aquí para aportar toda mi experiencia y dedicación, orientándome siempre a las necesidades específicas de cada proyecto.
+                        </p>
+                        <p className="reveal">
+                            Creo firmemente en la importancia de la <Em>transparencia, la innovación y el compromiso</Em>. Mi objetivo es ayudar a las marcas a contar su historia de manera auténtica y efectiva, conectando con su audiencia de una manera genuina.
+                        </p>
+                        <p className="reveal">
+                            Si buscas a alguien que combine profesionalidad con un trato cercano y personalizado, estaré encantada de ayudarte a alcanzar tus metas.
+                        </p>
+                        <p className="reveal !mt-12 max-w-[40ch] text-lead text-foreground">
+                            ¡Conectemos y hagamos crecer tu marca juntos!
+                        </p>
+                        <p className="reveal !mt-8">
+                            <a
+                                href="https://www.instagram.com/evelyn.digitalmkt/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex min-h-11 items-center text-[15px] font-medium text-link underline decoration-1 underline-offset-[3px]"
+                            >
+                                Instagram
+                            </a>
+                        </p>
                     </div>
                 </div>
-              </div>
             </div>
         </section>
     )

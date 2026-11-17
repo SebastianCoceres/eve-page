@@ -1,5 +1,5 @@
 import { createStore } from 'zustand'
-import { ServiceKeys } from '@/components/sections/Servicios'
+import { ServiceKeys } from '@/lib/services'
 
 export type ServiceState = {
     selectedService: ServiceKeys | undefined

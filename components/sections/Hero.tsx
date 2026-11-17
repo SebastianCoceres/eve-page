@@ -1,42 +1,65 @@
 'use client'
 import Image from "next/image";
+import type { MouseEvent } from "react";
 import imagen from "@/public/fondo-hero.webp";
-import { Logo } from "@/components/ui/Logo";
 import Heading from "@/components/ui/Heading";
 import { Button } from "@/components/ui/Button";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useHeroAnimation } from "@/hooks/useHeroAnimation";
-import Link from "next/link";
+import { scrollToSection } from "@/lib/scroll";
 
+const values = ["Transparencia", "Innovación", "Compromiso"] as const
 
 export const Hero = () => {
-    const { ref } = useIsInViewWithStore("home")
+    const { ref, setSelectedNavbarItem } = useIsInViewWithStore("home")
     const heroScope = useHeroAnimation();
+
+    const goTo = (event: MouseEvent<HTMLAnchorElement>, key: "contact" | "about") => {
+        event.preventDefault()
+        setSelectedNavbarItem(key)
+        scrollToSection(key)
+    }
+
     return (
-        <section id="home" className="relative  flex flex-col justify-center items-center flex-fill min-h-screen py-20 md:py-32">
-            <div className="absolute inset-0 -z-[1]">
-                <div className="absolute inset-0 lg:bg-hero-pattern bg-no-repeat bg-cover opacity-20"></div>
-                <div className="absolute right-0 w-full h-full md:w-2/3">
-                    <Image priority src={imagen} alt="" fill className="object-cover mask-gradient grayscale "></Image>
-                </div>
-            </div>
-            <div ref={ref} className="flex container md:max-w-6xl mx-auto">
-                <div ref={heroScope} className="md:w-2/3 text-balance flex flex-col justify-center items-start">
-                    <div className="text-center hero-reveal">
-                        <Heading is="h1" className="hidden md:block">
-                            <span className="sr-only">Evelyn Bogado</span>
-                            <Logo />
-                        </Heading>
-                        <Heading is="h2" className="relative z-[1] text-left">
-                            Vibra alto con un marketing consciente
-                        </Heading>
+        <section id="home" tabIndex={-1} className="scroll-mt-16 pt-16 pb-24 focus:outline-none md:pt-24 md:pb-32 xl:pt-32 xl:pb-40">
+            <div ref={ref} className="container">
+                <div ref={heroScope}>
+                    <div className="grid gap-12 md:grid-cols-12 md:items-end md:gap-x-6">
+                        <div className="md:col-span-8">
+                            <p className="hero-reveal text-eyebrow">¡Hola! Soy Eve 👋</p>
+                            <Heading is="h1" className="hero-reveal mt-4">Evelyn Bogado</Heading>
+                            <p className="hero-reveal mt-8 max-w-[40ch] text-lead text-foreground">
+                                Vibra alto con un marketing consciente. Ayudo a marcas a crecer de forma auténtica y ética.
+                            </p>
+                            <div className="hero-reveal mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+                                <Button asChild>
+                                    <a href="#contact" onClick={(event) => goTo(event, "contact")}>Contáctame</a>
+                                </Button>
+                                <Button asChild variant="quiet" size="inline">
+                                    <a href="#about" onClick={(event) => goTo(event, "about")}>Quiero conocerte más</a>
+                                </Button>
+                            </div>
+                        </div>
+
+                        <ul className="hero-reveal border-t border-hairline md:col-span-4 md:col-start-9">
+                            {values.map((value) => (
+                                <li key={value} className="border-b border-hairline py-3 text-[15px] text-foreground">
+                                    {value}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                    <Button size={"xl"} className={"mt-4 hero-reveal"} rounded={"full"}>
-                        <Link href="#contact">Contáctame</Link>
-                    </Button>
-                    <Button variant={"outline"} size={"xl"} className={"mt-4 text-primary hero-reveal"} rounded={"full"}>
-                        <Link href="#about">Quiero conocerte más</Link>
-                    </Button>
+
+                    <div className="hero-image relative mt-16 aspect-[4/5] overflow-hidden bg-surface md:aspect-[2/1]">
+                        <Image
+                            priority
+                            src={imagen}
+                            alt="Evelyn Bogado en su espacio de trabajo"
+                            fill
+                            sizes="(min-width: 1280px) 1200px, 100vw"
+                            className="object-cover object-[64%_30%] md:object-[70%_40%]"
+                        />
+                    </div>
                 </div>
             </div>
         </section>

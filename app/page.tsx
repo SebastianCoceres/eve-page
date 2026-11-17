@@ -12,21 +12,25 @@ export const metadata: Metadata = {
   description: "Vibra alto con un marketing consciente",
 };
 
-
 export default function Home() {
-
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-xs focus:bg-primary focus:px-4 focus:text-[15px] focus:font-medium focus:text-primary-foreground"
+      >
+        Saltar al contenido
+      </a>
+      <header className="sticky top-0 z-50">
         <Navbar />
       </header>
-      <main >
+      <main id="main" tabIndex={-1} className="focus:outline-none">
         <Hero />
         <Intro />
         <Servicios />
         <SobreMi />
         <Contacto />
-      </main >
+      </main>
       <Footer />
     </>
   );

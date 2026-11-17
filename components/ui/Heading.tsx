@@ -1,30 +1,45 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-type HeadingVariant = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+type HeadingElement = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+type HeadingVariant = 'display' | 'title' | 'subtitle' | 'item';
 
-interface _Heading extends React.HTMLAttributes<HTMLHeadingElement> {
-    is?: HeadingVariant;
+interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
+    is?: HeadingElement;
+    variant?: HeadingVariant;
     ref?: React.Ref<HTMLHeadingElement>;
 }
 
-const Heading: React.FC<_Heading> = ({ is = 'h1', ref, className, children }) => {
+// The element carries the document outline; the variant carries the look.
+// Serif display for the voice, Geist 500 for list items. Never uppercase.
+const variantClasses: Record<HeadingVariant, string> = {
+    display: 'text-display',
+    title: 'text-title',
+    subtitle: 'text-subtitle',
+    item: 'font-sans text-xl font-medium leading-[1.35] tracking-[-0.005em]',
+};
+
+const defaultVariant: Record<HeadingElement, HeadingVariant> = {
+    h1: 'display',
+    h2: 'title',
+    h3: 'subtitle',
+    h4: 'item',
+    h5: 'item',
+    h6: 'item',
+};
+
+const Heading: React.FC<HeadingProps> = ({ is = 'h2', variant, ref, className, children, ...props }) => {
     const Component = is;
-    const baseClasses = {
-        'h1': 'text-5xl md:text-7xl font-extrabold my-4',
-        'h2': 'text-3xl md:text-5xl font-semibold my-4',
-        'h3': 'text-xl md:text-2xl font-medium my-4',
-        'h4': 'text-lg md:text-xl font-medium my-4',
-        'h5': 'text-base md:text-lg font-medium my-4',
-        'h6': 'text-sm md:text-base font-medium my-4',
-    };
 
-    const classes = cn(
-        baseClasses[is as keyof typeof baseClasses],
-        className
+    return (
+        <Component
+            className={cn('text-foreground', variantClasses[variant ?? defaultVariant[is]], className)}
+            ref={ref}
+            {...props}
+        >
+            {children}
+        </Component>
     );
-
-    return <Component className={`${classes}`} ref={ref}>{children}</Component>;
 };
 
 export default Heading;

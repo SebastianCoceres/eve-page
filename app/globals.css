@@ -1,143 +1,179 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/*
+ * "Cal y cobalto": a whitewashed page at noon. White does the work, one cobalt
+ * marks decisions, and a single orange dot marks the selected service.
+ * Only two breakpoints exist: md (768px) and xl (1280px).
+ */
 
-@theme inline {
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-
-  --color-error: hsl(var(--error));
-  --color-error-foreground: hsl(var(--error-foreground));
-
-  --color-success: hsl(var(--success));
-  --color-success-foreground: hsl(var(--success-foreground));
-
-  --color-warning: hsl(var(--warning));
-  --color-warning-foreground: hsl(var(--warning-foreground));
-
-  --color-info: hsl(var(--info));
-  --color-info-foreground: hsl(var(--info-foreground));
-
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-
-  --background-image-hero-pattern: url('/fondo.png');
-
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
-  }
-  @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
-  }
+@theme {
+  --breakpoint-sm: initial;
+  --breakpoint-lg: initial;
+  --breakpoint-2xl: initial;
 }
 
-@utility container {
-  margin-inline: auto;
-  padding-inline: 2rem;
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-hairline: var(--hairline);
+  --color-input-border: var(--input-border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+  --color-ring: var(--focus-ring);
+  --color-error: var(--error);
+  --color-success: var(--success);
 
-  @media (width >= theme(--breakpoint-2xl)) {
-    max-width: 1400px;
-  }
+  --font-display: var(--font-caslon-display), "Times New Roman", serif;
+  --font-serif: var(--font-caslon-text), "Times New Roman", serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xs: 2px;
+
+  /* Flat world: no box-shadows anywhere. */
+  --shadow-*: initial;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
   :root {
-    --background: 26 100% 99%;
-    --foreground: 0 0% 13%;
-
-    --primary: 27 33% 42%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 200 39% 43%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
-
-    --error: 3 100% 89%;
-    --error-foreground: 0 0% 9%;
-
-    --info: 213 84% 74%;
-    --info-foreground: 0 0% 9%;
-
-    --success: 120 60% 67%;
-    --success-foreground: 0 0% 9%;
-
-    --warning: 60 97% 79%;
-    --warning-foreground: 0 0% 9%;
-
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 4%;
-
-    --radius: 0.5rem;
+    --background: #fafaf7;
+    --surface: #f1f0ea;
+    --field: #ffffff;
+    --foreground: #16181d;
+    --muted-foreground: #565b66;
+    --hairline: #deddd6;
+    --input-border: #8c909a;
+    --primary: #1e4ba8;
+    --primary-hover: #173c88;
+    --primary-foreground: #ffffff;
+    --accent: #e2672b;
+    --link: #1e4ba8;
+    --focus-ring: #1e4ba8;
+    --error: #b3261e;
+    --success: #2e6a4e;
   }
+}
+
+/* Content column: 1200px max, 24px gutter below 768px, 40px from 768px up. */
+@utility container {
+  width: 100%;
+  max-width: calc(1200px + 80px);
+  margin-inline: auto;
+  padding-inline: 24px;
+
+  @media (width >= 768px) {
+    padding-inline: 40px;
+  }
+}
+
+/* Vertical rhythm shared by every content section. */
+@utility section-pad {
+  padding-block: 96px;
+
+  @media (width >= 768px) {
+    padding-block: 128px;
+  }
+
+  @media (width >= 1280px) {
+    padding-block: 160px;
+  }
+}
+
+@utility text-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.75rem, 1.6rem + 5.2vw, 5.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@utility text-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+@utility text-subtitle {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@utility text-lead {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  line-height: 1.45;
+}
+
+@utility text-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--muted-foreground);
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-hairline;
   }
 
-  html,
-  body {
-    max-width: 100%;
-    overflow-x: hidden;
+  html {
+    scrollbar-color: var(--input-border) var(--surface);
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     font-size: 16px;
+    line-height: 1.6;
+    font-weight: 400;
+    overflow-x: clip;
   }
 
-  .mask-gradient {
-    mask-image: linear-gradient(to left, black 0%, transparent 90%);
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  input,
+  textarea {
+    caret-color: var(--primary);
   }
 
-  /* For IE, Edge and Firefox */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  a,
+  button,
+  [role="button"],
+  [role="combobox"] {
+    -webkit-tap-highlight-color: transparent;
   }
 
-  p:not([class]) {
-    @apply mb-2;
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 }
