@@ -44,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${caslonDisplay.variable} ${caslonText.variable} ${geist.variable}`}>
-      <body className="font-sans antialiased">
+      <body className="relative font-sans antialiased">
         <ServiceProvider>
           <NavbarProvider>
             {children}

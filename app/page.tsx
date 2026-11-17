@@ -6,6 +6,8 @@ import { NavbarSection as Navbar } from "@/components/sections/Navbar";
 import Footer from "@/components/sections/Footer";
 import Servicios from "@/components/sections/Servicios";
 import Contacto from "@/components/sections/Contacto";
+import { SectionMark } from "@/components/ui/SectionMark";
+import { TravelingSun } from "@/components/ui/TravelingSun";
 
 export const metadata: Metadata = {
   title: "Evelyn Bogado",
@@ -24,11 +26,16 @@ export default function Home() {
       <header className="sticky top-0 z-50">
         <Navbar />
       </header>
-      <main id="main" tabIndex={-1} className="focus:outline-none">
+      {/* "El viaje del sol": one sun behind everything, rising in the hero and setting in the footer. */}
+      <TravelingSun />
+      <main id="main" tabIndex={-1} className="relative z-10 focus:outline-none">
         <Hero />
         <Intro />
+        {/* A single seigaiha scale as a quiet pause between chapters; elsewhere whitespace alone. */}
+        <SectionMark />
         <Servicios />
         <SobreMi />
+        <SectionMark />
         <Contacto />
       </main>
       <Footer />

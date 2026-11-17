@@ -8,7 +8,7 @@ export const Intro = () => {
     const scope = useFadeStagger()
 
     return (
-        <section id="focus" tabIndex={-1} className="section-pad scroll-mt-16 bg-surface focus:outline-none">
+        <section id="focus" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
             <div ref={scope} className="container">
                 <div ref={ref} className="grid gap-y-8 md:grid-cols-12 md:gap-x-6">
                     <Heading is="h2" className="reveal md:col-span-12 xl:col-span-4">Mi enfoque</Heading>

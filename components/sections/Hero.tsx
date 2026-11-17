@@ -1,8 +1,8 @@
 'use client'
-import { useRef, type MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
-import { HeroSeigaiha } from "@/components/ui/HeroSeigaiha";
+import { SeaField } from "@/components/ui/SeaField";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useHeroAnimation } from "@/hooks/useHeroAnimation";
 import { scrollToSection } from "@/lib/scroll";
@@ -12,7 +12,6 @@ const values = ["Transparencia", "Innovación", "Compromiso"] as const
 export const Hero = () => {
     const { ref, setSelectedNavbarItem } = useIsInViewWithStore("home")
     const heroScope = useHeroAnimation();
-    const sectionRef = useRef<HTMLElement>(null)
 
     const goTo = (event: MouseEvent<HTMLAnchorElement>, key: "contact" | "about") => {
         event.preventDefault()
@@ -22,13 +21,12 @@ export const Hero = () => {
 
     return (
         <section
-            ref={sectionRef}
             id="home"
             tabIndex={-1}
             className="relative scroll-mt-16 overflow-hidden pt-16 focus:outline-none md:pt-24 xl:pt-32"
         >
             {/* Content first, in its own band: the waves never run under the text. */}
-            <div ref={ref} className="container relative z-10 pb-12 md:pb-20">
+            <div ref={ref} className="container relative z-10 pb-6 md:pb-20">
                 <div ref={heroScope} className="md:max-w-[58%]">
                     <p className="hero-reveal text-eyebrow">¡Hola! Soy Eve 👋</p>
                     {/* The logotype is the hero's lead element; the h1 keeps a readable text name. */}
@@ -57,16 +55,20 @@ export const Hero = () => {
                 </div>
             </div>
 
-            {/* "Seigaiha: el mar y el sol" — full bleed under the content. */}
-            <HeroSeigaiha sectionRef={sectionRef}>
-                {/* Artist's seal, stamped on the print's lower-right corner. */}
-                <span
-                    aria-hidden="true"
-                    className="absolute bottom-6 right-6 z-10 flex size-10 items-center justify-center bg-sun font-display text-[15px] leading-none text-field md:bottom-10 md:right-10"
+            {/* The sea, full bleed under the content; its swell climbs toward the sun. The
+                anchor marks where the sun rises: TravelingSun starts there, and under
+                reduced motion it is the static sun. */}
+            <SeaField
+                kind="hero"
+                className="pt-[calc(var(--sun-d)*(1-var(--sun-sink)))] [--sun-d:160px] [--sun-sink:0.65] md:pt-0 md:[--sun-d:400px] md:[--sun-sink:0.4] xl:[--sun-d:520px]"
+            >
+                <div
+                    data-sun-anchor="hero"
+                    className="pointer-events-none absolute right-[calc(var(--sun-d)*-0.28)] bottom-[calc(192px-var(--sun-d)*var(--sun-sink))] size-[var(--sun-d)] motion-safe:invisible md:bottom-[calc(280px-var(--sun-d)*var(--sun-sink))]"
                 >
-                    EB
-                </span>
-            </HeroSeigaiha>
+                    <div className="size-full rounded-full bg-sun" />
+                </div>
+            </SeaField>
         </section>
     )
 }

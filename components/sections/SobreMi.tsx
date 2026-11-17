@@ -18,7 +18,7 @@ export const SobreMi = () => {
             <div ref={scope} className="container">
                 <div ref={ref} className="grid gap-y-8 xl:grid-cols-12 xl:gap-x-6">
                     <div className="reveal xl:col-span-4">
-                        <Heading is="h2" className="xl:sticky xl:top-24">Sobre mí</Heading>
+                        <Heading is="h2">Sobre mí</Heading>
                     </div>
 
                     <div className="max-w-[65ch] text-muted-foreground xl:col-span-7 xl:col-start-5 [&>p+p]:mt-6">

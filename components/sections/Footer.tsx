@@ -1,4 +1,5 @@
 import { Logo } from "@/components/ui/Logo";
+import { SeaField } from "@/components/ui/SeaField";
 import { InstagramIcon, LinkedinIcon } from "@/components/vectors/SocialIcons";
 
 const socials = [
@@ -6,10 +7,13 @@ const socials = [
     { label: "LinkedIn", href: "https://www.linkedin.com/in/evebogado/", Icon: LinkedinIcon },
 ] as const
 
+// Sunset: the footer content sits above a shorter sea whose swell is mirrored
+// (highest on the left), and the day ends there: from 768px up the sun sets on the
+// left, into the swell, aligned with the content column; on phones, on the right.
 export const Footer = () => {
     return (
-        <footer className="border-t border-hairline bg-surface">
-            <div className="container grid items-center gap-6 py-12 md:grid-cols-3">
+        <footer className="relative z-10 overflow-hidden">
+            <div className="container grid items-center gap-6 pt-12 pb-20 md:grid-cols-3 md:pb-28">
                 <a href="#home" className="inline-flex min-h-11 w-fit items-center text-foreground">
                     <span className="sr-only">Evelyn Bogado, volver al inicio</span>
                     <span aria-hidden="true" className="block h-6 w-[154px] [&_svg]:size-full">
@@ -35,6 +39,21 @@ export const Footer = () => {
                     © {new Date().getFullYear()} Evelyn Bogado
                 </p>
             </div>
+
+            {/* Where the sun sets: TravelingSun ends on this anchor; under reduced
+                motion it is the static sunset. */}
+            <SeaField kind="footer" className="[--sun-d:140px] [--sun-sink:0.75] md:[--sun-d:200px] xl:[--sun-d:220px]">
+                <div
+                    data-sun-anchor="footer"
+                    className="pointer-events-none absolute right-[calc(var(--sun-d)*-0.3)] bottom-[calc(120px-var(--sun-d)*var(--sun-sink))] size-[var(--sun-d)] motion-safe:invisible md:bottom-[calc(200px-var(--sun-d)*var(--sun-sink))] md:right-auto md:left-[max(40px,calc((100%-1200px)/2))]"
+                >
+                    <div className="size-full rounded-full bg-sun-warm" />
+                </div>
+                {/* The artist's seal: the page's final stamp. */}
+                <span className="absolute bottom-6 right-6 z-10 flex size-10 items-center justify-center bg-sun font-display text-[15px] leading-none text-field md:bottom-8 md:right-10">
+                    EB
+                </span>
+            </SeaField>
         </footer>
     )
 }
