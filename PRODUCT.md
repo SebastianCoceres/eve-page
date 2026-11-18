@@ -36,7 +36,7 @@ Single-page landing in Spanish. Sections: Hero, Mi enfoque, Servicios, Sobre mí
 
 ## Evidence on Hand
 
-- Portrait photo `public/fondo-hero.webp` exists but is intentionally NOT used: the client chose a no-photo, graphic-led site (code-generated seigaiha sea and traveling sun). Do not reintroduce it.
+- Portrait photo `public/fondo-hero.webp` is used exactly once: in Sobre mí, under the heading, inside an arched doorway frame, printed on the washi paper. The hero has no photo (the logotype and the code-generated seigaiha sea and sun lead it). Do not add it anywhere else.
 - Logo: `public/logo-sin-fondo.png`, `public/logotipo.svg`.
 - No testimonials, client logos, case studies, or metrics exist. Do not fabricate any.
 
