@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-// Primary = cobalt pill with white text (7.99:1). Flat: no shadow, no border weight.
+// Primary = cobalt pill with washi-paper text (7.2:1). Flat: no shadow, no border weight.
 // The outline ring follows the pill because outlines track border-radius.
 const buttonVariants = cva(
     "inline-flex items-center justify-center gap-2 whitespace-nowrap font-sans font-medium transition-colors duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:cursor-progress motion-reduce:transition-none",
@@ -12,7 +12,8 @@ const buttonVariants = cva(
         variants: {
             variant: {
                 default: "rounded-full bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-hover",
-                link: "text-link underline decoration-1 underline-offset-[3px] decoration-transparent hover:decoration-current",
+                // The one text-link rule (see the `link` utility in globals.css).
+                link: "link",
                 quiet: "text-foreground underline decoration-1 underline-offset-[3px] decoration-hairline hover:decoration-current",
                 outline: "rounded-field border border-input-border bg-field text-foreground hover:border-muted-foreground",
             },

@@ -2,8 +2,9 @@
 @plugin "tailwindcss-animate";
 
 /*
- * "Cal y cobalto": a whitewashed page at noon. White does the work, one cobalt
- * marks decisions, and a single orange dot marks the selected service.
+ * "Washi y cobalto": a day on warm washi paper. The paper turns from morning to
+ * an autumn dusk with the scroll (one scrubbed tween on --paper, see
+ * hooks/usePaperDay); one cobalt marks decisions; one orange sun crosses it.
  * Only two breakpoints exist: md (768px) and xl (1280px).
  */
 
@@ -33,12 +34,14 @@
   /* Hero: the seigaiha lines use `primary`; the sun is the one orange disc. */
   --color-sun: var(--sun);
   --color-sun-warm: var(--sun-warm);
+  --color-sun-now: var(--sun-now);
+  --color-paper: var(--paper);
 
   --font-display: var(--font-caslon-display), "Times New Roman", serif;
   --font-serif: var(--font-caslon-text), "Times New Roman", serif;
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 
-  /* Shape rule: pills for primary actions, 6px for form fields, one arch on the portrait, everything else square. */
+  /* Shape rule: pills for primary actions, 6px for form fields, everything else square. */
   --radius-field: 6px;
 
   /* Flat world: no box-shadows anywhere. */
@@ -49,24 +52,61 @@
 
 @layer base {
   :root {
-    --background: #fafaf7;
-    --surface: #f1f0ea;
-    --field: #ffffff;
+    /* The paper's day, flat colours only (no gradients). Contrast on the darkest
+       stop (dusk): ink 12.1:1, muted 5.4:1, cobalt 5.5:1, input border 3.2:1. */
+    --paper-morning: #f3eee3;
+    --paper-midday: #efe7d8;
+    --paper-afternoon: #eadfca;
+    --paper-dusk: #e4d3b9;
+    /* The live paper: tweened by usePaperDay; a static midday under reduced motion. */
+    --paper: var(--paper-morning);
+
+    /* Every surface is the paper or a fixed step of it, so nothing shows a stray rectangle. */
+    --background: var(--paper);
+    --surface: color-mix(in oklab, var(--paper), #6b5233 6%);
+    --field: color-mix(in oklab, var(--paper), #fffcf5 28%);
+    --hairline: color-mix(in oklab, var(--paper), #16181d 13%);
     --foreground: #16181d;
-    --muted-foreground: #565b66;
-    --hairline: #deddd6;
-    --input-border: #8c909a;
+    --muted-foreground: #57504a;
+    --input-border: #7d7367;
     --primary: #1e4ba8;
     --primary-hover: #173c88;
-    --primary-foreground: #ffffff;
+    --primary-foreground: #f6f1e7;
     --accent: #e2672b;
     --link: #1e4ba8;
     --focus-ring: #1e4ba8;
     --error: #b3261e;
     --success: #2e6a4e;
 
+    /* The sun warms from orange to persimmon (kaki) as the day turns; --sun-now
+       is tweened together with the paper. */
     --sun: #e2672b;
-    --sun-warm: #d2481f;
+    --sun-warm: #cc4a1e;
+    --sun-now: var(--sun);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --paper: var(--paper-midday);
+    }
+  }
+}
+
+/* Every text link: cobalt, a 1px underline at 40% that turns solid on hover (150ms). */
+@utility link {
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in oklab, var(--link) 40%, transparent);
+  transition: text-decoration-color 150ms var(--ease-out);
+
+  &:hover {
+    text-decoration-color: var(--link);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 }
 
@@ -126,14 +166,6 @@
   line-height: 1.45;
 }
 
-@utility text-eyebrow {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--muted-foreground);
-}
 
 @layer base {
   * {

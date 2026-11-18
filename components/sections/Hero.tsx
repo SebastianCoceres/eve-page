@@ -28,20 +28,20 @@ export const Hero = () => {
             {/* Content first, in its own band: the waves never run under the text. */}
             <div ref={ref} className="container relative z-10 pb-6 md:pb-20">
                 <div ref={heroScope} className="md:max-w-[58%]">
-                    <p className="hero-reveal text-eyebrow">¡Hola! Soy Eve 👋</p>
-                    {/* The logotype is the hero's lead element; the h1 keeps a readable text name. */}
-                    <h1 className="hero-reveal mt-6 text-foreground">
+                    {/* The logotype is the hero's lead element; the h1 keeps a readable text name.
+                        No kicker above it: the greeting opens the serif lead below. */}
+                    <h1 className="hero-reveal text-foreground">
                         <span className="sr-only">Evelyn Bogado — Publicidad y marketing digital</span>
                         <Logo aria-hidden="true" className="block h-auto w-full max-w-[340px] md:max-w-[560px]" />
                     </h1>
                     <p className="hero-reveal mt-10 max-w-[40ch] text-lead text-foreground">
-                        Vibra alto con un marketing consciente. Ayudo a marcas a crecer de forma auténtica y ética.
+                        ¡Hola! Soy Eve. Vibra alto con un marketing consciente. Ayudo a marcas a crecer de forma auténtica y ética.
                     </p>
                     <div className="hero-reveal mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
                         <Button asChild>
                             <a href="#contact" onClick={(event) => goTo(event, "contact")}>Contáctame</a>
                         </Button>
-                        <Button asChild variant="quiet" size="inline">
+                        <Button asChild variant="link" size="inline">
                             <a href="#about" onClick={(event) => goTo(event, "about")}>Quiero conocerte más</a>
                         </Button>
                     </div>

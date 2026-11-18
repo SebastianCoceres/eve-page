@@ -10,8 +10,8 @@ const RINGS = [6, 12, 18, 23.5];
 const arc = (r: number) => `M${24 - r} 24A${r} ${r} 0 0 1 ${24 + r} 24`;
 
 /**
- * A quiet section mark: a single seigaiha scale on the content axis, like a mon
- * stamped between chapters. It draws once when it enters the viewport, arcs from
+ * A quiet section mark: a single seigaiha scale on the left text column's edge
+ * (the gutter), like a mon stamped between chapters. It draws once when it enters the viewport, arcs from
  * the innermost outward (0.6s, power2.out). Reduced motion: static.
  * Decorative: hidden from assistive tech.
  */
@@ -33,7 +33,7 @@ export function SectionMark() {
     }, { scope });
 
     return (
-        <div ref={scope} aria-hidden="true" className="container flex justify-center">
+        <div ref={scope} aria-hidden="true" className="container flex justify-start">
             <svg data-section-mark width={SIZE} height={SIZE / 2} viewBox={`0 0 ${SIZE} ${SIZE / 2}`} className="block overflow-visible" focusable="false">
                 {RINGS.map((r) => (
                     <path

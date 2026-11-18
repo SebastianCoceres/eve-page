@@ -4,9 +4,11 @@ import Heading from "@/components/ui/Heading";
 import { useFadeStagger } from "@/hooks/useFadeStagger";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 
-// Key phrases switch voice to the serif italic in full ink; the rest stays muted.
+// Key phrases switch voice to the serif italic at 0.98em, which matches the Geist
+// x-height (measured 53 vs 54 units per 100px), and
+// stay in the paragraph colour: only the italic carries the emphasis.
 const Em = ({ children }: { children: ReactNode }) => (
-    <em className="font-serif text-[1.0625em] italic text-foreground">{children}</em>
+    <em className="font-serif text-[0.98em] italic">{children}</em>
 )
 
 export const SobreMi = () => {
@@ -48,7 +50,7 @@ export const SobreMi = () => {
                                 href="https://www.instagram.com/evelyn.digitalmkt/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex min-h-11 items-center text-[15px] font-medium text-link underline decoration-1 underline-offset-[3px]"
+                                className="link inline-flex min-h-11 items-center text-[15px] font-medium"
                             >
                                 Instagram
                             </a>

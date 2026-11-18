@@ -7,19 +7,36 @@ const socials = [
     { label: "LinkedIn", href: "https://www.linkedin.com/in/evebogado/", Icon: LinkedinIcon },
 ] as const
 
-// Sunset: the footer content sits above a shorter sea whose swell is mirrored
-// (highest on the left), and the day ends there: from 768px up the sun sets on the
-// left, into the swell, aligned with the content column; on phones, on the right.
-// The footer has no top padding: Contacto's section padding is the pause before the
-// close, and the footer content and the sea read as one block. The 96px under the
-// content keeps the setting sun's visible cap 48px+ clear of the text.
+/**
+ * The artist's seal (hanko), the page's final stamp: a 42px square in the setting
+ * sun's persimmon, an inset 1.25px paper-coloured border and an E and B joined by
+ * their top and bottom bars, drawn as 1.5px paper-coloured strokes.
+ */
+const Seal = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 42 42" width="42" height="42" aria-hidden="true" focusable="false" className={className}>
+        <rect width="42" height="42" fill="var(--sun-warm)" />
+        <rect x="3.5" y="3.5" width="35" height="35" fill="none" stroke="var(--paper)" strokeWidth="1.25" />
+        <g fill="none" stroke="var(--paper)" strokeWidth="1.5" strokeLinejoin="miter">
+            <path d="M21 12.75H13V29.25H21M13 21H18.25" />
+            <path d="M21 29.25V12.75H24.9a4.125 4.125 0 0 1 0 8.25H21M21 21H25.4a4.125 4.125 0 0 1 0 8.25H21" />
+        </g>
+    </svg>
+)
+
+// Sunset: the footer content sits above a shorter sea that stays calm on the left
+// and swells toward the right. The day ends on the left at every width (east to
+// west), aligned with the content column: the sun sinks into the calm trough with
+// about 45% of its disc above the crests, so two or three scales cross its
+// waterline. The footer has no top padding: Contacto's section padding is the
+// pause before the close. The 96px under the content keeps the sun's cap 48px+
+// clear of the text. The seal closes the content column on the right.
 export const Footer = () => {
     return (
         <footer className="relative z-10 overflow-hidden">
             <div className="container grid items-center gap-6 pb-24 md:grid-cols-3">
                 <a href="#home" className="inline-flex min-h-11 w-fit items-center text-foreground">
                     <span className="sr-only">Evelyn Bogado, volver al inicio</span>
-                    <span aria-hidden="true" className="block h-6 w-[154px] [&_svg]:size-full">
+                    <span aria-hidden="true" className="block h-6 w-[150px] [&_svg]:size-full">
                         <Logo />
                     </span>
                 </a>
@@ -30,7 +47,7 @@ export const Footer = () => {
                                 href={href}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex min-h-11 items-center gap-2 text-[15px] text-foreground underline decoration-1 decoration-transparent underline-offset-[3px] transition-colors duration-150 ease-out hover:decoration-current motion-reduce:transition-none"
+                                className="link inline-flex min-h-11 items-center gap-2 text-[15px] font-medium"
                             >
                                 <Icon className="size-5" />
                                 {label}
@@ -44,18 +61,16 @@ export const Footer = () => {
             </div>
 
             {/* Where the sun sets: TravelingSun ends on this anchor; under reduced
-                motion it is the static sunset. */}
-            <SeaField kind="footer" className="[--sun-d:140px] [--sun-sink:0.75] md:[--sun-d:200px] md:[--sun-sink:0.85] xl:[--sun-d:220px]">
+                motion it is the static sunset. Sizes and offsets match the sea
+                presets in lib/seigaiha (field 120/200px, trough on the left). */}
+            <SeaField kind="footer">
                 <div
                     data-sun-anchor="footer"
-                    className="pointer-events-none absolute right-[calc(var(--sun-d)*-0.3)] bottom-[calc(120px-var(--sun-d)*var(--sun-sink))] size-[var(--sun-d)] motion-safe:invisible md:bottom-[calc(200px-var(--sun-d)*var(--sun-sink))] md:right-auto md:left-[max(40px,calc((100%-1200px)/2))]"
+                    className="pointer-events-none absolute bottom-[18px] left-6 size-[120px] motion-safe:invisible md:bottom-[22px] md:left-[max(40px,calc((100%-1200px)/2))] md:size-[200px]"
                 >
                     <div className="size-full rounded-full bg-sun-warm" />
                 </div>
-                {/* The artist's seal, the page's final stamp, on the side opposite the sunset. */}
-                <span className="absolute bottom-6 left-6 z-10 flex size-10 items-center justify-center bg-sun font-display text-[15px] leading-none text-field md:bottom-8 md:left-auto md:right-10">
-                    EB
-                </span>
+                <Seal className="absolute bottom-6 right-6 z-10 md:bottom-8 md:right-[max(40px,calc((100%-1200px)/2))]" />
             </SeaField>
         </footer>
     )

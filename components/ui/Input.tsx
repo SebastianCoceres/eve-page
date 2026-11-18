@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement>
 
-// 48px field on white, 6px radius, 1px border at 3:1. Focus turns the border cobalt and adds the ring.
+// 48px field one light step above the paper, 6px radius, 1px border at 3:1 on the darkest paper. Focus turns the border cobalt and adds the ring.
 export const fieldClasses =
     "w-full rounded-field border border-input-border bg-field px-4 text-base text-foreground transition-colors duration-150 ease-out placeholder:text-muted-foreground hover:border-muted-foreground focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"
 

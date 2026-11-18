@@ -95,18 +95,21 @@ export const Contacto = () => {
     return (
         <section id="contact" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
             <div ref={scope} className="container">
-                <div ref={ref} className="grid gap-y-16 md:grid-cols-12 md:gap-x-6">
-                    <div className="reveal md:col-span-12 xl:col-span-5">
-                        <p className="text-eyebrow">¡Estoy aquí para ti!</p>
-                        <Heading is="h2" className="mt-4">Hablemos de tu proyecto:</Heading>
-                        <ul className="mt-8 flex flex-wrap gap-x-8">
+                {/* Heading and lead open the left column; from 1280px the socials close it,
+                    level with the send button, and the low afternoon sun parks between
+                    them (useTravelingSun). Below 1280px everything stacks tightly. */}
+                <div ref={ref} className="grid gap-y-12 md:grid-cols-12 md:gap-x-6 md:gap-y-16">
+                    <div className="reveal flex flex-col md:col-span-12 xl:col-span-5">
+                        <Heading is="h2">Hablemos de tu proyecto</Heading>
+                        <p className="mt-4 max-w-[40ch] text-lead text-foreground">¡Estoy aquí para ti!</p>
+                        <ul className="mt-8 flex flex-wrap gap-x-8 xl:mt-auto xl:pt-12">
                             {socials.map(({ label, href, Icon }) => (
                                 <li key={label}>
                                     <a
                                         href={href}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-link underline decoration-1 decoration-transparent underline-offset-[3px] transition-colors duration-150 ease-out hover:decoration-current motion-reduce:transition-none"
+                                        className="link inline-flex min-h-11 items-center gap-2 text-[15px] font-medium"
                                     >
                                         <Icon className="size-5" />
                                         {label}

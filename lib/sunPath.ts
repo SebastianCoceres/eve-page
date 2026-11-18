@@ -62,7 +62,13 @@ export function findZone({ section, obstacles, viewportWidth, viewportHeight, ta
         const yEnd = Math.min(section.b - radius, section.t + viewportHeight * 1.1);
 
         for (let y = section.t + radius; y <= yEnd; y += step) {
-            for (let x = radius * 0.4; x <= viewportWidth - radius * 0.4; x += step) {
+            // Parked whole: never half cut by the page edge.
+            // Parked whole (never half cut by the page edge) and on its side of the day:
+            // a west chapter never parks east of the middle, nor an east one west of it.
+            const west = targetX < 0.5;
+            const xMin = west ? radius + 8 : Math.max(radius + 8, viewportWidth / 2);
+            const xMax = west ? Math.min(viewportWidth / 2, viewportWidth - radius - 8) : viewportWidth - radius - 8;
+            for (let x = xMin; x <= xMax; x += step) {
                 if (local.some((o) => circleHitsRect(x, y, radius + CLEARANCE, o))) continue;
                 // It must be able to leave sideways through empty space.
                 const toRight = x >= viewportWidth / 2;

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
-import { findZone, parkedScroll, route, type Point, type Rect, type Zone } from "@/lib/sunPath";
+import { CLEARANCE, findZone, parkedScroll, route, type Point, type Rect, type Zone } from "@/lib/sunPath";
 
 const docRect = (element: Element): Rect => {
     const r = element.getBoundingClientRect();
@@ -33,12 +33,24 @@ function collectObstacles(): Rect[] {
 // (east to west), how high in the viewport the sun sits when it arrives, and its
 // size by time of day: smallest at midday, larger toward the horizon (as a low
 // sun looks). Sizes are tried largest first and shrink only to fit a free zone.
+// Contacto is a chapter only from 1280px, where its left column leaves the sun a
+// planned spot between the heading and the socials; narrower, the form spans the
+// width and the sun passes it by in the margin, out of view.
 const CHAPTERS = [
-    { id: "focus", targetX: 0.82, height: 0.3, sizes: [180, 150, 120] },
-    { id: "services", targetX: 0.72, height: 0.26, sizes: [150, 130, 110] },
-    { id: "about", targetX: 0.2, height: 0.42, sizes: [200, 170, 140, 120] },
-    { id: "contact", targetX: 0.15, height: 0.52, sizes: [220, 180, 150, 120] },
+    { id: "focus", targetX: 0.82, height: 0.3, sizes: [180, 150, 120], minWidth: 768 },
+    { id: "services", targetX: 0.72, height: 0.26, sizes: [150, 130, 110], minWidth: 768 },
+    { id: "about", targetX: 0.2, height: 0.42, sizes: [200, 170, 140, 120], minWidth: 768 },
+    { id: "contact", targetX: 0.24, height: 0.5, sizes: [220, 180, 150, 120], minWidth: 1280 },
 ] as const;
+
+// Phones: the sun only peeks in, cropped by the page edge, in the empty band
+// between two sections: east (right) at midday, west (left) in the afternoon.
+const PEEKS = [
+    { from: "focus", to: "services", side: "right" },
+    { from: "services", to: "about", side: "left" },
+] as const;
+
+type Leg = { points: Point[]; zone: Zone; at: number; hidden?: boolean };
 
 /**
  * "El viaje del sol": one sun crosses the page along a day's arc, east to west.
@@ -54,9 +66,12 @@ const CHAPTERS = [
  * One scrubbed ScrollTrigger maps scroll to the whole journey; each leg is timed
  * so the sun reaches a zone as that zone reaches its height in the viewport.
  *
- * Phones (<768px): no horizontal travel. After the hero it waits out of view by
- * the right edge and only peeks in at the section marks before setting in the
- * footer. Reduced motion: never runs; the static anchors show instead.
+ * Phones (<768px): never across or beside text. After rising in the hero it
+ * slides out to the right; it peeks in from the right edge in the empty band
+ * between Mi enfoque and Servicios, from the left edge between Servicios and
+ * Sobre mí (the side switch happens out of view, hidden), and finally slides in
+ * from the left to set in the footer sea.
+ * Reduced motion: never runs; the static anchors show instead.
  */
 export function useTravelingSun() {
     const scope = useRef<HTMLDivElement>(null);
@@ -68,10 +83,6 @@ export function useTravelingSun() {
 
         const mm = gsap.matchMedia();
         mm.add("(prefers-reduced-motion: no-preference)", () => {
-            const css = getComputedStyle(document.documentElement);
-            const warm = css.getPropertyValue("--sun-warm").trim();
-            const sunColor = css.getPropertyValue("--sun").trim();
-
             let timeline: gsap.core.Timeline | null = null;
             let trigger: ScrollTrigger | null = null;
             let introPlayed = false;
@@ -101,13 +112,13 @@ export function useTravelingSun() {
                 gsap.set(root, { width: base, height: base, opacity: 1 });
                 const place = (p: Point) => ({ x: p.x - base / 2, y: p.y - base / 2 });
 
-                const legs: Array<{ points: Point[]; zone: Zone; at: number }> = [];
+                const legs: Leg[] = [];
+                const obstacles = collectObstacles();
+                const inside = (rect: Rect) => obstacles.filter((o) => o.t >= rect.t && o.b <= rect.b);
+                const textTop = (rect: Rect) => Math.min(rect.b, ...inside(rect).map((o) => o.t));
+                const textBottom = (rect: Rect) => Math.max(rect.t, ...inside(rect).map((o) => o.b));
 
                 if (vw >= 768) {
-                    const obstacles = collectObstacles();
-                    const inside = (rect: Rect) => obstacles.filter((o) => o.t >= rect.t && o.b <= rect.b);
-                    const textTop = (rect: Rect) => Math.min(rect.b, ...inside(rect).map((o) => o.t));
-                    const textBottom = (rect: Rect) => Math.max(rect.t, ...inside(rect).map((o) => o.b));
 
                     let previous: Zone = start;
                     let previousRect = docRect(document.getElementById("home") ?? heroAnchor);
@@ -115,7 +126,7 @@ export function useTravelingSun() {
 
                     for (const chapter of CHAPTERS) {
                         const section = document.getElementById(chapter.id);
-                        if (!section) continue;
+                        if (!section || vw < chapter.minWidth) continue;
                         const rect = docRect(section);
                         const zone = findZone({
                             section: rect,
@@ -140,28 +151,41 @@ export function useTravelingSun() {
                     const gapY = seaRect ? (seaRect.t + seaRect.b) / 2 + end.d / 2 : end.y;
                     legs.push({ points: route(previous, end, gapY, vw, contentLeft, contentRight), zone: end, at: maxScroll });
                 } else {
-                    // Phones: out by the right edge, peeking in at each section mark.
-                    const d = 140;
-                    const out = (y: number): Zone => ({ x: vw + d, y, d });
-                    const peek = (y: number): Zone => ({ x: vw + d * 0.15, y, d });
-                    const marks = Array.from(document.querySelectorAll("[data-section-mark]")).map((m) => {
-                        const r = docRect(m);
-                        return (r.t + r.b) / 2;
-                    });
+                    // Phones: peeks only, never beside text (see PEEKS).
                     let time = 0;
                     let from: Zone = start;
-                    const hop = (zone: Zone, when: number) => {
+                    const hop = (zone: Zone, when: number, hidden = false) => {
                         const t = Math.min(maxScroll - 1, Math.max(time + 1, when));
-                        legs.push({ points: [{ x: from.x, y: from.y }, { x: zone.x, y: zone.y }], zone, at: t });
+                        legs.push({ points: [{ x: from.x, y: from.y }, { x: zone.x, y: zone.y }], zone, at: t, hidden });
                         from = zone;
                         time = t;
                     };
-                    for (const y of marks) {
-                        hop(out(y - vh * 0.4), y - vh * 0.9);
-                        hop(peek(y), y - vh * 0.5);
-                        hop(out(y + vh * 0.4), y - vh * 0.1);
+                    // Wholly out of view past an edge, or 40% of the disc in view.
+                    const out = (side: "left" | "right", y: number, d: number): Zone =>
+                        ({ x: side === "right" ? vw + d / 2 + 4 : -d / 2 - 4, y, d });
+                    const peek = (side: "left" | "right", y: number, d: number): Zone =>
+                        ({ x: side === "right" ? vw + d * 0.1 : -d * 0.1, y, d });
+                    let side: "left" | "right" = "right";
+
+                    // Leaves the hero sideways, toward the edge it rose from.
+                    hop(out("right", start.y, start.d), vh * 0.35);
+                    for (const p of PEEKS) {
+                        const a = document.getElementById(p.from);
+                        const b = document.getElementById(p.to);
+                        if (!a || !b) continue;
+                        const top = textBottom(docRect(a));
+                        const bottom = textTop(docRect(b));
+                        const d = Math.min(112, bottom - top - 2 * CLEARANCE);
+                        if (d < 64) continue;
+                        const y = (top + bottom) / 2;
+                        hop(out(p.side, y, d), y - vh * 0.85, p.side !== side);
+                        hop(peek(p.side, y, d), y - vh * 0.6);
+                        hop(peek(p.side, y, d), y - vh * 0.42);
+                        hop(out(p.side, y, d), y - vh * 0.28);
+                        side = p.side;
                     }
-                    hop(out(end.y - vh * 0.3), maxScroll - vh * 0.4);
+                    // Sets on the left (west): out of view down to the sea, then in.
+                    hop(out("left", end.y, end.d), maxScroll - vh * 0.35, side !== "left");
                     legs.push({ points: [{ x: from.x, y: from.y }, { x: end.x, y: end.y }], zone: end, at: maxScroll });
                 }
 
@@ -173,18 +197,17 @@ export function useTravelingSun() {
                 let time = 0;
                 for (const leg of legs) {
                     const duration = Math.max(1, leg.at - time);
+                    // A hidden leg switches sides out of view: the disc is transparent on the way.
+                    if (leg.hidden) timeline.set(root, { opacity: 0 }, time);
                     timeline.to(root, {
                         motionPath: { path: leg.points.map(place), curviness: 0.6 },
                         scale: leg.zone.d / base,
                         duration,
                     }, time);
+                    if (leg.hidden) timeline.set(root, { opacity: 1 }, time + duration);
                     time += duration;
                 }
-
-                // Warm through the afternoon: from Sobre mí to the sunset.
-                const about = document.getElementById("about");
-                const warmFrom = about ? Math.max(0, docRect(about).t - vh) : maxScroll * 0.6;
-                timeline.fromTo(disc, { backgroundColor: sunColor }, { backgroundColor: warm, duration: Math.max(1, maxScroll - warmFrom), ease: "none" }, warmFrom);
+                // The colour warms with the paper's day (--sun-now, usePaperDay).
                 // Timeline seconds equal scroll pixels.
                 if (timeline.duration() < maxScroll) timeline.set({}, {}, maxScroll);
 

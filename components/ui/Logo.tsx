@@ -2,10 +2,11 @@ import type { SVGProps } from "react";
 
 // Logotype "EVELYN BOGADO / PUBLICIDAD & MKT DIGITAL". Fills inherit currentColor so the
 // mark takes its color from a text token. The viewBox is cropped to the artwork so the
-// mark aligns flush with the text column.
+// mark aligns flush with the text column; the bottom keeps a few units under the
+// subline so its descending curves never clip at small sizes.
 export const Logo = (props: SVGProps<SVGSVGElement>) => {
     return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="15 38 1009 157" fill="currentColor" focusable="false" {...props}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="15 37 1009 162" fill="currentColor" focusable="false" {...props}>
             <g>
                 <g>
                     <path d="M15.8,41.2h64.5v8.3C70.8,46.3,45,43,28.1,43c-3.3,0-4.9,1.3-4.9,6.3v29.4c0,2.8,1.9,4.7,4.7,4.7h43.4v7.8
