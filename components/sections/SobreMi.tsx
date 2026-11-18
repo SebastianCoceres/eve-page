@@ -35,7 +35,10 @@ const Portrait = () => (
                 src="/fondo-hero.webp"
                 alt="Evelyn Bogado"
                 fill
-                sizes="(min-width: 768px) 384px, calc(100vw - 48px)"
+                // Landscape source (16:9) in a 4:5 frame: object-cover scales by height,
+                // so the rendered width is ~2.2x the frame width.
+                sizes="(min-width: 768px) 860px, calc((100vw - 48px) * 2.25)"
+                quality={90}
                 className="object-cover object-[71%_center] saturate-[0.9]"
             />
             <div aria-hidden="true" className="absolute inset-0 bg-paper opacity-50 mix-blend-multiply" />
