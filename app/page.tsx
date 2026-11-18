@@ -8,6 +8,7 @@ import Servicios from "@/components/sections/Servicios";
 import Contacto from "@/components/sections/Contacto";
 import { SectionMark } from "@/components/ui/SectionMark";
 import { TravelingSun } from "@/components/ui/TravelingSun";
+import { PageMotion } from "@/components/ui/PageMotion";
 
 export const metadata: Metadata = {
   title: "Evelyn Bogado",
@@ -39,6 +40,7 @@ export default function Home() {
         <Contacto />
       </main>
       <Footer />
+      <PageMotion />
     </>
   );
 }

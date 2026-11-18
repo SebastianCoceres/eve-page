@@ -16,13 +16,16 @@ export const Intro = () => {
                         Mientras que el marketing tradicional se centra principalmente en la venta de productos o servicios mediante estrategias persuasivas y a menudo intrusivas, el marketing consciente prioriza la integridad y la conexión genuina con la audiencia. En lugar de buscar simplemente aumentar las ventas a cualquier costo, el marketing consciente se preocupa por el bienestar tanto de los consumidores como de la sociedad en general.
                     </p>
 
-                    <div className="reveal mt-8 border-t border-hairline pt-8 md:col-span-6 md:mt-16 xl:col-span-4 xl:col-start-5">
+                    <div data-focus-column className="relative mt-8 pt-8 md:col-span-6 md:mt-16 xl:col-span-4 xl:col-start-5">
+                        {/* The top hairline is its own element so it can draw left to right (usePageMotion). */}
+                        <span data-focus-rule aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-hairline" />
                         <Heading is="h3">¿Qué es el marketing consciente?</Heading>
                         <p className="mt-4 max-w-[65ch] text-muted-foreground">
                             El marketing consciente se enfoca en valores éticos, autenticidad y responsabilidad social. Se centra en la transparencia y el bienestar tanto personal como colectivo.
                         </p>
                     </div>
-                    <div className="reveal border-t border-hairline pt-8 md:col-span-6 md:mt-16 xl:col-span-4 xl:col-start-9">
+                    <div data-focus-column className="relative pt-8 md:col-span-6 md:mt-16 xl:col-span-4 xl:col-start-9">
+                        <span data-focus-rule aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-hairline" />
                         <Heading is="h3">¿Por qué elegirlo?</Heading>
                         <p className="mt-4 max-w-[65ch] text-muted-foreground">
                             Elegirlo es optar por una forma de promoción que va más allá de la simple venta de productos o servicios. Al adoptar el enfoque del marketing consciente, te comprometes a construir una marca auténtica y significativa que resuene con tu audiencia de manera genuina. Al priorizar la conexión emocional, puedes establecer relaciones más profundas y duraderas con tus clientes, lo que conduce a una lealtad más sólida y un mayor compromiso.

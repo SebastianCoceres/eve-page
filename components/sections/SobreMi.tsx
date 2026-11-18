@@ -1,5 +1,6 @@
 'use client'
 import type { ReactNode } from "react";
+import Image from "next/image";
 import Heading from "@/components/ui/Heading";
 import { useFadeStagger } from "@/hooks/useFadeStagger";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
@@ -11,6 +12,37 @@ const Em = ({ children }: { children: ReactNode }) => (
     <em className="font-serif text-[0.98em] italic">{children}</em>
 )
 
+/**
+ * The page's one photograph, in an arched doorway (4:5, a true half-circle top,
+ * square bottom). The photo is printed on the paper: a multiply layer of the live
+ * paper colour and a slight saturation trim, no border, shadow, blur or gradient.
+ * From 768px the afternoon sun parks behind the arch, peeking out past its
+ * upper-right shoulder (about 43% of the disc in view): the anchor below is that
+ * spot, used by useTravelingSun and shown as the static sun under reduced motion.
+ * Percent offsets are of the frame's width (margin-top percentages are too). The
+ * 64px under the heading keeps the parked disc 48px clear of it.
+ */
+const Portrait = () => (
+    <div data-portrait className="relative mt-16 w-full md:max-w-[384px]">
+        <div
+            data-sun-anchor="about"
+            className="pointer-events-none absolute left-[60%] top-0 -mt-[4%] hidden aspect-square w-[52%] motion-safe:invisible md:block"
+        >
+            <div className="size-full rounded-full bg-sun" />
+        </div>
+        <div data-portrait-photo className="relative aspect-[4/5] overflow-hidden rounded-t-[999px]">
+            <Image
+                src="/fondo-hero.webp"
+                alt="Evelyn Bogado"
+                fill
+                sizes="(min-width: 768px) 384px, calc(100vw - 48px)"
+                className="object-cover object-[71%_center] saturate-[0.9]"
+            />
+            <div aria-hidden="true" className="absolute inset-0 bg-paper opacity-50 mix-blend-multiply" />
+        </div>
+    </div>
+)
+
 export const SobreMi = () => {
     const { ref } = useIsInViewWithStore("about")
     const scope = useFadeStagger()
@@ -18,12 +50,13 @@ export const SobreMi = () => {
     return (
         <section id="about" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
             <div ref={scope} className="container">
-                <div ref={ref} className="grid gap-y-8 xl:grid-cols-12 xl:gap-x-6">
-                    <div className="reveal xl:col-span-4">
+                <div ref={ref} className="grid gap-y-12 xl:grid-cols-12 xl:gap-x-6">
+                    <div className="reveal xl:col-span-5">
                         <Heading is="h2">Sobre mí</Heading>
+                        <Portrait />
                     </div>
 
-                    <div className="max-w-[65ch] text-muted-foreground xl:col-span-7 xl:col-start-5 [&>p+p]:mt-6">
+                    <div className="max-w-[65ch] text-muted-foreground xl:col-span-6 xl:col-start-7 [&>p+p]:mt-6">
                         <p className="reveal">
                             ¡Hola! Soy Eve, <Em>licenciada en Publicidad</Em> y especializada en <Em>marketing digital</Em>. Mi formación académica, junto con mi experiencia práctica, abarca tanto el mercado <Em>latinoamericano</Em> como el <Em>europeo</Em>.
                         </p>

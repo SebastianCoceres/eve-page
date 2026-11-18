@@ -18,8 +18,11 @@ function collectObstacles(): Rect[] {
             if (!node.textContent?.trim() || !parent || parent.closest(".sr-only, [aria-hidden='true']")) continue;
             const range = document.createRange();
             range.selectNodeContents(node);
+            // A heading line that has not risen yet (usePageMotion) is measured where it will rest.
+            const line = parent.closest<HTMLElement>(".split-line");
+            const shift = line ? Number(gsap.getProperty(line, "y")) + (Number(gsap.getProperty(line, "yPercent")) / 100) * line.offsetHeight : 0;
             for (const r of range.getClientRects()) {
-                rects.push({ l: r.left, t: r.top + window.scrollY, r: r.right, b: r.bottom + window.scrollY });
+                rects.push({ l: r.left, t: r.top + window.scrollY - shift, r: r.right, b: r.bottom + window.scrollY - shift });
             }
         }
         scope.querySelectorAll("input, textarea, button, [role='combobox'], .bg-surface, [data-section-mark], h1 svg").forEach((element) => {
@@ -33,15 +36,20 @@ function collectObstacles(): Rect[] {
 // (east to west), how high in the viewport the sun sits when it arrives, and its
 // size by time of day: smallest at midday, larger toward the horizon (as a low
 // sun looks). Sizes are tried largest first and shrink only to fit a free zone.
-// Contacto is a chapter only from 1280px, where its left column leaves the sun a
-// planned spot between the heading and the socials; narrower, the form spans the
-// width and the sun passes it by in the margin, out of view.
-const CHAPTERS = [
-    { id: "focus", targetX: 0.82, height: 0.3, sizes: [180, 150, 120], minWidth: 768 },
-    { id: "services", targetX: 0.72, height: 0.26, sizes: [150, 130, 110], minWidth: 768 },
-    { id: "about", targetX: 0.2, height: 0.42, sizes: [200, 170, 140, 120], minWidth: 768 },
-    { id: "contact", targetX: 0.24, height: 0.5, sizes: [220, 180, 150, 120], minWidth: 1280 },
-] as const;
+// A chapter with an `anchor` parks on that element instead of a computed zone:
+// in Sobre mí the afternoon sun sets behind the portrait's arch. Contacto is not
+// a parking spot: from Sobre mí the sun only goes down (see the descent below).
+const CHAPTERS: ReadonlyArray<{ id: string; targetX: number; height: number; sizes: number[]; anchor?: string }> = [
+    { id: "focus", targetX: 0.82, height: 0.3, sizes: [180, 150, 120] },
+    { id: "services", targetX: 0.72, height: 0.26, sizes: [150, 130, 110] },
+    { id: "about", targetX: 0.2, height: 0.42, sizes: [200, 170, 140, 120], anchor: "about" },
+];
+
+/**
+ * The descent's slowest vertical speed, in document px per scroll px: above 1,
+ * so the sun keeps sinking in the viewport even where it moves most sideways.
+ */
+const SINK = 1.06;
 
 // Phones: the sun only peeks in, cropped by the page edge, in the empty band
 // between two sections: east (right) at midday, west (left) in the afternoon.
@@ -50,7 +58,72 @@ const PEEKS = [
     { from: "services", to: "about", side: "left" },
 ] as const;
 
-type Leg = { points: Point[]; zone: Zone; at: number; hidden?: boolean };
+type Leg = {
+    points: Point[];
+    zone: Zone;
+    at: number;
+    hidden?: boolean;
+    /** A leg driven by a function of its progress (linear in scroll) instead of a motion path. */
+    track?: (progress: number) => Zone;
+};
+
+const smooth = (t: number) => t * t * (3 - 2 * t);
+
+/**
+ * A path that only goes down, timed over `window` scroll px. Its shape is x as a
+ * function of y: x eases between the keys (smoothstep, so it never kinks) and
+ * the size follows y. It is walked at one even speed along its length, except
+ * where that would sink slower than SINK (the most sideways stretches), which
+ * are hurried just enough: so the sun never rises in the viewport and never
+ * lurches. The even speed is solved so the whole walk fills the window.
+ */
+function descentTrack(keys: Zone[], window: number) {
+    const first = keys[0];
+    const last = keys[keys.length - 1];
+    const shape = (y: number): Zone => {
+        let i = 0;
+        while (i < keys.length - 2 && y > keys[i + 1].y) i++;
+        const a = keys[i];
+        const b = keys[i + 1];
+        const t = b.y > a.y ? Math.min(1, Math.max(0, (y - a.y) / (b.y - a.y))) : 1;
+        const d = first.d + (last.d - first.d) * ((y - first.y) / Math.max(1, last.y - first.y));
+        return { x: a.x + (b.x - a.x) * smooth(t), y, d };
+    };
+    // Samples every 4px of height: drop and length of each step.
+    const steps: Array<{ y: number; dy: number; dl: number }> = [];
+    let previous = shape(first.y);
+    for (let y = first.y + 4; ; y += 4) {
+        const point = shape(Math.min(y, last.y));
+        steps.push({ y: point.y, dy: point.y - previous.y, dl: Math.hypot(point.x - previous.x, point.y - previous.y) });
+        previous = point;
+        if (point.y >= last.y) break;
+    }
+    const duration = (speed: number) => steps.reduce((sum, step) => sum + Math.min(step.dl / speed, step.dy / SINK), 0);
+    // Bisection on the even speed (the walk's duration falls as the speed rises).
+    let lo = 0.01;
+    let hi = 100;
+    for (let i = 0; i < 50; i++) {
+        const mid = (lo + hi) / 2;
+        if (duration(mid) > window) lo = mid; else hi = mid;
+    }
+    const speed = hi;
+    const times: number[] = [0];
+    for (const step of steps) times.push(times[times.length - 1] + Math.min(step.dl / speed, step.dy / SINK));
+    const total = times[times.length - 1] || 1;
+    return (progress: number): Zone => {
+        const target = progress * total;
+        let low = 0;
+        let high = times.length - 1;
+        while (high - low > 1) {
+            const mid = (low + high) >> 1;
+            if (times[mid] < target) low = mid; else high = mid;
+        }
+        const y0 = low === 0 ? first.y : steps[low - 1].y;
+        const y1 = steps[high - 1].y;
+        const t = times[high] > times[low] ? (target - times[low]) / (times[high] - times[low]) : 0;
+        return shape(y0 + (y1 - y0) * t);
+    };
+}
 
 /**
  * "El viaje del sol": one sun crosses the page along a day's arc, east to west.
@@ -62,7 +135,15 @@ type Leg = { points: Point[]; zone: Zone; at: number; hidden?: boolean };
  *   text, fully below the navbar; see lib/sunPath), sized by the time of day;
  * - between chapters it travels only through whitespace: out to the side margin,
  *   along it, across the gap between sections, and in (MotionPath, sine.inOut);
- * - it ends on the footer anchor, setting into the footer sea, warming on the way.
+ * - in Sobre mí it parks behind the portrait's arch, peeking past its shoulder;
+ * - from there it only sinks: one continuous descent, linear in scroll and faster
+ *   than the page (SINK), so it moves down the viewport the whole way. From
+ *   1280px it slips out to the left margin before Contacto, comes back in under
+ *   Contacto's left column, and goes straight down between the footer's logo and
+ *   socials into the sea. Narrower, it leaves by its side margin, sinks out of
+ *   view and slides in low, under the footer text, to set.
+ * Everything is measured from the live layout (pin spacers included), so a
+ * section that changes the document height only moves the keyframes.
  * One scrubbed ScrollTrigger maps scroll to the whole journey; each leg is timed
  * so the sun reaches a zone as that zone reaches its height in the viewport.
  *
@@ -126,9 +207,11 @@ export function useTravelingSun() {
 
                     for (const chapter of CHAPTERS) {
                         const section = document.getElementById(chapter.id);
-                        if (!section || vw < chapter.minWidth) continue;
+                        if (!section) continue;
                         const rect = docRect(section);
-                        const zone = findZone({
+                        const anchor = chapter.anchor ? document.querySelector(`[data-sun-anchor="${chapter.anchor}"]`) : null;
+                        const anchored = anchor ? anchorZone(anchor) : null;
+                        const zone = anchored && anchored.d > 0 ? anchored : findZone({
                             section: rect,
                             obstacles,
                             viewportWidth: vw,
@@ -144,12 +227,61 @@ export function useTravelingSun() {
                         previousRect = rect;
                         previousTime = at;
                     }
-                    // The last leg crosses behind the footer sea (the scales' fills hide it), not
-                    // through the gap above the footer, which is too narrow for a sun at tablet widths.
-                    const footerSea = document.querySelector('[data-sea-field="footer"]');
-                    const seaRect = footerSea ? docRect(footerSea) : null;
-                    const gapY = seaRect ? (seaRect.t + seaRect.b) / 2 + end.d / 2 : end.y;
-                    legs.push({ points: route(previous, end, gapY, vw, contentLeft, contentRight), zone: end, at: maxScroll });
+                    // The last way down: it never rises again after the last park.
+                    const dMax = Math.max(previous.d, end.d);
+                    const below = (y: number, xMin: number, xMax: number) => Math.min(
+                        Infinity,
+                        ...obstacles.filter((o) => o.t > y && o.l < xMax + CLEARANCE && o.r > xMin - CLEARANCE).map((o) => o.t),
+                    );
+                    const sink = (keys: Zone[]) => {
+                        // Leaves the park almost at once, while it is still well in view.
+                        const begin = Math.min(maxScroll - 2, previousTime + vh * 0.04);
+                        legs.push({ points: [previous, previous], zone: previous, at: begin });
+                        legs.push({ points: [], zone: end, at: maxScroll, track: descentTrack(keys, maxScroll - begin) });
+                    };
+                    let planned = false;
+                    const contact = document.getElementById("contact");
+                    if (vw >= 1280 && contact) {
+                        const r = dMax / 2;
+                        const mx = contentLeft - CLEARANCE - r;
+                        // Out to the margin before anything below it in its column.
+                        const y1 = below(previous.y, mx - r, previous.x + r) - CLEARANCE - r;
+                        // Back in under Contacto's left column, then down the footer's open lane.
+                        const contactRect = docRect(contact);
+                        const leftText = obstacles.filter((o) => o.t >= contactRect.t && o.b <= contactRect.b && o.l < end.x + r + CLEARANCE);
+                        const y2 = Math.max(contactRect.t, ...leftText.map((o) => o.b)) + CLEARANCE + r;
+                        const y3 = Math.min(y2 + 360, below(y2, mx - r, end.x + r) - CLEARANCE - r);
+                        if (y1 > previous.y + 40 && y2 > y1 && y3 - y2 >= 160 && end.y > y3) {
+                            sink([
+                                previous,
+                                { x: mx, y: y1, d: previous.d },
+                                { x: mx, y: y2, d: previous.d },
+                                { x: end.x, y: y3, d: end.d },
+                                end,
+                            ]);
+                            planned = true;
+                        }
+                    }
+                    if (!planned) {
+                        // Out by its own side, down out of view, and in low under the footer text.
+                        const side = previous.x < vw / 2 ? "left" : "right";
+                        const outX = (which: "left" | "right") => (which === "left" ? -dMax / 2 - 4 : vw + dMax / 2 + 4);
+                        const low = end.y - 12;
+                        const slide = Math.min(vh * 0.35, (maxScroll - previousTime) / 3);
+                        // Leaves sinking (behind the portrait, never toward text below it).
+                        const r = dMax / 2;
+                        const exitY = Math.max(previous.y, Math.min(
+                            previous.y + vh * 0.3 * SINK,
+                            below(previous.y, Math.min(outX(side), previous.x) - r, Math.max(outX(side), previous.x) + r) - CLEARANCE - r,
+                        ));
+                        const outAt = Math.min(maxScroll - slide - 2, previousTime + Math.max(vh * 0.25, (exitY - previous.y) / SINK));
+                        legs.push({ points: [previous, { x: outX(side), y: exitY }], zone: { ...previous, x: outX(side), y: exitY }, at: Math.max(previousTime + 1, outAt) });
+                        legs.push({ points: [{ x: outX(side), y: exitY }, { x: outX(side), y: low }], zone: { x: outX(side), y: low, d: end.d }, at: maxScroll - slide - 1 });
+                        if (side === "right") {
+                            legs.push({ points: [{ x: outX("right"), y: low }, { x: outX("left"), y: low }], zone: { x: outX("left"), y: low, d: end.d }, at: maxScroll - slide, hidden: true });
+                        }
+                        legs.push({ points: [{ x: outX("left"), y: low }, end], zone: end, at: maxScroll });
+                    }
                 } else {
                     // Phones: peeks only, never beside text (see PEEKS).
                     let time = 0;
@@ -184,8 +316,8 @@ export function useTravelingSun() {
                         hop(out(p.side, y, d), y - vh * 0.28);
                         side = p.side;
                     }
-                    // Sets on the left (west): out of view down to the sea, then in.
-                    hop(out("left", end.y, end.d), maxScroll - vh * 0.35, side !== "left");
+                    // Sets on the left (west): out of view down to the sea, then in, sinking a little.
+                    hop(out("left", end.y - 12, end.d), maxScroll - vh * 0.35, side !== "left");
                     legs.push({ points: [{ x: from.x, y: from.y }, { x: end.x, y: end.y }], zone: end, at: maxScroll });
                 }
 
@@ -199,11 +331,25 @@ export function useTravelingSun() {
                     const duration = Math.max(1, leg.at - time);
                     // A hidden leg switches sides out of view: the disc is transparent on the way.
                     if (leg.hidden) timeline.set(root, { opacity: 0 }, time);
-                    timeline.to(root, {
-                        motionPath: { path: leg.points.map(place), curviness: 0.6 },
-                        scale: leg.zone.d / base,
-                        duration,
-                    }, time);
+                    const track = leg.track;
+                    if (track) {
+                        const proxy = { progress: 0 };
+                        timeline.fromTo(proxy, { progress: 0 }, {
+                            progress: 1,
+                            duration,
+                            ease: "none",
+                            onUpdate: () => {
+                                const zone = track(proxy.progress);
+                                gsap.set(root, { ...place(zone), scale: zone.d / base });
+                            },
+                        }, time);
+                    } else {
+                        timeline.to(root, {
+                            motionPath: { path: leg.points.map(place), curviness: 0.6 },
+                            scale: leg.zone.d / base,
+                            duration,
+                        }, time);
+                    }
                     if (leg.hidden) timeline.set(root, { opacity: 1 }, time + duration);
                     time += duration;
                 }

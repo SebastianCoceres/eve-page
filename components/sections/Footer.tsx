@@ -25,9 +25,10 @@ const Seal = ({ className }: { className?: string }) => (
 
 // Sunset: the footer content sits above a shorter sea that stays calm on the left
 // and swells toward the right. The day ends on the left at every width (east to
-// west), aligned with the content column: the sun sinks into the calm trough with
-// about 45% of its disc above the crests, so two or three scales cross its
-// waterline. The footer has no top padding: Contacto's section padding is the
+// west): on the content's left edge below 1280px, and from 1280px in the open
+// space between the logo and the socials, where the sun's last descent comes
+// down. It sinks into the calm trough with about half its disc above the crests,
+// which overlap only its lower edge. The footer has no top padding: Contacto's section padding is the
 // pause before the close. The 96px under the content keeps the sun's cap 48px+
 // clear of the text. The seal closes the content column on the right.
 export const Footer = () => {
@@ -66,7 +67,7 @@ export const Footer = () => {
             <SeaField kind="footer">
                 <div
                     data-sun-anchor="footer"
-                    className="pointer-events-none absolute bottom-[18px] left-6 size-[120px] motion-safe:invisible md:bottom-[22px] md:left-[max(40px,calc((100%-1200px)/2))] md:size-[200px]"
+                    className="pointer-events-none absolute bottom-[23px] left-6 size-[120px] motion-safe:invisible md:bottom-[36px] md:left-[max(40px,calc((100%-1200px)/2))] md:size-[200px] xl:left-[calc((100%-1200px)/2+222px)]"
                 >
                     <div className="size-full rounded-full bg-sun-warm" />
                 </div>

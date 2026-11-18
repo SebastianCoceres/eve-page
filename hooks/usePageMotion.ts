@@ -1,0 +1,102 @@
+import { gsap, useGSAP, SplitText } from "@/lib/gsap";
+
+// One motion grammar: reveals 0.6–1.1s on expo.out / power3.out, once, on enter.
+const REVEAL = { ease: "expo.out", duration: 1 } as const;
+const onEnter = (trigger: Element, start = "top 85%") => ({ trigger, start, once: true });
+
+/**
+ * Page-wide entrances for the sections below the hero (the hero and Servicios
+ * own their motion). Everything starts from the visible, server-rendered layout
+ * and only animates transforms, opacity and clip-path, so nothing shifts and
+ * nothing is hidden without JavaScript. Reduced motion: nothing runs.
+ *
+ * - section headings (h2): lines rise out of a mask, yPercent 100 → 0, stagger 0.08;
+ * - lead paragraphs: lines fade in, stagger 0.08 (calmer than words);
+ * - Mi enfoque: the two columns rise in turn as their top hairlines draw left to right;
+ * - Sobre mí: the arched portrait is uncovered from the bottom (clip-path inset);
+ * - Contacto: the form fields cascade in; on a fine pointer the send pill
+ *   follows the cursor by at most 6px.
+ */
+export function usePageMotion() {
+    useGSAP(() => {
+        const mm = gsap.matchMedia();
+
+        mm.add("(prefers-reduced-motion: no-preference)", () => {
+            const splits: SplitText[] = [];
+
+            gsap.utils.toArray<HTMLElement>("main section:not(#home) h2").forEach((heading) => {
+                splits.push(SplitText.create(heading, {
+                    type: "lines",
+                    mask: "lines",
+                    linesClass: "split-line",
+                    autoSplit: true,
+                    onSplit: (self) => gsap.from(self.lines, {
+                        ...REVEAL,
+                        yPercent: 100,
+                        stagger: 0.08,
+                        scrollTrigger: onEnter(heading, "top 88%"),
+                    }),
+                }));
+            });
+
+            gsap.utils.toArray<HTMLElement>("main section:not(#home) .text-lead").forEach((lead) => {
+                splits.push(SplitText.create(lead, {
+                    type: "lines",
+                    linesClass: "split-line",
+                    autoSplit: true,
+                    onSplit: (self) => gsap.from(self.lines, {
+                        opacity: 0,
+                        duration: 0.9,
+                        ease: "power3.out",
+                        stagger: 0.08,
+                        scrollTrigger: onEnter(lead),
+                    }),
+                }));
+            });
+
+            const columns = gsap.utils.toArray<HTMLElement>("[data-focus-column]");
+            if (columns.length) {
+                const timeline = gsap.timeline({ scrollTrigger: onEnter(columns[0]) });
+                timeline.from(columns, { ...REVEAL, opacity: 0, y: 24, stagger: 0.12 }, 0);
+                timeline.from("[data-focus-rule]", { duration: 1.1, ease: "power3.out", scaleX: 0, transformOrigin: "left center", stagger: 0.12 }, 0);
+            }
+
+            gsap.utils.toArray<HTMLElement>("[data-portrait-photo]").forEach((photo) => {
+                gsap.fromTo(photo,
+                    { clipPath: "inset(100% 0% 0% 0%)" },
+                    { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1, ease: "expo.out", clearProps: "clipPath", scrollTrigger: onEnter(photo, "top 80%") },
+                );
+            });
+
+            const form = document.querySelector("#contact form");
+            if (form) {
+                gsap.from(form.children, { opacity: 0, y: 16, duration: 0.7, ease: "power3.out", stagger: 0.08, scrollTrigger: onEnter(form) });
+            }
+
+            return () => splits.forEach((split) => split.revert());
+        });
+
+        mm.add("(prefers-reduced-motion: no-preference) and (pointer: fine)", () => {
+            const pill = document.querySelector<HTMLElement>('#contact button[type="submit"]');
+            if (!pill) return;
+            const toX = gsap.quickTo(pill, "x", { duration: 0.4, ease: "power3.out" });
+            const toY = gsap.quickTo(pill, "y", { duration: 0.4, ease: "power3.out" });
+            const follow = (event: PointerEvent) => {
+                const box = pill.getBoundingClientRect();
+                const limit = (value: number) => gsap.utils.clamp(-6, 6, value * 0.15);
+                toX(limit(event.clientX - (box.left + box.width / 2)));
+                toY(limit(event.clientY - (box.top + box.height / 2)));
+            };
+            const settle = () => { toX(0); toY(0); };
+            pill.addEventListener("pointermove", follow);
+            pill.addEventListener("pointerleave", settle);
+            return () => {
+                pill.removeEventListener("pointermove", follow);
+                pill.removeEventListener("pointerleave", settle);
+                gsap.set(pill, { clearProps: "x,y" });
+            };
+        });
+
+        return () => mm.revert();
+    });
+}

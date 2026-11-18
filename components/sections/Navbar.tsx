@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import {
     Navbar,
     NavbarClose,
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { useNavbarStore } from '@/stores/nav/nav-providers'
 import { scrollToSection } from "@/lib/scroll";
 import { cn } from "@/lib/utils";
+import { gsap, useGSAP } from "@/lib/gsap";
 
 export const navbarItems = [
     {
@@ -46,14 +47,55 @@ export type NavbarKeys = typeof navbarItems[number]['key']
 const textLinks = navbarItems.filter(item => item.key !== 'home' && item.key !== 'contact')
 
 const desktopLinkClasses =
-    "inline-flex min-h-11 items-center px-3 text-[15px] text-muted-foreground underline decoration-1 decoration-transparent underline-offset-[6px] transition-colors duration-150 ease-out hover:text-foreground hover:decoration-current aria-[current=location]:text-foreground aria-[current=location]:decoration-current motion-reduce:transition-none"
+    "inline-flex min-h-11 items-center px-3 text-[15px] text-muted-foreground underline decoration-1 decoration-transparent underline-offset-[6px] transition-colors duration-150 ease-out hover:text-foreground hover:decoration-current aria-[current=location]:text-foreground aria-[current=location]:hover:decoration-transparent motion-reduce:transition-none"
 
 const panelLinkClasses =
     "inline-flex min-h-11 items-center font-display text-[32px] leading-[1.2] text-foreground underline decoration-1 decoration-transparent underline-offset-[8px] aria-[current=location]:decoration-current"
 
+/**
+ * The active section's underline: one 1px element that slides and stretches to
+ * the current link's text (x + scaleX only, 0.45s power3.out; instant under
+ * reduced motion). Hidden when no desktop link is current (hero, Contacto).
+ */
+function useActiveUnderline(active: string) {
+    const scope = useRef<HTMLDivElement>(null)
+    useGSAP(() => {
+        const root = scope.current
+        const bar = root?.querySelector<HTMLElement>("[data-nav-underline]")
+        if (!root || !bar) return
+        const place = (animate: boolean) => {
+            const link = root.querySelector<HTMLElement>('a[aria-current="location"]')
+            const still = !animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            if (!link) {
+                gsap.to(bar, { opacity: 0, duration: still ? 0 : 0.15 })
+                return
+            }
+            const box = root.getBoundingClientRect()
+            const text = link.getBoundingClientRect()
+            // The links carry 12px of hit-area padding on each side; the line sits 6px under the text.
+            gsap.to(bar, {
+                x: text.left - box.left + 12,
+                y: text.top - box.top + text.height / 2 + 15,
+                scaleX: Math.max(1, text.width - 24),
+                opacity: 1,
+                duration: still ? 0 : 0.45,
+                ease: "power3.out",
+            })
+        }
+        const firstPaint = bar.dataset.placed !== "true"
+        bar.dataset.placed = "true"
+        place(!firstPaint)
+        const onResize = () => place(false)
+        window.addEventListener("resize", onResize)
+        return () => window.removeEventListener("resize", onResize)
+    }, { scope, dependencies: [active] })
+    return scope
+}
+
 function NavbarContent() {
     const { selectedNavbarItem, setSelectedNavbarItem } = useNavbarStore(state => state)
     const { close } = useNavbarContext()
+    const underlineScope = useActiveUnderline(selectedNavbarItem)
 
     const navigate = (event: MouseEvent<HTMLAnchorElement>, key: NavbarKeys) => {
         event.preventDefault()
@@ -80,7 +122,9 @@ function NavbarContent() {
 
     return (
         <>
-            <NavigationList className="-ml-3 hidden items-center gap-1 md:flex">
+            <div ref={underlineScope} className="relative -ml-3 hidden md:block">
+            <span data-nav-underline aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-px w-px origin-left bg-foreground opacity-0" />
+            <NavigationList className="flex items-center gap-1">
                 {textLinks.map((item) => (
                     <NavigationItem
                         key={item.key}
@@ -93,6 +137,7 @@ function NavbarContent() {
                     </NavigationItem>
                 ))}
             </NavigationList>
+            </div>
 
             <NavbarTrigger className="ml-auto inline-flex min-h-11 min-w-11 items-center justify-end text-[15px] font-medium text-foreground md:hidden">
                 Menú

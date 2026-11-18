@@ -61,6 +61,11 @@ export interface SeigaihaOptions {
     swell?: (x: number) => number;
     /** Line opacity of the back row and of the front row. */
     opacity?: [number, number];
+    /**
+     * Flat opacities for the last rows, nearest last, so the sea dissolves into
+     * the paper instead of ending on a ruled edge (e.g. [0.45, 0.25, 0.1]).
+     */
+    fade?: number[];
 }
 
 // Two decimals is far below a device pixel and keeps the path strings short.
@@ -82,6 +87,7 @@ export function seigaiha({
     vanishX = width / 2,
     swell,
     opacity = [0.3, 0.7],
+    fade = [],
 }: SeigaihaOptions): SeigaihaField {
     // Three depth tiers (depth·R, the midpoint, R), each a band of the field. Within
     // a tier every row shares one radius, so the classic lattice is exact; only at
@@ -126,8 +132,13 @@ export function seigaiha({
             }
         }
         if (!stroke) return;
-        const t = count > 1 ? index / (count - 1) : 1;
-        rows.push({ index, base: n(base), radius: n(r), opacity: n(opacity[0] + (opacity[1] - opacity[0]) * t), fill, stroke });
+        // The ramp runs back to the last unfaded row; the faded rows step down from there.
+        const ramp = Math.max(1, count - 1 - fade.length);
+        const fromFront = count - 1 - index;
+        const value = fromFront < fade.length
+            ? fade[fade.length - 1 - fromFront]
+            : opacity[0] + (opacity[1] - opacity[0]) * Math.min(1, index / ramp);
+        rows.push({ index, base: n(base), radius: n(r), opacity: n(value), fill, stroke });
     });
 
     return { width, height, radius, rows };
@@ -136,13 +147,14 @@ export function seigaiha({
 /**
  * A slow swell, as the depth (px) of the sea's top edge below the field's top.
  * `toward` is the side the swell climbs to: the sea is `low` px deep at the
- * other side and reaches the top edge at 85% of the width, staying there.
- * Eased with a half cosine.
+ * other side (and flat out to `calm` px from it) and reaches the top edge at
+ * 85% of the remaining width, staying there. Eased with a half cosine.
  */
-export function swell(width: number, low: number, toward: "right" | "left") {
+export function swell(width: number, low: number, toward: "right" | "left", calm = 0) {
     return (x: number) => {
-        const along = Math.min(1, Math.max(0, x / width));
-        const u = toward === "right" ? along : 1 - along;
+        // Distance into the swell, past the calm stretch on the low side.
+        const into = toward === "right" ? x - calm : width - x - calm;
+        const u = Math.min(1, Math.max(0, into / Math.max(1, width - calm)));
         const rise = (1 - Math.cos(Math.PI * Math.min(1, u / 0.85))) / 2;
         return low * (1 - rise);
     };
@@ -179,13 +191,18 @@ export function seaFor(kind: SeaKind, width: number): SeigaihaField {
                 vanishX: wide ? width - Math.min(160, width * 0.12) : width - 24,
                 swell: swell(width, wide ? 120 : 72, "right"),
                 opacity: [0.3, 0.7],
+                // The near rows fade out, so the sea bleeds into the paper like a print.
+                fade: [0.45, 0.25, 0.1],
             });
         case "footer": {
             const contentLeft = wide ? Math.max(40, (width - 1200) / 2) : 24;
+            // The sun's centre: see the footer anchor (between the logo and the
+            // socials from 1280px, on the content's left edge below that).
+            const sunX = contentLeft + (width >= 1280 ? 322 : wide ? 100 : 60);
             return seigaiha({
                 width, height, radius,
-                vanishX: contentLeft + (wide ? 100 : 60),
-                swell: swell(width, wide ? 64 : 34, "right"),
+                vanishX: sunX,
+                swell: swell(width, wide ? 64 : 34, "right", sunX + (wide ? 60 : 30)),
                 opacity: [0.3, 0.65],
             });
         }

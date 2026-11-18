@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/Button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -13,7 +12,6 @@ import Heading from "@/components/ui/Heading";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
-import { InstagramIcon, LinkedinIcon } from "@/components/vectors/SocialIcons";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useFadeStagger } from "@/hooks/useFadeStagger";
 import { Services } from "@/lib/services";
@@ -26,11 +24,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 const SEND_ERROR = "No se pudo enviar el mensaje. Inténtalo de nuevo o escríbeme por Instagram."
-
-const socials = [
-    { label: "Instagram", href: "https://www.instagram.com/evelyn.digitalmkt/", Icon: InstagramIcon },
-    { label: "LinkedIn", href: "https://www.linkedin.com/in/evebogado/", Icon: LinkedinIcon },
-] as const
 
 const servicesMap = Object.fromEntries(Services.map((service) => ([service.key, service.key])))
 const formSchema = z.object({
@@ -95,28 +88,17 @@ export const Contacto = () => {
     return (
         <section id="contact" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
             <div ref={scope} className="container">
-                {/* Heading and lead open the left column; from 1280px the socials close it,
-                    level with the send button, and the low afternoon sun parks between
-                    them (useTravelingSun). Below 1280px everything stacks tightly. */}
-                <div ref={ref} className="grid gap-y-12 md:grid-cols-12 md:gap-x-6 md:gap-y-16">
-                    <div className="reveal flex flex-col md:col-span-12 xl:col-span-5">
+                {/* The left column is the invitation: heading, lead and one quiet line of
+                    help. The socials live once, in the footer. From 1280px the column is
+                    the sun's last way down: it descends through the open space under the
+                    help line toward the footer sea (useTravelingSun). */}
+                <div ref={ref} className="grid gap-y-10 md:grid-cols-12 md:gap-x-6 md:gap-y-14">
+                    <div className="reveal md:col-span-12 xl:col-span-5">
                         <Heading is="h2">Hablemos de tu proyecto</Heading>
                         <p className="mt-4 max-w-[40ch] text-lead text-foreground">¡Estoy aquí para ti!</p>
-                        <ul className="mt-8 flex flex-wrap gap-x-8 xl:mt-auto xl:pt-12">
-                            {socials.map(({ label, href, Icon }) => (
-                                <li key={label}>
-                                    <a
-                                        href={href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="link inline-flex min-h-11 items-center gap-2 text-[15px] font-medium"
-                                    >
-                                        <Icon className="size-5" />
-                                        {label}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
+                        <p className="mt-6 max-w-[36ch] text-[15px] leading-[1.6] text-muted-foreground">
+                            Si prefieres, déjame tu número de teléfono y charlamos sobre tu proyecto.
+                        </p>
                     </div>
 
                     <div className="reveal md:col-span-12 xl:col-span-6 xl:col-start-7">
@@ -181,9 +163,6 @@ export const Contacto = () => {
                                                 <Textarea placeholder="Cuéntame tu historia" {...field} />
                                             </FormControl>
                                             <FormMessage />
-                                            <FormDescription>
-                                                Si prefieres, déjame tu número de teléfono y charlamos sobre tu proyecto.
-                                            </FormDescription>
                                         </FormItem>
                                     )}
                                 />
