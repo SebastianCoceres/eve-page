@@ -109,7 +109,7 @@ const HERO_RISE = 0.4;
 /** Share of the Mi enfoque pin over which the sun climbs beside the problem (done before the crossing). */
 const FOCUS_PROBLEM_RISE = FOCUS_SCENE.CROSS[0];
 /** Where the sun arrives at the Sobre mí disc, as a share of the viewport height, when its column does not stick (below 1280px). */
-const ABOUT_LOOSE_HEIGHT = 0.55;
+const ABOUT_LOOSE_HEIGHT = 0.62;
 
 type Leg = {
     points: Point[];
@@ -471,13 +471,28 @@ export function useTravelingSun() {
                         const height = anchored && !aboutTravel ? ABOUT_LOOSE_HEIGHT : chapter.height;
                         const at = Math.min(maxScroll - 1, Math.max(previousTime + 1, parkedScroll(zone, height, vh)));
 
+                        // 3a. When the gap above Sobre mí is too tight to cross in view with 48px
+                        // to spare (768–1023px, where Servicios is a free zone), it leaves its
+                        // zone sideways through the free band findZone guarantees and switches
+                        // to the west out of view, like after the emakimono.
+                        const gap = textTop(rect) - textBottom(previousRect);
+                        if (anchored && !fromWestEdge && previous.x >= vw / 2 && gap < Math.max(previous.d, zone.d) + 2 * CLEARANCE) {
+                            const exitAt = previousTime + Math.max(1, Math.min(vh * 0.3, (at - previousTime) * 0.25));
+                            const eastOut: Zone = { x: vw + previous.d / 2 + 8, y: previous.y, d: previous.d };
+                            legs.push({ points: [previous, eastOut], zone: eastOut, at: exitAt });
+                            previous = eastOut;
+                            previousTime = exitAt;
+                            fromWestEdge = eastOut;
+                        }
+
                         // 3. After the emakimono: down the west margin out of view, then one
                         // horizontal glide in to the Sobre mí disc.
                         if (anchored && fromWestEdge) {
                             const glide = Math.min(vh * 0.55, Math.max(1, (at - previousTime) * 0.6));
                             const glideFrom = Math.max(previousTime + 1, at - glide);
                             const edge: Zone = { x: -zone.d / 2 - 4, y: aboutY(glideFrom), d: zone.d };
-                            legs.push({ points: [previous, edge], zone: edge, at: glideFrom });
+                            // From the east it switches sides out of view (transparent).
+                            legs.push({ points: [previous, edge], zone: edge, at: glideFrom, hidden: previous.x > vw / 2 });
                             // One horizontal glide in, following the column if it already sticks.
                             legs.push({
                                 points: [],
@@ -506,14 +521,14 @@ export function useTravelingSun() {
                     //   height in the viewport, so it is in the margin before the column lets
                     //   go: it never rides up under the navbar, and Contacto's section mark,
                     //   still far below, never meets it. Past the release it already sinks.
-                    // - Column loose (below 1280px), the disc moves with the page: it leaves
-                    //   while its speed on the page eases from 0 to 1 (it stops rising in the
-                    //   viewport), early enough to stay whole below the navbar.
+                    // - Column loose (below 1280px), the disc moves with the page: it keeps its
+                    //   place on the page (so the text below keeps its distance) and slides out
+                    //   quickly, early enough that its top never reaches the navbar.
                     if (about && parkedAbout) {
                         const parkFrom = previousTime;
-                        const slide = vh * 0.35;
+                        const slide = vh * (aboutTravel ? 0.35 : 0.22);
                         const travelEnd = aboutTravel ? aboutTravel.end : -Infinity;
-                        const latest = aboutTravel ? Infinity : about.y - about.d / 2 - (NAVBAR + 32) - slide / 2;
+                        const latest = aboutTravel ? Infinity : about.y - about.d / 2 - (NAVBAR + 32) - slide;
                         const hold = Math.min(maxScroll - 3, Math.max(parkFrom + 1, Math.min(latest, Math.max(parkFrom + vh * 0.25, travelEnd - slide))));
                         const rest: Zone = { ...about, y: aboutY(hold) };
                         legs.push({
@@ -529,8 +544,7 @@ export function useTravelingSun() {
                         // Its height on the page during the slide.
                         const slideY = (scroll: number) => {
                             if (aboutTravel) return aboutY(scroll) + SINK * Math.max(0, scroll - travelEnd);
-                            const s = Math.min(span, Math.max(0, scroll - hold));
-                            return rest.y + s / 2 - (span / (2 * Math.PI)) * Math.sin((Math.PI * s) / span);
+                            return rest.y;
                         };
                         const out: Zone = { x: contentLeft - CLEARANCE - end.d / 2, y: slideY(slideAt), d: end.d };
                         legs.push({
