@@ -1,33 +1,13 @@
 import { useRef } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
-import { CLEARANCE, SKY_TOP, findZone, parkedScroll, type Point, type Rect, type Zone } from "@/lib/sunPath";
+import { CLEARANCE, SKY_TOP, docRect, findZone, parkedScroll, stickyTravel, type Point, type Rect, type Zone } from "@/lib/sunPath";
+import { publishSunTrack } from "@/lib/sunTrack";
 import { getHeroPinRange } from "@/hooks/useHeroAnimation";
 import { getEmakiPinRange } from "@/hooks/useEmakiScroll";
 import { FOCUS_PIN_TOP, FOCUS_SCENE, getFocusPinRange } from "@/hooks/useFocusScene";
 
-const docRect = (element: Element): Rect => {
-    const r = element.getBoundingClientRect();
-    return { l: r.left, t: r.top + window.scrollY, r: r.right, b: r.bottom + window.scrollY };
-};
-
-/**
- * A sticky block's travel (Sobre mí's left column, `[data-sun-sticky]`, which
- * rests at the top of its grid cell): how far it has moved down its cell now and
- * at most (px), and the scroll range over which it moves. Null when it is not
- * sticky at this width.
- */
-type StickyTravel = { now: number; total: number; start: number; end: number };
-function stickyTravel(sticky: HTMLElement | null): StickyTravel | null {
-    const cell = sticky?.parentElement;
-    if (!sticky || !cell) return null;
-    const style = getComputedStyle(sticky);
-    if (style.position !== "sticky") return null;
-    const top = parseFloat(style.top) || 0;
-    const c = docRect(cell);
-    const total = Math.max(0, c.b - c.t - sticky.offsetHeight);
-    const now = sticky.getBoundingClientRect().top - cell.getBoundingClientRect().top;
-    return { now, total, start: c.t - top, end: c.t - top + total };
-}
+/** Scroll px between two samples of the published sun track (lib/sunTrack). */
+const TRACK_STEP = 4;
 
 /**
  * Hidden from assistive tech and from the sun's clearance alike, except the pieces
@@ -713,9 +693,28 @@ export function useTravelingSun() {
                 // current scroll even when the playhead does not move (a reload at the
                 // top, where time(0) on a fresh timeline renders nothing).
                 timeline.time(maxScroll);
+                // The whole path as a table, for the companions that follow the sun
+                // (the scale journey): the same timeline sampled every TRACK_STEP px.
+                const samples = Math.ceil(maxScroll / TRACK_STEP) + 1;
+                const track = {
+                    step: TRACK_STEP,
+                    maxScroll,
+                    x: new Float32Array(samples),
+                    y: new Float32Array(samples),
+                    d: new Float32Array(samples),
+                    o: new Float32Array(samples),
+                };
+                for (let k = 0; k < samples; k++) {
+                    timeline.time(Math.min(maxScroll, k * TRACK_STEP));
+                    track.x[k] = goal.x + base / 2;
+                    track.y[k] = goal.y + base / 2;
+                    track.d[k] = goal.scale * base;
+                    track.o[k] = goal.opacity;
+                }
                 view = { timeline, goal, maxScroll };
                 drawnAt = -1;
                 draw();
+                publishSunTrack(track);
 
                 if (!introPlayed) {
                     introPlayed = true;
@@ -769,6 +768,7 @@ export function useTravelingSun() {
                 ScrollTrigger.removeEventListener("refresh", schedule);
                 cancelAnimationFrame(frame);
                 timeline?.kill();
+                publishSunTrack(null);
             };
         });
 

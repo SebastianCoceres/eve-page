@@ -18,10 +18,31 @@
  * - Line depth: each row has one flat stroke opacity, light at the back and
  *   darker at the front. Flat per-row values, never gradients.
  *
+ * - Loose crest: on request, the scales on the sea's exposed top edge are peeled
+ *   off layer by layer (the crest, then the crest beneath it) and kept apart from
+ *   their row's paths, so the scale journey (hooks/useScaleJourney) can lift them
+ *   out of the sea one by one. They are drawn exactly as before until then.
+ *
  * Geometry is in CSS pixels (the SVG viewBox is 1:1 with its box), so a 1px
  * stroke lands on device pixels. Rows run past each edge, so the viewport crops
  * whole scales. Pure functions, no DOM.
  */
+
+/** One scale: its centre x, base line, radius and its row's line opacity. */
+export interface SeigaihaScale {
+    /** Stable within one field: the order the crest was peeled in (0 = the highest crest). */
+    id: number;
+    cx: number;
+    base: number;
+    radius: number;
+    opacity: number;
+}
+
+/** A loose crest scale with its own paths (same geometry and style as its row). */
+export interface LooseScale extends SeigaihaScale {
+    fill: string;
+    stroke: string;
+}
 
 export interface SeigaihaRow {
     /** Back (0) to front. */
@@ -36,6 +57,8 @@ export interface SeigaihaRow {
     fill: string;
     /** The concentric arcs. */
     stroke: string;
+    /** Crest scales kept apart from `fill` and `stroke` (see `loose`). */
+    loose: LooseScale[];
 }
 
 export interface SeigaihaField {
@@ -43,6 +66,8 @@ export interface SeigaihaField {
     height: number;
     radius: number;
     rows: SeigaihaRow[];
+    /** Every loose scale, in peel order (highest crest first). */
+    crest: SeigaihaScale[];
 }
 
 export interface SeigaihaOptions {
@@ -66,6 +91,11 @@ export interface SeigaihaOptions {
      * the paper instead of ending on a ruled edge (e.g. [0.45, 0.25, 0.1]).
      */
     fade?: number[];
+    /**
+     * How many crest scales to keep apart, peeled from the top edge down, layer by
+     * layer (0: none). The last layer is thinned evenly across the width.
+     */
+    loose?: number;
 }
 
 // Two decimals is far below a device pixel and keeps the path strings short.
@@ -78,16 +108,48 @@ const paper = (cx: number, base: number, r: number, bottom: number) =>
 const arc = (cx: number, base: number, r: number) =>
     `M${n(cx - r)} ${n(base)}A${n(r)} ${n(r)} 0 0 1 ${n(cx + r)} ${n(base)}`;
 
+/** Concentric rings per scale, outermost included (the classic count). */
+export const RINGS = 4;
+
+/**
+ * The crest of a set of scales, peeled layer by layer: a scale is on the crest
+ * when no scale of a farther row (drawn before it, higher on the paper) sits
+ * behind it. Returns up to `count` scales, the highest layer first; the last
+ * layer taken is thinned evenly by x so the peel stays spread over the width.
+ */
+function peelCrest<T extends { row: number; cx: number; radius: number }>(scales: T[], count: number): T[] {
+    const left = new Set(scales);
+    const taken: T[] = [];
+    while (taken.length < count && left.size > 0) {
+        const rest = [...left];
+        const layer = rest.filter((s) => !rest.some((t) =>
+            t.row < s.row && Math.abs(t.cx - s.cx) < (t.radius + s.radius) * 0.75));
+        if (layer.length === 0) break;
+        const need = count - taken.length;
+        layer.sort((a, b) => a.cx - b.cx);
+        const pick = layer.length <= need
+            ? layer
+            : Array.from({ length: need }, (_, k) => layer[Math.floor(((k + 0.5) * layer.length) / need)]);
+        for (const scale of pick) {
+            taken.push(scale);
+            left.delete(scale);
+        }
+        if (pick.length < layer.length) break;
+    }
+    return taken;
+}
+
 export function seigaiha({
     width,
     height,
     radius,
     depth = 0.6,
-    rings = 4,
+    rings = RINGS,
     vanishX = width / 2,
     swell,
     opacity = [0.3, 0.7],
     fade = [],
+    loose = 0,
 }: SeigaihaOptions): SeigaihaField {
     // Three depth tiers (depth·R, the midpoint, R), each a band of the field. Within
     // a tier every row shares one radius, so the classic lattice is exact; only at
@@ -114,34 +176,66 @@ export function seigaiha({
     layout.reverse();
 
     const count = layout.length;
-    const rows: SeigaihaRow[] = [];
+    // The ramp runs back to the last unfaded row; the faded rows step down from there.
+    const ramp = Math.max(1, count - 1 - fade.length);
+    const rowOpacity = (index: number) => {
+        const fromFront = count - 1 - index;
+        return fromFront < fade.length
+            ? fade[fade.length - 1 - fromFront]
+            : opacity[0] + (opacity[1] - opacity[0]) * Math.min(1, index / ramp);
+    };
+
+    // Every scale the swell keeps, row by row.
+    const scales: Array<{ row: number; cx: number; base: number; radius: number }> = [];
     layout.forEach(({ base, radius: r }, index) => {
         const period = r * 2;
         // The front row is unshifted; rows alternate by half a period behind it.
         const shift = (count - 1 - index) % 2 === 0 ? 0 : r;
         const first = Math.floor((-period - vanishX - shift) / period);
-        let fill = "";
-        let stroke = "";
         for (let k = first; ; k++) {
             const cx = vanishX + shift + k * period;
             if (cx > width + period) break;
             if (swell && base - r < swell(cx)) continue;
-            fill += paper(cx, base, r, height);
-            for (let ring = rings; ring >= 1; ring--) {
-                stroke += arc(cx, base, (r * ring) / rings);
-            }
+            scales.push({ row: index, cx, base, radius: r });
         }
-        if (!stroke) return;
-        // The ramp runs back to the last unfaded row; the faded rows step down from there.
-        const ramp = Math.max(1, count - 1 - fade.length);
-        const fromFront = count - 1 - index;
-        const value = fromFront < fade.length
-            ? fade[fade.length - 1 - fromFront]
-            : opacity[0] + (opacity[1] - opacity[0]) * Math.min(1, index / ramp);
-        rows.push({ index, base: n(base), radius: n(r), opacity: n(value), fill, stroke });
     });
 
-    return { width, height, radius, rows };
+    // Loose crest scales, only whole ones (the viewport never crops a lifted scale).
+    const peeled = loose > 0
+        ? peelCrest(scales.filter((s) => s.cx - s.radius >= 0 && s.cx + s.radius <= width), loose)
+        : [];
+    const looseId = new Map(peeled.map((scale, id) => [scale, id]));
+    const ringsOf = (cx: number, base: number, r: number) => {
+        let d = "";
+        for (let ring = rings; ring >= 1; ring--) d += arc(cx, base, (r * ring) / rings);
+        return d;
+    };
+
+    const rows: SeigaihaRow[] = [];
+    const crest: SeigaihaScale[] = [];
+    layout.forEach(({ base, radius: r }, index) => {
+        let fill = "";
+        let stroke = "";
+        const rowLoose: LooseScale[] = [];
+        const value = n(rowOpacity(index));
+        for (const scale of scales) {
+            if (scale.row !== index) continue;
+            const id = looseId.get(scale);
+            if (id === undefined) {
+                fill += paper(scale.cx, base, r, height);
+                stroke += ringsOf(scale.cx, base, r);
+                continue;
+            }
+            const kept = { id, cx: n(scale.cx), base: n(base), radius: n(r), opacity: value };
+            rowLoose.push({ ...kept, fill: paper(scale.cx, base, r, height), stroke: ringsOf(scale.cx, base, r) });
+            crest.push(kept);
+        }
+        if (!stroke && rowLoose.length === 0) return;
+        rows.push({ index, base: n(base), radius: n(r), opacity: value, fill, stroke, loose: rowLoose });
+    });
+    crest.sort((a, b) => a.id - b.id);
+
+    return { width, height, radius, rows, crest };
 }
 
 /**
@@ -179,7 +273,13 @@ export const SEA_HEIGHT: Record<SeaKind, { wide: number; narrow: number }> = {
  *   the left, where the sun sets, so its lower half sinks behind two or three
  *   crests instead of being cut by a single scale;
  */
-export function seaFor(kind: SeaKind, width: number): SeigaihaField {
+/**
+ * Crest scales the hero sea keeps apart for the scale journey: from 768px about a
+ * hundred (two or three crest layers), on phones about three dozen.
+ */
+export const looseCrestFor = (width: number) => (width >= 768 ? 96 : 36);
+
+export function seaFor(kind: SeaKind, width: number, loose = 0): SeigaihaField {
     const wide = width >= 768;
     const radius = wide ? 40 : 24;
     const height = SEA_HEIGHT[kind][wide ? "wide" : "narrow"];
@@ -193,6 +293,7 @@ export function seaFor(kind: SeaKind, width: number): SeigaihaField {
                 opacity: [0.3, 0.7],
                 // The near rows fade out, so the sea bleeds into the paper like a print.
                 fade: [0.45, 0.25, 0.1],
+                loose,
             });
         case "footer": {
             const contentLeft = wide ? Math.max(40, (width - 1200) / 2) : 24;
@@ -204,6 +305,7 @@ export function seaFor(kind: SeaKind, width: number): SeigaihaField {
                 vanishX: sunX,
                 swell: swell(width, wide ? 64 : 34, "right", sunX + (wide ? 60 : 30)),
                 opacity: [0.3, 0.65],
+                loose,
             });
         }
     }

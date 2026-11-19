@@ -7,6 +7,7 @@ import Servicios from "@/components/sections/Servicios";
 import Contacto from "@/components/sections/Contacto";
 import { SectionMark } from "@/components/ui/SectionMark";
 import { TravelingSun } from "@/components/ui/TravelingSun";
+import { ScaleJourney } from "@/components/ui/ScaleJourney";
 import { PageMotion } from "@/components/ui/PageMotion";
 import { FloatingContact } from "@/components/ui/FloatingContact";
 
@@ -25,6 +26,9 @@ export default function Home() {
         Saltar al contenido
       </a>
       {/* "El viaje del sol": one sun behind everything, rising in the hero and setting in the footer. */}
+      {/* The sea's scales follow the sun: spray, wake, fans, momiji, and back to the sea.
+          Behind the sun, so the disc occludes them like the seas do. */}
+      <ScaleJourney />
       <TravelingSun />
       <main id="main" tabIndex={-1} className="relative z-10 focus:outline-none">
         <Hero />

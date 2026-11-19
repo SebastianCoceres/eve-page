@@ -25,11 +25,15 @@ export function useSeaField(field: SeigaihaField | null, kind: SeaKind) {
         mm.add("(prefers-reduced-motion: no-preference)", () => {
             drawn.current = true;
             if (kind === "hero") {
+                // Rows from the centre row out, 30ms apart; a row's loose crest scales
+                // (their own paths, see SeaField) draw with their row.
+                const center = (field.rows.length - 1) / 2;
                 gsap.from(strokes, {
                     drawSVG: "50% 50%",
                     duration: 1.0,
                     ease: "power2.inOut",
-                    stagger: { each: 0.03, from: "center" },
+                    stagger: (_index: number, target: Element) =>
+                        0.03 * Math.abs(Number((target as SVGElement).dataset.row ?? center) - center),
                 });
                 return;
             }

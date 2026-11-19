@@ -12,6 +12,31 @@ export interface Rect { l: number; t: number; r: number; b: number }
 export interface Point { x: number; y: number }
 export interface Zone extends Point { d: number }
 
+/** An element's box in document coordinates. */
+export const docRect = (element: Element): Rect => {
+    const r = element.getBoundingClientRect();
+    return { l: r.left, t: r.top + window.scrollY, r: r.right, b: r.bottom + window.scrollY };
+};
+
+/**
+ * A sticky block's travel (Sobre mí's left column, `[data-sun-sticky]`, which
+ * rests at the top of its grid cell): how far it has moved down its cell now and
+ * at most (px), and the scroll range over which it moves. Null when it is not
+ * sticky at this width.
+ */
+export type StickyTravel = { now: number; total: number; start: number; end: number };
+export function stickyTravel(sticky: HTMLElement | null): StickyTravel | null {
+    const cell = sticky?.parentElement;
+    if (!sticky || !cell) return null;
+    const style = getComputedStyle(sticky);
+    if (style.position !== "sticky") return null;
+    const top = parseFloat(style.top) || 0;
+    const c = docRect(cell);
+    const total = Math.max(0, c.b - c.t - sticky.offsetHeight);
+    const now = sticky.getBoundingClientRect().top - cell.getBoundingClientRect().top;
+    return { now, total, start: c.t - top, end: c.t - top + total };
+}
+
 export const CLEARANCE = 48;
 /** The least room between a parked disc and the top of the viewport. */
 export const SKY_TOP = 32;
