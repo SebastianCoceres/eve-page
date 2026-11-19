@@ -28,6 +28,7 @@ Single-page landing in Spanish. Sections: Hero, Mi enfoque, Servicios, Sobre mí
 - Values: Transparencia, Innovación, Compromiso.
 - Contact form: an optional phone field ("Teléfono (opcional)"), approved by the client, so the help line "Si prefieres, déjame tu número de teléfono y charlamos sobre tu proyecto." is now true.
 - Existing copy is confirmed and must be preserved. Exception, approved by the client: Mi enfoque and Sobre mí are distilled into short points (a mincho line plus at most one short note), derived only from Eve's confirmed copy, so visitors scan instead of read. The client extended it to Servicios, keeping the emakimono's look: each service keeps its name and order and is said in two or three short points taken only from Eve's copy for that service. Overpromising phrases ("resultados excepcionales", "garantizando", "el éxito de tu negocio") were dropped, per Authenticity over persuasion.
+- Navigation: no menu (approved by the client: it added little to a one-page read). The only persistent action is a floating "Contáctame" pill, shown once the hero's own Contáctame has scrolled away and hidden while Contacto is in view, so contacting Eve stays one tap away from every section (Principle 2).
 - Stack per AGENTS.md: Next.js App Router, Tailwind v4 tokens in `app/globals.css`, GSAP for motion, Zustand stores. No dark mode.
 
 ## Brand Commitments

@@ -94,7 +94,6 @@ spacing:
   section-sm: "96px"
   section-md: "128px"
   section-xl: "160px"
-  navbar: "64px"
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
@@ -172,7 +171,7 @@ A warm paper that changes with the day, an ink, one cobalt and one sun; nothing 
 - **Kaki Persimmon** (sun-warm): the sun as the day turns (the live sun is `--sun-now` mixed toward persimmon by `--sun-late`), the sunset disc in the footer, and the hanko seal.
 
 ### Neutral
-- **Kinari Dawn / Midday / Autumn Afternoon / Dusk** (paper-morning, paper-midday, paper-afternoon, paper-dusk): the four flat stops of the live `--paper`, which is the page background, the navbar and every sea fill.
+- **Kinari Dawn / Midday / Autumn Afternoon / Dusk** (paper-morning, paper-midday, paper-afternoon, paper-dusk): the four flat stops of the live `--paper`, which is the page background and every sea fill.
 - **Paper Shade** (surface): a fixed 6% step of the paper toward umber; scrollbar track.
 - **Paper Light** (field): a fixed 28% step of the paper toward light; form fields and toasts.
 - **Paper Hairline** (hairline): a fixed 13% step of the paper toward ink; every border by default.
@@ -218,7 +217,7 @@ A warm paper that changes with the day, an ink, one cobalt and one sun; nothing 
 
 ## Layout
 
-One content column: 1200px max, 24px gutter below 768px and 40px from 768px. Only two breakpoints exist, md (768px) and xl (1280px); the emakimono pins from 1024px by media query in script. Sections share one vertical rhythm of 96 / 128 / 160px. The navbar is 64px and opaque in the live paper, with a hairline that appears after 8px of scroll. Grids are 12 columns with 24px gaps; Sobre mí and Contacto split 5 / 6 with a column gap at xl. The hero stage is one viewport under the navbar (min 560px). Text never runs over the seas or the sun; the sun travels only through computed free zones at least 48px from text.
+One content column: 1200px max, 24px gutter below 768px and 40px from 768px. Only two breakpoints exist, md (768px) and xl (1280px); the emakimono pins from 1024px by media query in script. Sections share one vertical rhythm of 96 / 128 / 160px. There is no navbar: the one persistent action is a floating Contáctame pill in the bottom-right corner of the content column. Grids are 12 columns with 24px gaps; Sobre mí and Contacto split 5 / 6 with a column gap at xl. The hero stage is one viewport (min 560px). Text never runs over the seas or the sun; the sun travels only through computed free zones at least 48px from text.
 
 **The Two Breakpoints Rule.** Design for below 768px, from 768px and from 1280px. Do not introduce sm, lg or 2xl.
 
@@ -239,7 +238,7 @@ Square by default. Primary actions are full pills; form fields have a 6px radius
 ### Buttons
 Quiet and confident: one cobalt pill per decision.
 - **Shape:** full pill.
-- **Primary:** cobalt fill, paper-white Geist 500 at 15px, 48px tall with 28px side padding; compact variant 44px with 24px (the navbar's Contacto).
+- **Primary:** cobalt fill, paper-white Geist 500 at 15px, 48px tall with 28px side padding; compact variant 44px with 24px.
 - **Hover / Focus:** fill deepens to Deep Cobalt over 150ms; 2px cobalt outline at 2px offset, following the pill.
 - **Busy:** signalled with `aria-disabled` and a spinner, never the disabled attribute.
 - **Link variant:** the one link rule (below), 44px hit area.
@@ -255,8 +254,8 @@ Quiet and confident: one cobalt pill per decision.
 - **Sent:** the confirmation stays under the send pill as a mincho lead ("Mensaje enviado. Te responderé pronto.", a polite status) until a new message is started; no success toast.
 
 ### Navigation
-- **Desktop:** no brand mark; Mi enfoque, ¿Qué ofrezco? and Sobre mí as 15px muted links flush left, ink when active, and the compact cobalt pill on the right. One 1px ink underline slides and stretches between links (0.45s power3.out).
-- **Mobile:** "Menú" alone on the right opens a full paper panel of mincho links at 32px, closed by "Cerrar".
+No menu: the page is one day read top to bottom. A skip link ("Saltar al contenido") is the first stop.
+- **Floating Contáctame:** the primary pill (cobalt, 48px, no shadow), fixed in the bottom-right corner inside the content column's gutter, above the safe area on phones. That corner is the one the sun never crosses (it rests top right in the hero and sets bottom left). It appears only once the hero's own Contáctame has left the viewport, and hides when that button returns and while Contacto or the footer is in view. It enters with a short rise, fade and scale from its corner (0.45s expo.out) and leaves in 0.2s; under reduced motion it simply appears. Hidden, it is inert. It scrolls to Contacto and moves focus there.
 
 ### Seigaiha (signature)
 Generated in code (`lib/seigaiha`), never as an image. Seas: whole scales in three depth tiers with a swell line, flat per-row opacities and the nearest rows dissolving into the paper. Marks: a single 48px scale at the column edge between chapters, drawn from the centre outward once on enter. Fans: a single scale used as the emakimono's resting fans, the values' separators and Sobre mí's milestones.

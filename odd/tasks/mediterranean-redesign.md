@@ -134,3 +134,21 @@ Verification (T9, final tree including T10):
 - Reload probe (`scratchpad/t10/reload.mjs`: F5 and a hard reload at 0, mid-hero, Mi enfoque, Servicios and Sobre mí; 1440/1024/390): 0 failures; the sun is at its place and visible (or transparent only on a designed side switch) right after load.
 - Whole-page sweep (40px steps, settled): no discontinuities, no text closer than 48px (min 48 at 1440, 54 at 1280, 51 at 1024, 52 at 800, 53 at 390), no horizontal overflow at 1440/1280/1024/800/390.
 - `pnpm exec tsc --noEmit`: pass. `pnpm exec eslint .`: 0 problems. `pnpm build`: pass.
+
+## T10 No navbar, a floating Contáctame
+
+User request: "remove the menu, it adds little; keep only the hero's Contáctame and make it appear fixed, with an animated entrance, once the hero button leaves the screen."
+
+- [x] T10.1 Remove the navbar. Route: inline writer (mechanical edits across sections, prepared from a grep of every dependency). Gone: `components/sections/Navbar.tsx`, `components/ui/Navbar.tsx` (desktop links, mobile panel and its focus trap, the 64px bar and hairline), `stores/nav` and `NavbarProvider`, and `hooks/useIsInViewWithStore.ts` (it only fed the active-link state). Kept: the skip link, `scrollToSection` (now without an offset) with focus on the section, and the service preselect. Offsets dropped: `scroll-mt-16`, the hero pin (`top top`) and `--hero-h` (`max(560px, 100svh)`), `FOCUS_PIN_TOP` 96 → 32, the emakimono's pinned `pt-16`, the Sobre mí sticky top 112 → 48px. The sun's `NAVBAR` band became `SKY_TOP` (32px from the top edge).
+- [x] T10.2 Floating Contáctame (`components/ui/FloatingContact.tsx`). The primary pill (cobalt, 48px, no shadow), fixed bottom right inside the content column's gutter (24 / 40px, the 1200px column edge from 1280; `max(24px, safe-area + 16px)` from the bottom). Why that corner: the sun rests top right in the hero (`hero-high`) and leaves the hero eastward at that height, travels the upper half of the sky on the right in Mi enfoque and the emakimono, and sets bottom left; top right collided with its hero exit, bottom right is never crossed (measured minimum gap 360px at 1440, 76px at 390). Shown only when the hero's `[data-hero-cta][href="#contact"]` is out of the viewport, hidden when it returns and while Contacto or the footer is in view (IntersectionObserver). Enter 0.45s `expo.out` (rise 24px, fade, scale 0.92 → 1 from its corner), exit 0.2s `power2.in`, instant under reduced motion; hidden it is `invisible` and `inert`.
+- [x] T10.3 Docs: AGENTS.md, DESIGN.md (Navigation, layout, tokens), PRODUCT.md. Commit: see below.
+
+Commits: 96c2012 (feat), docs below.
+
+Verification (T10):
+- Pins re-verified (`scratchpad/t10/pins.mjs`): hero pinned at 0 (1440/1280/1024/800); Mi enfoque stage at 32px and the emakimono at 0 (1440/1280/1024); Sobre mí sticky at 48px (1440/1280).
+- Floating button (`scratchpad/t10/fab.mjs`, 1440/1024/390, motion and reduced motion): hidden and inert at load, never reached by Tab while hidden; shown once the hero CTA leaves (mid-entrance opacity 0.6–0.7 with motion, instant under reduced motion); hidden again back at the hero, at Contacto and at the page end; focusable when shown; a click lands on Contacto (top 0) with focus on `#contact`.
+- Sun sweep with the button (`scratchpad/t10/sweep7.mjs`): no sun closer than 48px to the shown button at any width (min 360 at 1440/1280, 359 at 1024, 282 at 800, 76 at 390); text, jump and overflow results as in T9.
+- `pnpm exec tsc --noEmit`: pass. `pnpm exec eslint .`: 0 problems. `pnpm build`: pass.
+
+Next step: client review of the calmer sun and the floating Contáctame on a phone.
