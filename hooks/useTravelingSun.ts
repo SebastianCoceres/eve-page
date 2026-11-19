@@ -111,30 +111,11 @@ const ABOUT_LOOSE_HEIGHT = 0.62;
 /** How far the sun sinks while it crosses Mi enfoque's sky, as a share of the viewport height (the afternoon begins). */
 const FOCUS_SINK = 0.04;
 
-/**
- * Smoothing of what the sun does on its own (seconds): the time constant of an
- * exponential follow, so a coarse wheel step becomes one soft glide (about the
- * feel of a 0.8s scrub, 95% there in 0.9s). What the page or a pin does to it is
- * never smoothed (see `frame`), so it never drifts against a pinned chapter.
- */
-const SMOOTHING = 0.3;
-/** The most the smoothed sun may trail its exact place, as a share of the viewport height. */
-const MAX_LAG = 0.2;
-
-/**
- * What the sun is attached to on a leg: 1, the viewport (a pinned chapter, a
- * sticky column, a passage between chapters: its document y carries the scroll
- * one to one); 0, the page (it rests beside text that scrolls, or glides with it).
- */
-type Frame = number | ((scroll: number) => number);
-
 type Leg = {
     points: Point[];
     zone: Zone;
     at: number;
     hidden?: boolean;
-    /** Default 0 (the page). */
-    frame?: Frame;
     /** A leg driven by a function of the scroll position (document px) instead of a motion path. */
     track?: (scroll: number) => Zone;
 };
@@ -204,11 +185,12 @@ function descentTrack(keys: Zone[], window: number) {
 /**
  * "El viaje del sol": one sun crosses the page along a day's arc, east to west.
  *
- * The sun is a document-level layer (behind main and footer) whose path is
- * computed from the real layout on every resize and every ScrollTrigger refresh
- * (pin spacers included). It is the only owner of the sun: the pinned chapters
- * (hero, Mi enfoque, emakimono) do not move it; their pin ranges become legs of
- * its one timeline, where a pinned position is a viewport position plus the scroll.
+ * The sun is a fixed, viewport-sized layer (behind main and footer) whose path is
+ * computed in document coordinates from the real layout on every resize and every
+ * ScrollTrigger refresh (pin spacers included). It is the only owner of the sun:
+ * the pinned chapters (hero, Mi enfoque, emakimono) do not move it; their pin
+ * ranges become legs of its one timeline, where a pinned position is a viewport
+ * position plus the scroll.
  *
  * Calm: it rises once (the hero sunrise) and never bobs after that. Inside a
  * chapter it holds or moves one slow way; between chapters (`passage`) it only
@@ -244,9 +226,10 @@ function descentTrack(keys: Zone[], window: number) {
  *   comes back in under Contacto's left column, and goes straight down between
  *   the footer's logo and socials into the sea. Narrower, it leaves by its side
  *   margin, sinks out of view and slides in low, under the footer text, to set.
- * The timeline maps the exact scroll to the sun's exact place; a ticker draws it,
- * easing only the sun's own motion (SMOOTHING, see `draw`), so a pinned chapter
- * and the sun never drift apart and a slow wheel step is one soft glide.
+ * The timeline maps the exact scroll to the sun's exact place; every frame a ticker
+ * reads the live scroll and draws that place, unsmoothed, in the viewport (see
+ * `draw`): the sun is a pure function of the scroll, so it never trails, overshoots
+ * or bounces back. Its softness comes from the path (eased segments), not from time.
  *
  * Phones (<768px): never beside text. After rising in the hero it slides out to
  * the right; it peeks in from the right edge in the empty band between Mi
@@ -266,17 +249,14 @@ export function useTravelingSun() {
         const mm = gsap.matchMedia();
         mm.add("(prefers-reduced-motion: no-preference)", () => {
             let timeline: gsap.core.Timeline | null = null;
-            // What the ticker draws from: the latest build's timeline, its goal and frames.
+            // What the ticker draws from: the latest build's timeline and its goal.
             let view: {
                 timeline: gsap.core.Timeline;
                 goal: { x: number; y: number; scale: number; opacity: number; late: number };
-                frameAt: (scroll: number) => number;
                 maxScroll: number;
-                lag: number;
-                base: number;
-                width: number;
             } | null = null;
-            let drawn: { x: number; y: number; scale: number; opacity: number; scroll: number } | null = null;
+            // The scroll position last drawn (-1: draw on the next frame whatever the scroll).
+            let drawnAt = -1;
             let introPlayed = false;
 
             const build = () => {
@@ -360,7 +340,7 @@ export function useTravelingSun() {
                     const coming: Zone = { x: isOut(b) ? b.x : offX(sideOf(b), dMax), y: yIn(bFrame, b, t1, m1), d: b.d };
                     if (exit > 0) {
                         legs.push({
-                            points: [], zone: gone, at: m0, frame: aFrame,
+                            points: [], zone: gone, at: m0,
                             track: (scroll) => ({ x: lerp(a.x, gone.x, sine((scroll - t0) / exit)), y: yIn(aFrame, a, t0, scroll), d: a.d }),
                         });
                     }
@@ -368,7 +348,7 @@ export function useTravelingSun() {
                     const v0 = gone.y - m0;
                     const v1 = coming.y - m1;
                     legs.push({
-                        points: [], zone: coming, at: m1, frame: 1, hidden: sideOf(gone) !== sideOf(coming),
+                        points: [], zone: coming, at: m1, hidden: sideOf(gone) !== sideOf(coming),
                         track: (scroll) => {
                             const q = sine((scroll - m0) / Math.max(1, m1 - m0));
                             return { x: lerp(gone.x, coming.x, q), y: lerp(v0, v1, q) + scroll, d: lerp(a.d, b.d, q) };
@@ -376,7 +356,7 @@ export function useTravelingSun() {
                     });
                     if (m1 < t1) {
                         legs.push({
-                            points: [], zone: b, at: t1, frame: bFrame,
+                            points: [], zone: b, at: t1,
                             track: (scroll) => ({ x: lerp(coming.x, b.x, sine((scroll - m1) / Math.max(1, t1 - m1))), y: yIn(bFrame, b, t1, scroll), d: b.d }),
                         });
                     }
@@ -395,7 +375,6 @@ export function useTravelingSun() {
                             points: [],
                             zone: { ...to, y: to.y + heroPin.end },
                             at: heroPin.end,
-                            frame: 1,
                             track: (scroll) => {
                                 // Gently: its fastest climb stays near the page's own speed.
                                 const t = gentle((scroll - heroPin.start) / (span * HERO_RISE));
@@ -443,7 +422,6 @@ export function useTravelingSun() {
                                     points: [],
                                     zone: { x: xOut, y: skyY + emakiPin.end, d },
                                     at: emakiPin.end,
-                                    frame: 1,
                                     track: (scroll) => ({
                                         x: lerp(xIn, xOut, sine((scroll - emakiPin.start) / span)),
                                         y: skyY + scroll,
@@ -495,7 +473,6 @@ export function useTravelingSun() {
                                 points: [],
                                 zone: { x: west, y: rest + sink + pin.end, d },
                                 at: pin.end,
-                                frame: 1,
                                 track: (scroll) => {
                                     const t = sine(((scroll - pin.start) / span - crossFrom) / (crossTo - crossFrom));
                                     return { x: lerp(east, west, t), y: rest + sink * t + scroll, d };
@@ -554,8 +531,6 @@ export function useTravelingSun() {
                             points: [],
                             zone: rest,
                             at: hold,
-                            // Held in the viewport while the column sticks, on the page otherwise.
-                            frame: (scroll) => (aboutTravel && scroll >= aboutTravel.start && scroll <= aboutTravel.end ? 1 : 0),
                             track: (scroll) => ({ ...about, y: aboutY(scroll) }),
                         });
                         warmFrom = parkFrom;
@@ -572,7 +547,6 @@ export function useTravelingSun() {
                             points: [],
                             zone: out,
                             at: slideAt,
-                            frame: aboutTravel ? 1 : 0,
                             track: (scroll) => {
                                 const t = sine((scroll - hold) / span);
                                 return { x: lerp(rest.x, out.x, t), y: slideY(scroll), d: lerp(rest.d, out.d, t) };
@@ -594,7 +568,7 @@ export function useTravelingSun() {
                         const begin = Math.min(maxScroll - 2, previousTime + (slidDown ? 1 : vh * 0.04));
                         legs.push({ points: [previous, previous], zone: previous, at: begin });
                         const walk = descentTrack(keys, maxScroll - begin);
-                        legs.push({ points: [], zone: end, at: maxScroll, frame: 1, track: (scroll) => walk((scroll - begin) / Math.max(1, maxScroll - begin)) });
+                        legs.push({ points: [], zone: end, at: maxScroll, track: (scroll) => walk((scroll - begin) / Math.max(1, maxScroll - begin)) });
                     };
                     let planned = false;
                     const contact = document.getElementById("contact");
@@ -632,10 +606,10 @@ export function useTravelingSun() {
                             below(previous.y, Math.min(outX(side), previous.x) - r, Math.max(outX(side), previous.x) + r) - CLEARANCE - r,
                         ));
                         const outAt = Math.min(maxScroll - slide - 2, previousTime + Math.max(vh * 0.25, (exitY - previous.y) / SINK));
-                        legs.push({ points: [previous, { x: outX(side), y: exitY }], zone: { ...previous, x: outX(side), y: exitY }, at: Math.max(previousTime + 1, outAt), frame: 1 });
-                        legs.push({ points: [{ x: outX(side), y: exitY }, { x: outX(side), y: low }], zone: { x: outX(side), y: low, d: end.d }, at: maxScroll - slide - 1, frame: 1 });
+                        legs.push({ points: [previous, { x: outX(side), y: exitY }], zone: { ...previous, x: outX(side), y: exitY }, at: Math.max(previousTime + 1, outAt) });
+                        legs.push({ points: [{ x: outX(side), y: exitY }, { x: outX(side), y: low }], zone: { x: outX(side), y: low, d: end.d }, at: maxScroll - slide - 1 });
                         if (side === "right") {
-                            legs.push({ points: [{ x: outX("right"), y: low }, { x: outX("left"), y: low }], zone: { x: outX("left"), y: low, d: end.d }, at: maxScroll - slide, hidden: true, frame: 1 });
+                            legs.push({ points: [{ x: outX("right"), y: low }, { x: outX("left"), y: low }], zone: { x: outX("left"), y: low, d: end.d }, at: maxScroll - slide, hidden: true });
                         }
                         legs.push({ points: [{ x: outX("left"), y: low }, end], zone: end, at: maxScroll });
                     }
@@ -692,15 +666,13 @@ export function useTravelingSun() {
                 root.dataset.keyframes = legs.map((leg) => Math.round(leg.at)).join(",");
 
                 // The timeline computes where the sun belongs at each scroll position (its
-                // seconds are scroll px) into `goal`; the ticker below draws it, smoothed.
+                // seconds are scroll px) into `goal`, in document coordinates; `draw` shows it.
                 const goal = { x: 0, y: 0, scale: 1, opacity: 1, late: 0 };
-                const frames: Array<{ to: number; frame: Frame }> = [];
                 timeline = gsap.timeline({ paused: true, defaults: { ease: "sine.inOut" } });
                 timeline.set(goal, { ...place(start), scale: 1 }, 0);
                 let time = 0;
                 for (const leg of legs) {
                     const duration = Math.max(1, leg.at - time);
-                    frames.push({ to: time + duration, frame: leg.frame ?? 0 });
                     // A hidden leg switches sides out of view: the disc is transparent on the way.
                     if (leg.hidden) timeline.set(goal, { opacity: 0 }, time);
                     const track = leg.track;
@@ -737,17 +709,12 @@ export function useTravelingSun() {
                 // Timeline seconds equal scroll pixels.
                 if (timeline.duration() < maxScroll) timeline.set({}, {}, maxScroll);
 
-                const frameAt = (scroll: number) => {
-                    const leg = frames.find((f) => scroll < f.to) ?? frames[frames.length - 1];
-                    const frame = leg?.frame ?? 0;
-                    return typeof frame === "function" ? frame(scroll) : frame;
-                };
                 // A first render through every leg, so `goal` holds the place at the
                 // current scroll even when the playhead does not move (a reload at the
                 // top, where time(0) on a fresh timeline renders nothing).
                 timeline.time(maxScroll);
-                view = { timeline, goal, frameAt, maxScroll, lag: vh * MAX_LAG, base, width: vw };
-                drawn = null;
+                view = { timeline, goal, maxScroll };
+                drawnAt = -1;
                 draw();
 
                 if (!introPlayed) {
@@ -758,41 +725,21 @@ export function useTravelingSun() {
             };
 
             /**
-             * Draws the sun every frame. Its exact place comes from the timeline at the
-             * real scroll position (so a pinned chapter and the sun never drift apart);
-             * the drawn sun follows it with an exponential ease (SMOOTHING), except for
-             * what its frame does: on a leg held in the viewport its document y takes
-             * the scroll one to one, so only its own motion is eased. Out of view
-             * (transparent) it is placed exactly, so it never shows up mid-way.
+             * Draws the sun every frame, in the frame of the fixed layer (the viewport):
+             * the timeline's place at the live scroll position, minus that same scroll.
+             * Nothing is eased or carried over from the previous frame, so the drawn sun
+             * is always exactly the function of the scroll the browser is about to
+             * paint, the same frame in which ScrollTrigger places the pinned chapters
+             * (no trailing, no overshoot, no bounce while a smooth scroll animates).
              */
             const draw = () => {
                 if (!view) return;
                 const scroll = Math.min(view.maxScroll, Math.max(0, window.scrollY));
+                if (scroll === drawnAt) return;
+                drawnAt = scroll;
                 view.timeline.time(scroll);
-                const { goal, lag } = view;
-                const late = goal.late;
-                if (!drawn || goal.opacity < 1 || drawn.opacity < 1) {
-                    drawn = { x: goal.x, y: goal.y, scale: goal.scale, opacity: goal.opacity, scroll };
-                } else {
-                    const seconds = Math.min(0.1, gsap.ticker.deltaRatio() / 60);
-                    const k = 1 - Math.exp(-seconds / SMOOTHING);
-                    const ease = (now: number, target: number) => {
-                        const next = now + (target - now) * k;
-                        return Math.abs(target - next) < 0.05 ? target : Math.min(target + lag, Math.max(target - lag, next));
-                    };
-                    drawn.y += view.frameAt(scroll) * (scroll - drawn.scroll);
-                    // Wholly past a side edge it takes its height at once (unseen), so it never
-                    // brings a lag back into view to make up there.
-                    const centre = drawn.x + view.base / 2;
-                    const radius = (view.base * drawn.scale) / 2;
-                    const unseen = centre + radius <= 0 || centre - radius >= view.width;
-                    drawn.y = unseen ? goal.y : ease(drawn.y, goal.y);
-                    drawn.x = ease(drawn.x, goal.x);
-                    drawn.scale = ease(drawn.scale, goal.scale);
-                    drawn.opacity = goal.opacity;
-                    drawn.scroll = scroll;
-                }
-                gsap.set(root, { x: drawn.x, y: drawn.y, scale: drawn.scale, opacity: drawn.opacity, "--sun-late": late });
+                const { goal } = view;
+                gsap.set(root, { x: goal.x, y: goal.y - scroll, scale: goal.scale, opacity: goal.opacity, "--sun-late": goal.late });
             };
 
             build();
