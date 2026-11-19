@@ -152,3 +152,13 @@ Verification (T10):
 - `pnpm exec tsc --noEmit`: pass. `pnpm exec eslint .`: 0 problems. `pnpm build`: pass.
 
 Next step: client review of the calmer sun and the floating Contáctame on a phone.
+
+## T11 A sun that follows the scroll exactly
+
+User report: "the sun still jumps while scrolling; as if it computed its position before and after: I scroll a little, it goes up and then back down to its place."
+
+- [x] T11.1 Diagnose per frame. Route: inline (one hook, a probe in the scratchpad). `scratchpad/t11/frames.mjs` logs every animation frame (after GSAP's ticker) under a smooth, frame-by-frame mouse-wheel scroll gesture (50–120px steps, short pauses, whole page down and up, 1440 and 390): scrollY, the sun's rect centre and the target the hook computed for that frame, then re-visits 80 logged scroll positions and lets them settle (independent "function of the scroll"). Root cause: the sun lived in a document-sized absolute layer (the browser scrolls it natively, one to one with the page) while most legs hold it in the viewport, and the ticker drew it with an exponential ease (`SMOOTHING` 0.3s, `MAX_LAG` 20% vh) that only compensated the scroll after the fact. Every scroll step moved the sun with the page, then the ease pulled it back: before, 1440: 389 visible frames moving against or without their target, up to 118px of vertical lag (x up to 180px), settled re-visit off by up to 100px; 390: 215 frames, up to 169px.
+- [x] T11.2 Fix. Route: inline (the hook and its component). The sun layer is `fixed inset-0` (viewport-sized, still clipping without horizontal scroll), so the browser never scrolls it. The timeline still computes the place in document coordinates; every frame the ticker reads the live scroll and sets `y = goal.y - scroll`, no easing and nothing carried between frames. `SMOOTHING`, `MAX_LAG` and the per-leg `frame` table were removed; the passages keep their own frames (they shape the path). After: 0 overshoot frames and 0.0px lag in every section at 1440 and 390; settled re-visit 0.00px.
+- [x] T11.3 Docs: DESIGN.md and AGENTS.md (the drawing is unsmoothed, in one frame).
+
+Verification (T11): per-frame probe before / after (`scratchpad/t11/frames-before-gesture.json`, `frames-after-gesture.json`, `summary-*.txt`). `pnpm exec tsc --noEmit`: pass. `pnpm exec eslint .`: 0 problems. `pnpm build`: pass. Skipped at the user's request (they confirmed the fix in the browser): the T9 calm metrics, the reload probe, the clearance/button/overflow sweep.
