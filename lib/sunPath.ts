@@ -4,8 +4,8 @@
  * For each section the sun gets a keyframe "zone": the free spot nearest a target
  * x (east to west across the page) whose disc keeps at least CLEARANCE px from
  * every text block and opaque surface, and that can slide out to its side edge
- * through empty space. Between zones the sun leaves sideways through that space
- * and changes height only out of view (see the passage in useTravelingSun).
+ * through empty space. Between zones the sun goes sideways through that space to
+ * its side edge and waits there in view (see the passage in useTravelingSun).
  */
 
 export interface Rect { l: number; t: number; r: number; b: number }

@@ -90,12 +90,17 @@ const HERO_RISE = 0.4;
 const ABOUT_LOOSE_HEIGHT = 0.62;
 /** How far the sun sinks while it crosses Mi enfoque's sky, as a share of the viewport height (the afternoon begins). */
 const FOCUS_SINK = 0.04;
+/**
+ * Between chapters the sun waits at a side edge: its centre this share of its
+ * diameter past the edge (40% of the disc in view; 20% on phones, whose gutter is
+ * narrow).
+ */
+const PEEK = { wide: 0.1, narrow: 0.3 };
 
 type Leg = {
     points: Point[];
     zone: Zone;
     at: number;
-    hidden?: boolean;
     /** A leg driven by a function of the scroll position (document px) instead of a motion path. */
     track?: (scroll: number) => Zone;
 };
@@ -163,7 +168,8 @@ function descentTrack(keys: Zone[], window: number) {
 }
 
 /**
- * "El viaje del sol": one sun crosses the page along a day's arc, east to west.
+ * "El viaje del sol": one sun crosses the page along a day's arc, east to west,
+ * and never leaves the screen.
  *
  * The sun is a fixed, viewport-sized layer (behind main and footer) whose path is
  * computed in document coordinates from the real layout on every resize and every
@@ -172,50 +178,50 @@ function descentTrack(keys: Zone[], window: number) {
  * ranges become legs of its one timeline, where a pinned position is a viewport
  * position plus the scroll.
  *
- * Calm: it rises once (the hero sunrise) and never bobs after that. Inside a
- * chapter it holds or moves one slow way; between chapters (`passage`) it only
- * leaves and enters sideways, in the frame of the chapter (held in the viewport
- * by a pin or a sticky column, or riding with the page beside text that
- * scrolls), and changes height only out of view.
+ * Calm and always in view: it rises once (the hero sunrise, while the hero sea
+ * dissolves under it) and never bobs after that. Inside a chapter it holds or
+ * moves one slow way; between chapters (`passage`) it moves sideways to its side
+ * edge in the frame of the chapter it leaves and waits there as a crescent (PEEK:
+ * 40% of the disc in view, 20% on phones), held in the viewport, changing height
+ * slowly while the page scrolls past, then comes in sideways in the frame of the
+ * chapter it reaches. To change sides between chapters it climbs to the top edge,
+ * crosses along it (a crescent) and comes down the other edge.
  *
  * From 768px:
- * - hero pin: the sun rises from the hero anchor, out of the sea, to the
- *   `hero-high` anchor in the upper right, shrinking as it climbs, then rides
- *   the rest of the pin at rest; after the unpin it leaves by the east edge at
- *   that height;
+ * - hero pin: the sun rises from the hero anchor to the `hero-high` anchor in the
+ *   upper right, shrinking as it climbs, then rides the rest of the pin at rest;
+ *   after the unpin it waits at the east edge;
  * - Mi enfoque, pinned from 1024px (two acts, see useFocusScene): it slides in from
  *   the east as the pin begins and stands still right of the problem (48px+
  *   from its text); as the problem steps back it crosses the sky to the left
  *   (FOCUS_SCENE.CROSS), sinking a little, and stands left of the answer until
- *   the unpin, then leaves by the west edge at its height. Not pinned
- *   (768–1023px or a stage too tall), it parks in the section's free zone (at
- *   least 48px from any text, whole in view; see lib/sunPath),
- *   arriving and leaving sideways through the free band beside it;
- * - emakimono (pinned from 1024px): out of view (transparent when it changes
- *   sides, never west to east in view) it reaches the sky's height and slides in
- *   from the east as the pin begins, then crosses the band level, east to west,
- *   for the whole unroll, above the horizon and below the heading, behind the
- *   fans, never over panel text; it leaves by the west edge as the pin ends;
- * - out of view it comes down the west margin and glides in with the page, to
- *   the afternoon sun's disc in Sobre mí;
+ *   the unpin, then waits at the west edge. Not pinned (768–1023px or a stage too
+ *   tall), it parks in the section's free zone (at least 48px from any text,
+ *   whole in view; see lib/sunPath), arriving and leaving sideways through the
+ *   free band beside it;
+ * - emakimono (pinned from 1024px): it waits at the west edge at the sky's height
+ *   until the pin holds the heading still, comes in over the first stretch of the
+ *   unroll (above the horizon, below the heading, behind the fans, never over panel
+ *   text) and drifts back out to the west edge by the end of the pin;
+ * - down the west edge it glides in with the page to the afternoon sun's disc in
+ *   Sobre mí;
  * - Sobre mí: it parks exactly as that disc (`[data-sun-anchor="about"]`), whole:
  *   nothing occludes it there, so it never sinks, it only warms;
  * - from there it only sinks: one continuous descent, linear in scroll and faster
  *   than the page (SINK), so it moves down the viewport the whole way. From
- *   1280px it slips out from its column to the left margin before Contacto,
- *   comes back in under Contacto's left column, and goes straight down between
- *   the footer's logo and socials into the sea. Narrower, it leaves by its side
- *   margin, sinks out of view and slides in low, under the footer text, to set.
+ *   1280px it slips out from its column to the left margin before Contacto (at
+ *   least 24px of it in view), comes back in under Contacto's left column, and goes
+ *   straight down between the footer's logo and socials into the sea. Narrower, it
+ *   goes down its side edge and comes in low, under the footer text, to set.
  * The timeline maps the exact scroll to the sun's exact place; every frame a ticker
  * reads the live scroll and draws that place, unsmoothed, in the viewport (see
  * `draw`): the sun is a pure function of the scroll, so it never trails, overshoots
  * or bounces back. Its softness comes from the path (eased segments), not from time.
  *
- * Phones (<768px): never beside text. After rising in the hero it slides out to
- * the right; it peeks in from the right edge in the empty band between Mi
- * enfoque and Servicios; it switches sides out of view and slides in from the
- * west to the Sobre mí disc, parks as it, slides back out to the west
- * and finally sets in the footer sea.
+ * Phones (<768px): after the hero it waits high at the right edge, small (a 20%
+ * crescent, the gutter is narrow), crosses to the west along the top edge for the
+ * Sobre mí disc, parks as it, waits small at the west edge on the way down and
+ * sets in the footer sea.
  * Reduced motion: never runs; the static anchors show instead.
  */
 export function useTravelingSun() {
@@ -283,9 +289,6 @@ export function useTravelingSun() {
 
                 const legs: Leg[] = [];
                 const obstacles = collectObstacles();
-                const inside = (rect: Rect) => obstacles.filter((o) => o.t >= rect.t && o.b <= rect.b);
-                const textTop = (rect: Rect) => Math.min(rect.b, ...inside(rect).map((o) => o.t));
-                const textBottom = (rect: Rect) => Math.max(rect.t, ...inside(rect).map((o) => o.b));
                 const aboutAnchor = document.querySelector('[data-sun-anchor="about"]');
                 // Sobre mí's left column is sticky from 1280px: the disc's place is a
                 // function of the scroll. `about` is where it rests before the column sticks.
@@ -297,41 +300,55 @@ export function useTravelingSun() {
                 let warmFrom = -1;
                 let warmTo = -1;
 
-                // The passage between two chapters. Sideways out of view in the frame of
-                // the chapter it leaves (with the page, or held in the viewport), any change
-                // of height out of view (transparent when it changes sides, so it is never
-                // seen going west to east), and sideways in, in the frame of the chapter it
-                // reaches. In view it only ever moves sideways in its frame: it never drifts
-                // with the page and is pulled back, and never bobs between two chapters.
-                const offX = (side: "left" | "right", d: number) => (side === "right" ? vw + d / 2 + 8 : -d / 2 - 8);
+                // The passage between two chapters, never out of view. Sideways to its side
+                // edge in the frame of the chapter it leaves (with the page, or held in the
+                // viewport), any change of height at the edge as a crescent held in the
+                // viewport, and sideways in, in the frame of the chapter it reaches. It never
+                // drifts with the page and is pulled back, and never bobs between two chapters.
+                // At the edge, never gone: the disc's centre a little past its side edge,
+                // so a crescent of it stays in view while the page scrolls past.
+                const peek = PEEK[vw >= 768 ? "wide" : "narrow"];
+                const edgeX = (side: "left" | "right", d: number) => (side === "right" ? vw + d * peek : -d * peek);
                 const sideOf = (zone: Zone) => (zone.x >= vw / 2 ? "right" : "left");
-                const isOut = (zone: Zone) => zone.x <= -zone.d / 2 || zone.x >= vw + zone.d / 2;
                 // Its document y in a frame: fixed on the page (0), or fixed in the viewport (1).
                 const yIn = (frame: 0 | 1, zone: Zone, time: number, scroll: number) => (frame ? zone.y - time + scroll : zone.y);
                 const passage = (a: Zone, aFrame: 0 | 1, t0: number, b: Zone, bFrame: 0 | 1, t1: number) => {
                     const span = Math.max(3, t1 - t0);
-                    const exit = isOut(a) ? 0 : Math.min(vh * 0.25, span * 0.3);
-                    const enter = isOut(b) ? 0 : Math.min(vh * 0.3, span * 0.4);
+                    // Short enough that a disc riding with the page is still in view when it
+                    // reaches the edge (and already in view when it leaves it).
+                    let exit = Math.min(vh * 0.25, span * 0.3);
+                    let enter = Math.min(vh * 0.3, span * 0.4);
+                    if (!aFrame) exit = Math.max(1, Math.min(exit, a.y - t0 + a.d * peek));
+                    if (!bFrame) enter = Math.max(1, Math.min(enter, vh + b.d * peek - (b.y - t1)));
                     const m0 = t0 + exit;
                     const m1 = Math.max(m0 + 1, t1 - enter);
-                    // Past the edge by the larger disc, so it stays out of view while it changes size.
-                    const dMax = Math.max(a.d, b.d);
-                    const gone: Zone = { x: offX(sideOf(a), dMax), y: yIn(aFrame, a, t0, m0), d: a.d };
-                    const coming: Zone = { x: isOut(b) ? b.x : offX(sideOf(b), dMax), y: yIn(bFrame, b, t1, m1), d: b.d };
-                    if (exit > 0) {
-                        legs.push({
-                            points: [], zone: gone, at: m0,
-                            track: (scroll) => ({ x: lerp(a.x, gone.x, sine((scroll - t0) / exit)), y: yIn(aFrame, a, t0, scroll), d: a.d }),
-                        });
-                    }
-                    // Out of view: from one height in the viewport to the other.
+                    const gone: Zone = { x: edgeX(sideOf(a), a.d), y: yIn(aFrame, a, t0, m0), d: a.d };
+                    const coming: Zone = { x: edgeX(sideOf(b), b.d), y: yIn(bFrame, b, t1, m1), d: b.d };
+                    legs.push({
+                        points: [], zone: gone, at: m0,
+                        track: (scroll) => ({ x: lerp(a.x, gone.x, sine((scroll - t0) / exit)), y: yIn(aFrame, a, t0, scroll), d: a.d }),
+                    });
+                    // At the edge, held in the viewport: from one height to the other. To change
+                    // sides it climbs to the top edge, crosses along it and comes down the other.
                     const v0 = gone.y - m0;
                     const v1 = coming.y - m1;
+                    const sameSide = sideOf(gone) === sideOf(coming);
+                    const sky = -Math.max(a.d, b.d) * PEEK.wide;
                     legs.push({
-                        points: [], zone: coming, at: m1, hidden: sideOf(gone) !== sideOf(coming),
+                        points: [], zone: coming, at: m1,
                         track: (scroll) => {
-                            const q = sine((scroll - m0) / Math.max(1, m1 - m0));
-                            return { x: lerp(gone.x, coming.x, q), y: lerp(v0, v1, q) + scroll, d: lerp(a.d, b.d, q) };
+                            const q = (scroll - m0) / Math.max(1, m1 - m0);
+                            if (sameSide) {
+                                const t = sine(q);
+                                return { x: lerp(gone.x, coming.x, t), y: lerp(v0, v1, t) + scroll, d: lerp(a.d, b.d, t) };
+                            }
+                            const up = sine(q / 0.3);
+                            const across = sine((q - 0.3) / 0.4);
+                            const down = sine((q - 0.7) / 0.3);
+                            const d = lerp(a.d, b.d, across);
+                            const x = lerp(edgeX(sideOf(gone), d), edgeX(sideOf(coming), d), across);
+                            const y = q < 0.7 ? lerp(v0, sky, up) : lerp(sky, v1, down);
+                            return { x, y: y + scroll, d };
                         },
                     });
                     if (m1 < t1) {
@@ -391,19 +408,23 @@ export function useTravelingSun() {
                                 // Clear of the horizon by 24px, so the panel titles below it stay 48px+ away.
                                 const d = Math.max(64, Math.min(150, horizonY - 24 - top));
                                 const skyY = top + d / 2;
-                                const xIn = Math.min(vw * 0.78, vw - d / 2 - 24);
-                                const xOut = -d / 2 - 8;
+                                // In the west of the sky (it crossed in Mi enfoque), drifting slowly on
+                                // toward the west edge over the unroll, where it waits for Sobre mí.
+                                // It waits at the west edge until the pin holds the heading still, comes in
+                                // over the first stretch of the unroll and drifts back out to the edge.
+                                const xIn = edgeX("left", d);
+                                const xMid = Math.max(d / 2 + 24, vw * 0.3);
+                                const xOut = edgeX("left", d);
                                 const span = Math.max(1, emakiPin.end - emakiPin.start);
                                 const zoneIn: Zone = { x: xIn, y: skyY + emakiPin.start, d };
-                                // From Mi enfoque's answer (west) it leaves by the west edge, crosses out
-                                // of view and slides in from the east at the sky's height as the pin begins.
+                                const emakiX = (t: number) => (t < 0.3 ? lerp(xIn, xMid, sine(t / 0.3)) : lerp(xMid, xOut, sine((t - 0.3) / 0.7)));
                                 passage(previous, previousFrame, previousTime, zoneIn, 1, Math.max(previousTime + 3, emakiPin.start));
                                 legs.push({
                                     points: [],
                                     zone: { x: xOut, y: skyY + emakiPin.end, d },
                                     at: emakiPin.end,
                                     track: (scroll) => ({
-                                        x: lerp(xIn, xOut, sine((scroll - emakiPin.start) / span)),
+                                        x: emakiX((scroll - emakiPin.start) / span),
                                         y: skyY + scroll,
                                         d,
                                     }),
@@ -522,7 +543,7 @@ export function useTravelingSun() {
                             if (aboutTravel) return aboutY(scroll) + SINK * Math.max(0, scroll - travelEnd);
                             return rest.y;
                         };
-                        const out: Zone = { x: contentLeft - CLEARANCE - end.d / 2, y: slideY(slideAt), d: end.d };
+                        const out: Zone = { x: Math.max(24 - end.d / 2, contentLeft - CLEARANCE - end.d / 2), y: slideY(slideAt), d: end.d };
                         legs.push({
                             points: [],
                             zone: out,
@@ -554,7 +575,7 @@ export function useTravelingSun() {
                     const contact = document.getElementById("contact");
                     if (vw >= 1280 && contact) {
                         const r = dMax / 2;
-                        const mx = contentLeft - CLEARANCE - r;
+                        const mx = Math.max(24 - r, contentLeft - CLEARANCE - r);
                         // Out to the margin (from the parked disc) before anything below it in its column.
                         const y1 = below(previous.y, mx - r, Math.max(previous.x, end.x) + r) - CLEARANCE - r;
                         // Back in under Contacto's left column, then down the footer's open lane.
@@ -574,72 +595,41 @@ export function useTravelingSun() {
                         }
                     }
                     if (!planned) {
-                        // Out by its own side, down out of view, and in low under the footer text.
-                        const side = previous.x < vw / 2 ? "left" : "right";
-                        const outX = (which: "left" | "right") => (which === "left" ? -dMax / 2 - 4 : vw + dMax / 2 + 4);
-                        const low = end.y - 12;
-                        const slide = Math.min(vh * 0.35, (maxScroll - previousTime) / 3);
-                        // Leaves sinking (from the parked disc, never toward text below it).
-                        const r = dMax / 2;
-                        const exitY = Math.max(previous.y, Math.min(
-                            previous.y + vh * 0.3 * SINK,
-                            below(previous.y, Math.min(outX(side), previous.x) - r, Math.max(outX(side), previous.x) + r) - CLEARANCE - r,
-                        ));
-                        const outAt = Math.min(maxScroll - slide - 2, previousTime + Math.max(vh * 0.25, (exitY - previous.y) / SINK));
-                        legs.push({ points: [previous, { x: outX(side), y: exitY }], zone: { ...previous, x: outX(side), y: exitY }, at: Math.max(previousTime + 1, outAt) });
-                        legs.push({ points: [{ x: outX(side), y: exitY }, { x: outX(side), y: low }], zone: { x: outX(side), y: low, d: end.d }, at: maxScroll - slide - 1 });
-                        if (side === "right") {
-                            legs.push({ points: [{ x: outX("right"), y: low }, { x: outX("left"), y: low }], zone: { x: outX("left"), y: low, d: end.d }, at: maxScroll - slide, hidden: true });
-                        }
-                        legs.push({ points: [{ x: outX("left"), y: low }, end], zone: end, at: maxScroll });
+                        // Out to its side edge, down it in view, and in low under the footer text.
+                        passage(previous, slidDown ? 0 : previousFrame, previousTime, end, 0, maxScroll);
                     }
                 } else {
-                    // Phones: peeks and the Sobre mí disc only, never beside text.
-                    let time = 0;
-                    let from: Zone = start;
-                    const hop = (zone: Zone, when: number, hidden = false) => {
-                        const t = Math.min(maxScroll - 1, Math.max(time + 1, when));
-                        legs.push({ points: [{ x: from.x, y: from.y }, { x: zone.x, y: zone.y }], zone, at: t, hidden });
-                        from = zone;
-                        time = t;
+                    // Phones: never beside text. It waits high at the right edge (a crescent in
+                    // view), crosses to the west along the top edge for the Sobre mí disc, parks
+                    // as it, and goes down the west edge to set in the footer sea.
+                    const d = Math.min(80, start.d);
+                    const waitV = vh * 0.16;
+                    const waitFrom = Math.min(maxScroll - 4, vh * 0.5);
+                    passage(start, 0, 0, { x: edgeX("right", d), y: waitV + waitFrom, d }, 1, waitFrom);
+                    let wait: Zone = { x: edgeX("right", d), y: waitV + waitFrom, d };
+                    let waitTo = waitFrom;
+                    const hold = (until: number) => {
+                        const to = Math.min(maxScroll - 3, Math.max(waitTo + 1, until));
+                        legs.push({ points: [], zone: { ...wait, y: waitV + to }, at: to, track: (scroll) => ({ ...wait, y: waitV + scroll }) });
+                        wait = { ...wait, y: waitV + to };
+                        waitTo = to;
                     };
-                    // Wholly out of view past an edge, or 40% of the disc in view.
-                    const out = (side: "left" | "right", y: number, d: number): Zone =>
-                        ({ x: side === "right" ? vw + d / 2 + 4 : -d / 2 - 4, y, d });
-                    const peek = (side: "left" | "right", y: number, d: number): Zone =>
-                        ({ x: side === "right" ? vw + d * 0.1 : -d * 0.1, y, d });
-
-                    // Leaves the hero sideways, toward the edge it rose from.
-                    hop(out("right", start.y, start.d), vh * 0.35);
-                    // East, between Mi enfoque and Servicios.
-                    const a = document.getElementById("focus");
-                    const b = document.getElementById("services");
-                    if (a && b) {
-                        const top = textBottom(docRect(a));
-                        const bottom = textTop(docRect(b));
-                        const d = Math.min(112, bottom - top - 2 * CLEARANCE);
-                        if (d >= 64) {
-                            const y = (top + bottom) / 2;
-                            hop(out("right", y, d), y - vh * 0.85);
-                            hop(peek("right", y, d), y - vh * 0.6);
-                            hop(peek("right", y, d), y - vh * 0.42);
-                            hop(out("right", y, d), y - vh * 0.28);
-                        }
-                    }
-                    let side: "left" | "right" = "right";
-                    // West: slides in to the Sobre mí disc, parks as it, slides back out.
                     if (about) {
-                        hop(out("left", about.y, about.d), about.y - vh * 1.05, true);
-                        // It moves with the page there (nothing sticks): arrives low, rests, and is
-                        // gone by the west edge before its top could reach the top edge.
-                        hop(about, parkedScroll(about, 0.62, vh));
-                        hop(about, about.y - vh * 0.42);
-                        hop(out("left", about.y, about.d), about.y - vh * 0.2);
-                        side = "left";
+                        // It moves with the page there (nothing sticks): arrives low and rests.
+                        const arrive = Math.min(maxScroll - 2, Math.max(waitTo + vh * 0.6, parkedScroll(about, ABOUT_LOOSE_HEIGHT, vh)));
+                        hold(arrive - vh * 1.8);
+                        passage(wait, 1, waitTo, about, 0, arrive);
+                        const leave = Math.min(maxScroll - 1, Math.max(arrive + 1, about.y - vh * 0.42));
+                        legs.push({ points: [], zone: about, at: leave, track: () => about });
+                        // Small again at the west edge on the way down, then in low to set.
+                        const low: Zone = { x: edgeX("left", d), y: 0, d };
+                        const lowFrom = Math.max(leave + 3, Math.min(maxScroll - vh * 0.5, leave + vh * 0.5));
+                        passage(about, 0, leave, { ...low, y: vh * 0.3 + lowFrom }, 1, lowFrom);
+                        passage({ ...low, y: vh * 0.3 + lowFrom }, 1, lowFrom, end, 0, maxScroll);
+                    } else {
+                        hold(maxScroll - vh * 1.2);
+                        passage(wait, 1, waitTo, end, 0, maxScroll);
                     }
-                    // Sets on the left (west): out of view down to the sea, then in, sinking a little.
-                    hop(out("left", end.y - 12, end.d), maxScroll - vh * 0.35, side !== "left");
-                    legs.push({ points: [{ x: from.x, y: from.y }, { x: end.x, y: end.y }], zone: end, at: maxScroll });
                 }
 
                 // Exposed for layout checks: the scroll position at which each keyframe lands.
@@ -653,8 +643,6 @@ export function useTravelingSun() {
                 let time = 0;
                 for (const leg of legs) {
                     const duration = Math.max(1, leg.at - time);
-                    // A hidden leg switches sides out of view: the disc is transparent on the way.
-                    if (leg.hidden) timeline.set(goal, { opacity: 0 }, time);
                     const track = leg.track;
                     if (track) {
                         const from = time;
@@ -678,7 +666,6 @@ export function useTravelingSun() {
                             duration,
                         }, time);
                     }
-                    if (leg.hidden) timeline.set(goal, { opacity: 1 }, time + duration);
                     time += duration;
                 }
                 // The colour warms with the paper's day (--sun-now, usePaperDay), and further,
