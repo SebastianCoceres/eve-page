@@ -61,3 +61,37 @@ Verification (T4–T6):
 - Ink check: every Mi enfoque point computes to the ink token at 33% (act 1), 92% and 99.5% (act 2) of the pin; Sobre mí points all ink once read; hero greeting lines back to opacity 1 from 63% of its pin. Reduced motion: stacked, static, all ink, static disc.
 
 Next step: client review of the distilled copy; push/PR remain the user's decision.
+
+## T7 Impeccable deep pass
+
+- [x] T7 Impeccable critique, then polish and audit of `app/page.tsx`. Route: delegated Opus writer. The critique ran as two isolated Opus assessments: A (design review) and B (detector, browser, a11y and lint). There was one fix batch and one confirmation round.
+
+Critique (before): 22/32 (heuristics 7 and 10 n/a), Good. The design is authored, not interchangeable. The CLI detector found 0 issues. The browser detector found 4 low issues: the hero clip (an intentional crop), display line-height, Geist share, and an unlocated height transition. These are false positives or taste. Snapshot: `.impeccable/critique/2026-11-19T15-15-24Z__app-page-tsx.md`.
+
+Findings and outcome:
+- P1. Service selection had no visible signifier. Fixed: each panel now has a "Me interesa" / "Servicio elegido" cue in the link style. Commit 57c2f72.
+- P1. The Contacto help line promises a phone field that does not exist. Not changed: it is confirmed copy, so it needs the client's decision.
+- P2. Servicios is a wall of text. Not changed: distilling it needs approval to extend the distillation exception.
+- P2. The send success was only a toast. Fixed: an inline `role="status"` confirmation, plus error copy that names the fix (empty email, limits with their number). Commit 142e20d.
+- P2. There are empty valleys in the pinned chapters. Left alone: changing them is choreography, beyond refinement.
+- Minor fixes in 2cb5e7f:
+  - On mobile, the values row left a separator orphaned at the start of the second line. The values now stack.
+  - The footer sea's fills bit into the sun before its strokes were drawn. The sea now draws as soon as it enters.
+- Cleanup:
+  - Store providers use a lazy `useState` instead of reading a ref during render (6fb13c4).
+  - Removed the unused Accordion, Carousel, Dialog, Drawer and HoverCard components, along with their deps and next-themes (6923a77).
+  - Removed the unreferenced `fondo.png`, `fondo-hero.webp` and `undraw_*.svg` (6923a77).
+
+Verification:
+- `pnpm exec tsc --noEmit`: pass.
+- `pnpm build`: pass.
+- `pnpm exec eslint .`: 0 problems. This clears the 5 known errors.
+- Impeccable detect on the changed sections: `[]`.
+- Sun sweep (40px steps, whole page): no discontinuities and no text closer than 48px at any width. Minimum gaps: 48px at 1440, 56px at 1024, 58px at 390.
+- No horizontal overflow at any width, and no console errors.
+- Form check (mocked `/api/send`):
+  - an empty email shows "Escribe tu correo para que pueda responderte.";
+  - after sending, the status reads "Mensaje enviado. Te responderé pronto.";
+  - the status clears on the next edit.
+
+Next step: the client decides on the phone line and on distilling Servicios.

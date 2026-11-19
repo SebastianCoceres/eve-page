@@ -200,7 +200,7 @@ A warm paper that changes with the day, an ink, one cobalt and one sun; nothing 
 - **Title** (600, fluid to 3.25rem, 1.1): section headings, revealed line by line out of a mask.
 - **Subtitle** (400, fluid to 2rem, 1.2): h3 default.
 - **Hero lead** (400, height-bounded, 1.12): the greeting, spoken line by line in the pin.
-- **Point / Values / Statement** (400, height-bounded): the Mi enfoque points and the Sobre mí milestones (point, fluid to 2.75rem, 1.12), the values row, and the Sobre mí opening line and close (statement). Height-bounded with `min(clamp(), max(_, vh))` so pinned scenes always fit.
+- **Point / Values / Statement** (400, height-bounded): the Mi enfoque points and the Sobre mí milestones (point, fluid to 2.75rem, 1.12), the values row (stacked, without separators, below 768px), and the Sobre mí opening line and close (statement). Height-bounded with `min(clamp(), max(_, vh))` so pinned scenes always fit.
 - **Lead** (400, fluid to 1.5rem, 1.45): section leads.
 - **Note** (Geist 400, 16px, 18px from 768px): the one short line under a point, in Warm Ash, at most 40 to 44ch.
 - **Item** (Geist 500, 1.25rem, 1.35): list headings; service titles override it with the mincho at 400.
@@ -250,7 +250,8 @@ Quiet and confident: one cobalt pill per decision.
 ### Inputs / Fields
 - **Style:** 48px tall, paper-light fill, 1px Field Stone border, 6px radius, 16px side padding; labels above in Geist 500 at 14px.
 - **Focus:** border turns cobalt and the 2px cobalt ring appears at 2px offset. Hover darkens the border to Warm Ash.
-- **Error / Disabled:** error-red border with a message below; disabled at 60% opacity.
+- **Error / Disabled:** error-red border with a message below that names the fix (an empty email asks for it; limits name their number); disabled at 60% opacity.
+- **Sent:** the confirmation stays under the send pill as a mincho lead ("Mensaje enviado. Te responderé pronto.", a polite status) until a new message is started; no success toast.
 
 ### Navigation
 - **Desktop:** no brand mark; Mi enfoque, ¿Qué ofrezco? and Sobre mí as 15px muted links flush left, ink when active, and the compact cobalt pill on the right. One 1px ink underline slides and stretches between links (0.45s power3.out).
@@ -263,7 +264,7 @@ Generated in code (`lib/seigaiha`), never as an image. Seas: whole scales in thr
 One orange disc with one timeline owner. It rises from the hero sea, stands right of the problem in Mi enfoque and crosses the sky to stand left of the answer (pinned from 1024px), crosses the emakimono's sky, parks as the afternoon disc on the Sobre mí band (sticky from 1280px), and sets into the footer sea in persimmon. Static anchors stand in for it under reduced motion.
 
 ### Emakimono (signature)
-Servicios as a hand-scroll pinned from 1024px: tall panels joined by 1px hairlines, one continuous cobalt horizon at 45%, a fan resting on it at an uneven position in each panel, and a row of 1px progress ticks (active in cobalt). A panel's hover and focus frame turns its hairlines to solid cobalt; the selected service shows the 6px sun dot. Stacked with cobalt top rules below 1024px.
+Servicios as a hand-scroll pinned from 1024px: tall panels joined by 1px hairlines, one continuous cobalt horizon at 45%, a fan resting on it at an uneven position in each panel, and a row of 1px progress ticks (active in cobalt). A panel's hover and focus frame turns its hairlines to solid cobalt; the selected service shows the 6px sun dot. Every panel ends in a visible cue in the link style, "Me interesa" ("Servicio elegido" once picked), whose underline turns solid with the panel frame: the panel is the button, and touch has no hover to reveal it. Stacked with cobalt top rules below 1024px.
 
 ### Mi enfoque in two acts (signature)
 The problem, then the answer: "El marketing tradicional" as three points on the left with the sun on the right; the sun crosses the sky; "El marketing consciente" as four points on the right with the sun on the left. Each point rises in Warm Ash, turns to Sumi Ink and holds.
