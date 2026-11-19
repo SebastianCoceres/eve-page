@@ -1,7 +1,6 @@
 'use client'
 import type { MouseEvent } from "react";
 import { RevealTitle } from "@/components/ui/TextReveal";
-import { SeaField } from "@/components/ui/SeaField";
 import { EmakiFan } from "@/components/ui/EmakiFan";
 import { Button } from "@/components/ui/Button";
 import { useAboutJourney } from "@/hooks/useAboutJourney";
@@ -19,29 +18,18 @@ const milestones: ReadonlyArray<{ point: string; note: string }> = [
 ]
 
 /**
- * "Sol de la tarde": a pure disc standing on a narrow seigaiha band (three rows of
- * small scales), the afternoon sun over the sea. The disc is
- * [data-sun-anchor="about"]: the traveling sun parks exactly there (same size and
- * place, measured from the live layout), and it is the static disc under reduced
- * motion.
- *
- * Geometry, in shares of the frame width W: the disc is 0.62 W wide, centred, its top
- * at the frame's top; the band starts at 0.5 W, so the sea hides the disc's lower edge
- * (the band's paper fills occlude it), and under the band a strip of paper (0.1 W)
- * hides it as it sinks while the text is read (up to 0.0744 W, see useTravelingSun):
- * the sun sets behind the sea, never below it.
+ * "Sol de la tarde": the afternoon sun, one whole disc under the heading, flush with
+ * its left edge. Nothing stands in front of it: no sea, no paper strip, so it is
+ * never cut. The disc is [data-sun-anchor="about"]: the traveling sun parks exactly
+ * there (same size and place, measured from the live layout) and only warms while
+ * the text is read (useTravelingSun); under reduced motion it is the static disc.
+ * Its size matches the former frame's 0.62 share: 174px on phones, 198px from 768px.
  */
 const AfternoonSun = () => (
-    <div data-about-sun aria-hidden="true" className="relative mt-14 w-[min(100%,280px)] md:w-[320px]">
-        <div
-            data-sun-anchor="about"
-            className="pointer-events-none absolute left-[19%] top-0 aspect-square w-[62%] motion-safe:invisible"
-        >
+    <div data-about-sun aria-hidden="true" className="mt-14 w-[min(100%,174px)] md:w-[198px]">
+        <div data-sun-anchor="about" className="pointer-events-none aspect-square w-full motion-safe:invisible">
             <div className="size-full rounded-full bg-sun" />
         </div>
-        <div className="pt-[50%]" />
-        <SeaField kind="band" />
-        <div className="relative bg-background pt-[10%]" />
     </div>
 )
 
@@ -50,8 +38,8 @@ const AfternoonSun = () => (
  *
  * From 1280px the left column (heading and the afternoon sun) is sticky 112px from
  * the top while the milestones pass on the right; the column is `[data-sun-sticky]`,
- * so the traveling sun stays locked to its disc for the whole sticky range and sinks
- * a little and warms as the text is read (useTravelingSun). The opening line is set
+ * so the traveling sun stays locked to its disc, whole, for the whole sticky range
+ * and warms as the text is read (useTravelingSun). The opening line is set
  * as a statement; each milestone is a large mincho line with a small seigaiha fan in
  * the margin and one short note, spaced so they arrive one at a time. The close,
  * "¡Conectemos y hagamos crecer tu marca juntos!", follows with the Contáctame pill

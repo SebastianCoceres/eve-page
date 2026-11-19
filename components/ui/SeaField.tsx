@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 const HEIGHT: Record<SeaKind, string> = {
     hero: "h-[192px] md:h-[280px]",
     footer: "h-[120px] md:h-[200px]",
-    band: "h-[36px]",
 };
 
 /**

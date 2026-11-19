@@ -90,7 +90,7 @@ function collectObstacles(): Rect[] {
 // size by time of day: smallest at midday, larger toward the horizon (as a low
 // sun looks). Sizes are tried largest first and shrink only to fit a free zone.
 // A chapter with an `anchor` parks on that element instead of a computed zone:
-// in Sobre mí the afternoon sun becomes the disc standing on the band. Contacto is
+// in Sobre mí the afternoon sun becomes the whole disc under the heading. Contacto is
 // not a parking spot: from Sobre mí the sun only goes down (see the descent below).
 const CHAPTERS: ReadonlyArray<{ id: string; targetX: number; height: number; sizes: number[]; anchor?: string }> = [
     { id: "focus", targetX: 0.82, height: 0.3, sizes: [180, 150, 120] },
@@ -108,8 +108,8 @@ const SINK = 1.06;
 const HERO_RISE = 0.4;
 /** Share of the Mi enfoque pin over which the sun climbs beside the problem (done before the crossing). */
 const FOCUS_PROBLEM_RISE = FOCUS_SCENE.CROSS[0];
-/** How far the parked sun sinks into the Sobre mí band while the text is read, as a share of its diameter (the paper strip under the band hides it). */
-const PARK_SINK = 0.12;
+/** Where the sun arrives at the Sobre mí disc, as a share of the viewport height, when its column does not stick (below 1280px). */
+const ABOUT_LOOSE_HEIGHT = 0.55;
 
 type Leg = {
     points: Point[];
@@ -212,7 +212,8 @@ function descentTrack(keys: Zone[], window: number) {
  * - out of view, it comes down the west margin to the height of the
  *   afternoon sun's disc in Sobre mí and slides in from the west: a calm leg whose
  *   visible part is one horizontal glide (narrower: the classic margin route);
- * - Sobre mí: it parks exactly as that disc (`[data-sun-anchor="about"]`);
+ * - Sobre mí: it parks exactly as that disc (`[data-sun-anchor="about"]`), whole:
+ *   nothing occludes it there, so it never sinks, it only warms;
  * - from there it only sinks: one continuous descent, linear in scroll and faster
  *   than the page (SINK), so it moves down the viewport the whole way. From
  *   1280px it slips out from its column to the left margin before Contacto,
@@ -329,6 +330,7 @@ export function useTravelingSun() {
                     const focusPin = getFocusPinRange();
                     let fromWestEdge: Zone | null = null;
                     let parkedAbout = false;
+                    let slidDown = false;
 
                     for (const chapter of CHAPTERS) {
                         const section = document.getElementById(chapter.id);
@@ -464,7 +466,10 @@ export function useTravelingSun() {
                             sizes: [...chapter.sizes],
                         });
                         if (!zone) continue;
-                        const at = Math.min(maxScroll - 1, Math.max(previousTime + 1, parkedScroll(zone, chapter.height, vh)));
+                        // Where Sobre mí's column does not stick, the parked disc moves with the
+                        // page: it arrives lower, so it can rest and leave before reaching the navbar.
+                        const height = anchored && !aboutTravel ? ABOUT_LOOSE_HEIGHT : chapter.height;
+                        const at = Math.min(maxScroll - 1, Math.max(previousTime + 1, parkedScroll(zone, height, vh)));
 
                         // 3. After the emakimono: down the west margin out of view, then one
                         // horizontal glide in to the Sobre mí disc.
@@ -493,30 +498,53 @@ export function useTravelingSun() {
                         previousTime = at;
                         if (anchored) parkedAbout = true;
                     }
-                    // 4. It rests as the Sobre mí disc for a while (moving with its column), then
-                    // slides out of the column, west, at the same height, easing to the
-                    // sunset's size on the way, before it sinks.
-                    // While the column sticks it stays locked to the disc, sinking a
-                    // little (PARK_SINK) and warming (--sun-late) as the text is read.
+                    // 4. It rests as the Sobre mí disc, whole (nothing stands in front of it, so
+                    // it never sinks), and warms (--sun-late) as the text is read; then it
+                    // slides out west to the margin, easing to the sunset's size, and sinks.
+                    // - Column sticky (from 1280px): it is locked to the disc and slides out
+                    //   during the last stretch of the column's travel, still at the disc's
+                    //   height in the viewport, so it is in the margin before the column lets
+                    //   go: it never rides up under the navbar, and Contacto's section mark,
+                    //   still far below, never meets it. Past the release it already sinks.
+                    // - Column loose (below 1280px), the disc moves with the page: it leaves
+                    //   while its speed on the page eases from 0 to 1 (it stops rising in the
+                    //   viewport), early enough to stay whole below the navbar.
                     if (about && parkedAbout) {
                         const parkFrom = previousTime;
-                        const hold = Math.min(maxScroll - 3, Math.max(parkFrom + vh * 0.25, aboutTravel ? aboutTravel.end : 0));
-                        const sink = about.d * PARK_SINK;
-                        const sinking = (scroll: number) => sink * sine((scroll - parkFrom) / Math.max(1, hold - parkFrom));
-                        const rest: Zone = { ...about, y: aboutY(hold) + sink };
+                        const slide = vh * 0.35;
+                        const travelEnd = aboutTravel ? aboutTravel.end : -Infinity;
+                        const latest = aboutTravel ? Infinity : about.y - about.d / 2 - (NAVBAR + 32) - slide / 2;
+                        const hold = Math.min(maxScroll - 3, Math.max(parkFrom + 1, Math.min(latest, Math.max(parkFrom + vh * 0.25, travelEnd - slide))));
+                        const rest: Zone = { ...about, y: aboutY(hold) };
                         legs.push({
                             points: [],
                             zone: rest,
                             at: hold,
-                            track: (scroll) => ({ ...about, y: aboutY(scroll) + sinking(scroll) }),
+                            track: (scroll) => ({ ...about, y: aboutY(scroll) }),
                         });
                         warmFrom = parkFrom;
                         warmTo = hold;
-                        const out: Zone = { x: contentLeft - CLEARANCE - end.d / 2, y: rest.y, d: end.d };
-                        const slideAt = Math.min(maxScroll - 2, hold + vh * 0.35);
-                        legs.push({ points: [rest, out], zone: out, at: slideAt });
+                        const slideAt = Math.min(maxScroll - 2, hold + slide);
+                        const span = Math.max(1, slideAt - hold);
+                        // Its height on the page during the slide.
+                        const slideY = (scroll: number) => {
+                            if (aboutTravel) return aboutY(scroll) + SINK * Math.max(0, scroll - travelEnd);
+                            const s = Math.min(span, Math.max(0, scroll - hold));
+                            return rest.y + s / 2 - (span / (2 * Math.PI)) * Math.sin((Math.PI * s) / span);
+                        };
+                        const out: Zone = { x: contentLeft - CLEARANCE - end.d / 2, y: slideY(slideAt), d: end.d };
+                        legs.push({
+                            points: [],
+                            zone: out,
+                            at: slideAt,
+                            track: (scroll) => {
+                                const t = sine((scroll - hold) / span);
+                                return { x: lerp(rest.x, out.x, t), y: slideY(scroll), d: lerp(rest.d, out.d, t) };
+                            },
+                        });
                         previous = out;
                         previousTime = slideAt;
+                        slidDown = true;
                     }
                     // The last way down: it never rises again after the last park.
                     const dMax = Math.max(previous.d, end.d);
@@ -525,8 +553,9 @@ export function useTravelingSun() {
                         ...obstacles.filter((o) => o.t > y && o.l < xMax + CLEARANCE && o.r > xMin - CLEARANCE).map((o) => o.t),
                     );
                     const sink = (keys: Zone[]) => {
-                        // Leaves the park almost at once, while it is still well in view.
-                        const begin = Math.min(maxScroll - 2, previousTime + vh * 0.04);
+                        // Leaves the park almost at once, while it is still well in view; after a
+                        // slide that already goes down, at once (no pause that would lift it).
+                        const begin = Math.min(maxScroll - 2, previousTime + (slidDown ? 1 : vh * 0.04));
                         legs.push({ points: [previous, previous], zone: previous, at: begin });
                         const walk = descentTrack(keys, maxScroll - begin);
                         legs.push({ points: [], zone: end, at: maxScroll, track: (scroll) => walk((scroll - begin) / Math.max(1, maxScroll - begin)) });
@@ -611,9 +640,11 @@ export function useTravelingSun() {
                     // West: slides in to the Sobre mí disc, parks as it, slides back out.
                     if (about) {
                         hop(out("left", about.y, about.d), about.y - vh * 1.05, true);
-                        hop(about, parkedScroll(about, 0.42, vh));
-                        hop(about, about.y - vh * 0.3);
-                        hop(out("left", about.y, about.d), about.y - vh * 0.05);
+                        // It moves with the page there (nothing sticks): arrives low, rests, and is
+                        // gone by the west edge before its top could reach the navbar.
+                        hop(about, parkedScroll(about, 0.62, vh));
+                        hop(about, about.y - vh * 0.42);
+                        hop(out("left", about.y, about.d), about.y - vh * 0.2);
                         side = "left";
                     }
                     // Sets on the left (west): out of view down to the sea, then in, sinking a little.
