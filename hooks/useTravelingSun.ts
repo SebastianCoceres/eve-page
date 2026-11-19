@@ -711,6 +711,9 @@ export function useTravelingSun() {
                             scroll: from + duration,
                             duration,
                             ease: "none",
+                            // Rendered only by the playhead: an immediate render of a later leg
+                            // would leave its start in `goal` (see the first render below).
+                            immediateRender: false,
                             onUpdate: () => {
                                 const zone = track(proxy.scroll);
                                 Object.assign(goal, place(zone), { scale: zone.d / base });
@@ -739,6 +742,10 @@ export function useTravelingSun() {
                     const frame = leg?.frame ?? 0;
                     return typeof frame === "function" ? frame(scroll) : frame;
                 };
+                // A first render through every leg, so `goal` holds the place at the
+                // current scroll even when the playhead does not move (a reload at the
+                // top, where time(0) on a fresh timeline renders nothing).
+                timeline.time(maxScroll);
                 view = { timeline, goal, frameAt, maxScroll, lag: vh * MAX_LAG, base, width: vw };
                 drawn = null;
                 draw();
