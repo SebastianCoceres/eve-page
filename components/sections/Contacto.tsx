@@ -18,7 +18,7 @@ import { Services } from "@/lib/services";
 import { useServicesStore } from "@/stores/service/service-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useEffect, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -27,10 +27,10 @@ const SEND_ERROR = "No se pudo enviar el mensaje. Inténtalo de nuevo o escríbe
 
 const servicesMap = Object.fromEntries(Services.map((service) => ([service.key, service.key])))
 const formSchema = z.object({
-    username: z.string().trim().min(2, { message: "Escribe tu nombre (mínimo 2 caracteres)." }).max(50, { message: "Número máximo de caracteres excedido" }),
-    email: z.string().trim().email({ message: "Revisa el correo: debe tener el formato nombre@dominio.com." }),
+    username: z.string().trim().min(2, { message: "Escribe tu nombre (mínimo 2 caracteres)." }).max(50, { message: "Usa como máximo 50 caracteres." }),
+    email: z.string().trim().min(1, { message: "Escribe tu correo para que pueda responderte." }).email({ message: "Revisa el correo: debe tener el formato nombre@dominio.com." }),
     asunto: z.nativeEnum({ ...servicesMap }).optional(),
-    message: z.string().trim().min(10, { message: "Cuéntame un poco más (mínimo 10 caracteres)." }).max(500, { message: "Número máximo de caracteres excedido" }),
+    message: z.string().trim().min(10, { message: "Cuéntame un poco más (mínimo 10 caracteres)." }).max(500, { message: "Usa como máximo 500 caracteres." }),
 })
 
 type ContactValues = z.infer<typeof formSchema>
@@ -50,13 +50,18 @@ export const Contacto = () => {
         // Validate on blur first, then re-check on every change so a fixed error clears at once.
         mode: "onTouched",
     })
-    const { isSubmitting, errors } = form.formState
+    const { isSubmitting, isDirty, errors } = form.formState
+    // The success line stays under the button until the visitor starts a new message
+    // (the reset form is pristine; any edit makes it dirty again).
+    const [sent, setSent] = useState(false)
+    const showSent = sent && !isDirty
 
     useEffect(() => {
         if (selectedService) form.setValue("asunto", selectedService)
     }, [selectedService, form])
 
     async function onSubmit(values: ContactValues) {
+        setSent(false)
         try {
             const res = await fetch("/api/send", {
                 method: "POST",
@@ -66,9 +71,9 @@ export const Contacto = () => {
                 body: JSON.stringify(values),
             })
             if (!res.ok) throw new Error("send failed")
-            toast.success("Mensaje enviado. Te responderé pronto.")
             form.clearErrors("root")
             form.reset({ username: "", email: "", asunto: undefined, message: "" })
+            setSent(true)
         } catch {
             toast.error(SEND_ERROR)
             form.setError("root", { message: SEND_ERROR })
@@ -185,6 +190,12 @@ export const Contacto = () => {
                                         ) : "Enviar mensaje"}
                                     </Button>
                                 </div>
+
+                                {/* Inline confirmation instead of a passing toast: the end of the task
+                                    stays on the page, in the voice of the page. */}
+                                <p role="status" className="text-lead text-foreground md:col-span-2 empty:sr-only">
+                                    {showSent ? "Mensaje enviado. Te responderé pronto." : ""}
+                                </p>
                             </form>
                         </Form>
                     </div>
