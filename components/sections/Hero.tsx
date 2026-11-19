@@ -102,11 +102,13 @@ export const Hero = () => {
                     <span className="block">Vibra alto con un marketing consciente.</span>
                     <span className="block">Ayudo a marcas a crecer de forma auténtica y ética.</span>
                 </p>
-                <ul className="pointer-events-auto mt-[clamp(20px,3.5vh,36px)] flex flex-wrap items-center gap-x-[0.45em] gap-y-1 text-values text-foreground">
+                {/* Below 768px the row does not fit: the values stack, so no separator is
+                    ever left orphaned at the start of a wrapped line. */}
+                <ul className="pointer-events-auto mt-[clamp(20px,3.5vh,36px)] flex flex-col items-start gap-y-1 text-values text-foreground md:flex-row md:flex-wrap md:items-center md:gap-x-[0.45em]">
                     {values.map((value, index) => (
                         <li key={value} data-hero-value className="flex items-center gap-x-[0.45em]">
                             {/* A single seigaiha scale between the values. */}
-                            {index > 0 && <EmakiFan className="w-[0.6em]" />}
+                            {index > 0 && <EmakiFan className="hidden w-[0.6em] md:block" />}
                             {value}
                         </li>
                     ))}

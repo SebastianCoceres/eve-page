@@ -38,7 +38,9 @@ export function useSeaField(field: SeigaihaField | null, kind: SeaKind) {
                 duration: 0.5,
                 ease: "power2.out",
                 stagger: Math.min(0.1, 0.3 / strokes.length),
-                scrollTrigger: { trigger: root, start: "top 90%", once: true },
+                // Start as soon as the sea enters, so its strokes are drawn before the
+                // setting sun reaches it: the paper fills never show an empty bite.
+                scrollTrigger: { trigger: root, start: "top bottom", once: true },
             });
         });
     }, { scope, dependencies: [field] });
