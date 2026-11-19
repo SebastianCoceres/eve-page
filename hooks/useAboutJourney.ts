@@ -16,7 +16,7 @@ import { revealLinesOnEnter, splitLines } from "@/lib/splitLines";
  * - the key phrases (`em`, Geist 500) start in the muted tone and turn to full ink
  *   as they cross the reading zone (72% → 52% of the viewport), scrubbed and flat;
  * - the close is spoken with the scroll: its masked lines rise (yPercent 130 → 0,
- *   scrub 0.6) as it passes from 90% to 60% of the viewport; the actions fade up once.
+ *   scrub 0.6) as it enters, done once the whole line is in view; the actions fade up once.
  * The portrait column's stickiness is CSS (from 1280px); the sun behind Eve is
  * useTravelingSun's. Reduced motion: nothing runs, the emphasis stays in full ink.
  */
@@ -77,7 +77,8 @@ export function useAboutJourney() {
                         yPercent: 130,
                         ease: "power3.out",
                         stagger: 0.25,
-                        scrollTrigger: { trigger: close, start: "top 90%", end: "bottom 60%", scrub: 0.6 },
+                        // Done by the time the whole line is in view (its bottom 4% above the fold): never half risen at rest.
+                        scrollTrigger: { trigger: close, start: "top bottom", end: "bottom 96%", scrub: 0.6 },
                     });
                     return rise;
                 });

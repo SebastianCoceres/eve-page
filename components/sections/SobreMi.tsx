@@ -116,7 +116,7 @@ export const SobreMi = () => {
                             ))}
                         </div>
 
-                        <div className="mt-20 md:mt-24">
+                        <div className="mt-12 md:mt-14">
                             <p data-about-close className="max-w-[18em] text-statement text-foreground">
                                 ¡Conectemos y hagamos crecer tu marca juntos!
                             </p>

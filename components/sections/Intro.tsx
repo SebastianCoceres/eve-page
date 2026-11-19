@@ -16,16 +16,18 @@ const mondo = [
 ] as const
 
 // While pinned (useFocusScene sets data-focus="pinned" from 768px), the statement and
-// the two pairs share one grid cell and the scene shows them in turn.
-const PINNED_CELL = "group-data-[focus=pinned]/focus:[grid-area:1/1] group-data-[focus=pinned]/focus:self-start"
+// the two pairs share one grid cell and the scene shows them in turn; the active pair
+// is centred in that cell (the room the statement held), never left at its top.
+const PINNED_CELL = "group-data-[focus=pinned]/focus:[grid-area:1/1]"
 
 /**
  * Mi enfoque: one statement, then a mondō.
  *
  * The statement is set large in the mincho and tells the contrast in its tone: the
  * traditional half in muted ink, and from "el marketing consciente prioriza…" the
- * full ink. The two questions follow as a dialogue, each question in the mincho and
- * its answer in Geist beside a 1px hairline, one pair after the other.
+ * full ink. The two questions follow as a dialogue, each question a step above the
+ * statement in the mincho (text-question) and its answer in Geist at lead size
+ * (text-answer, at most 52ch) beside a 1px hairline, one pair after the other.
  *
  * Without JS, under reduced motion and below 768px everything is in the flow (the
  * lines fade in and each pair rises on enter with motion). From 768px the stage pins
@@ -43,7 +45,7 @@ export const Intro = () => {
                     <RevealTitle text="Mi enfoque" />
                     <div className="mt-10 grid md:mt-12 md:grid-cols-12 md:gap-x-6">
                         <div className="grid md:col-span-8">
-                            <p data-focus-lead className={`text-statement text-foreground ${PINNED_CELL}`}>
+                            <p data-focus-lead className={`text-statement text-foreground ${PINNED_CELL} group-data-[focus=pinned]/focus:self-start`}>
                                 <span className="text-muted-foreground">
                                     Mientras que el marketing tradicional se centra principalmente en la venta de productos o servicios mediante estrategias persuasivas y a menudo intrusivas,
                                 </span>{" "}
@@ -55,12 +57,12 @@ export const Intro = () => {
                                 <div
                                     key={question}
                                     data-focus-pair
-                                    className={`mt-16 md:mt-24 group-data-[focus=pinned]/focus:mt-0 ${PINNED_CELL}`}
+                                    className={`mt-16 md:mt-24 group-data-[focus=pinned]/focus:mt-0 ${PINNED_CELL} group-data-[focus=pinned]/focus:self-center`}
                                 >
-                                    <h3 data-focus-question className="text-statement text-foreground">{question}</h3>
+                                    <h3 data-focus-question className="text-question text-foreground">{question}</h3>
                                     <p
                                         data-focus-answer
-                                        className="mt-6 max-w-[60ch] border-l border-hairline pl-6 text-[17px] leading-[1.65] text-muted-foreground md:mt-8 md:pl-8 md:text-lg"
+                                        className="mt-6 max-w-[52ch] border-l border-hairline pl-6 text-answer text-muted-foreground md:mt-8 md:pl-8"
                                     >
                                         {answer}
                                     </p>
