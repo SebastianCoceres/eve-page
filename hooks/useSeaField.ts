@@ -5,8 +5,8 @@ import type { SeaKind, SeigaihaField } from "@/lib/seigaiha";
 /**
  * Ink for a seigaiha field. Each field draws once:
  * - hero: on load, each row's arcs spread from its middle outward (DrawSVG
- *   "50% 50%"), rows staggered from the centre row out (~1.6s), in step with
- *   the sun rising (TravelingSun);
+ *   "50% 50%"), rows staggered from the centre row out (~1.3s), in step with
+ *   the sun rising (TravelingSun) and the name's letters (useHeroAnimation);
  * - footer: when it enters the viewport, row by row from the left,
  *   like a wave passing (at most 0.8s).
  * Reduced motion: nothing runs; every field is simply drawn.
@@ -27,9 +27,9 @@ export function useSeaField(field: SeigaihaField | null, kind: SeaKind) {
             if (kind === "hero") {
                 gsap.from(strokes, {
                     drawSVG: "50% 50%",
-                    duration: 1.2,
+                    duration: 1.0,
                     ease: "power2.inOut",
-                    stagger: { each: 0.035, from: "center" },
+                    stagger: { each: 0.03, from: "center" },
                 });
                 return;
             }

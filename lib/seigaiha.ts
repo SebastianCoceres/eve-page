@@ -160,7 +160,7 @@ export function swell(width: number, low: number, toward: "right" | "left", calm
     };
 }
 
-export type SeaKind = "hero" | "footer";
+export type SeaKind = "hero" | "footer" | "band";
 
 /**
  * Field heights per placement and viewport; SeaField reserves exactly these.
@@ -169,6 +169,7 @@ export type SeaKind = "hero" | "footer";
 export const SEA_HEIGHT: Record<SeaKind, { wide: number; narrow: number }> = {
     hero: { wide: 280, narrow: 192 },
     footer: { wide: 200, narrow: 120 },
+    band: { wide: 36, narrow: 36 },
 };
 
 /**
@@ -177,7 +178,10 @@ export const SEA_HEIGHT: Record<SeaKind, { wide: number; narrow: number }> = {
  * - hero: the swell climbs toward the rising sun on the right;
  * - footer (sunset): the swell climbs to the right and leaves a calm trough on
  *   the left, where the sun sets, so its lower half sinks behind two or three
- *   crests instead of being cut by a single scale.
+ *   crests instead of being cut by a single scale;
+ * - band: three rows of small (16px) scales, no swell, no depth tiers: the base
+ *   Eve's portrait rises from in Sobre mí (the top row's notches sit 20px below
+ *   the band's top edge, see BAND_NOTCH).
  */
 export function seaFor(kind: SeaKind, width: number): SeigaihaField {
     const wide = width >= 768;
@@ -194,6 +198,8 @@ export function seaFor(kind: SeaKind, width: number): SeigaihaField {
                 // The near rows fade out, so the sea bleeds into the paper like a print.
                 fade: [0.45, 0.25, 0.1],
             });
+        case "band":
+            return seigaiha({ width, height, radius: 16, depth: 1, vanishX: width / 2, opacity: [0.35, 0.6] });
         case "footer": {
             const contentLeft = wide ? Math.max(40, (width - 1200) / 2) : 24;
             // The sun's centre: see the footer anchor (between the logo and the
@@ -208,3 +214,6 @@ export function seaFor(kind: SeaKind, width: number): SeigaihaField {
         }
     }
 }
+
+/** Depth of the band's top row notches below its top edge (base 36 − two half-radius steps). */
+export const BAND_NOTCH = 20;

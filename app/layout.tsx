@@ -1,22 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Libre_Caslon_Display, Libre_Caslon_Text } from "next/font/google";
+import { Geist, Zen_Old_Mincho } from "next/font/google";
 import "./globals.css";
 import { NavbarProvider } from "@/stores/nav/nav-providers";
 import { ServiceProvider } from "@/stores/service/service-provider";
 import { Toaster } from "@/components/ui/Toaster";
 
-const caslonDisplay = Libre_Caslon_Display({
+// The mincho voice (headings, leads, values): a Japanese old-style mincho with full
+// Latin, including ¡ ¿ ñ and accented vowels. Only the Latin subset is downloaded.
+const mincho = Zen_Old_Mincho({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-caslon-display",
-  display: "swap",
-});
-
-const caslonText = Libre_Caslon_Text({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-caslon-text",
+  weight: ["400", "600", "700", "900"],
+  variable: "--font-mincho",
   display: "swap",
 });
 
@@ -43,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${caslonDisplay.variable} ${caslonText.variable} ${geist.variable}`}>
+    <html lang="es" className={`${mincho.variable} ${geist.variable}`}>
       <body className="relative font-sans antialiased">
         <ServiceProvider>
           <NavbarProvider>

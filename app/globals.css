@@ -37,8 +37,10 @@
   --color-sun-now: var(--sun-now);
   --color-paper: var(--paper);
 
-  --font-display: var(--font-caslon-display), "Times New Roman", serif;
-  --font-serif: var(--font-caslon-text), "Times New Roman", serif;
+  /* One mincho voice for every heading, lead and the values (Zen Old Mincho, see
+     app/layout.tsx); Geist for body and UI. Mincho has no italic. */
+  --font-display: var(--font-mincho), "Yu Mincho", "Hiragino Mincho ProN", serif;
+  --font-serif: var(--font-mincho), "Yu Mincho", "Hiragino Mincho ProN", serif;
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 
   /* Shape rule: pills for primary actions, 6px for form fields, everything else square. */
@@ -52,9 +54,10 @@
 
 @layer base {
   :root {
-    /* The paper's day, flat colours only (no gradients). Contrast on the darkest
-       stop (dusk): ink 12.1:1, muted 5.4:1, cobalt 5.5:1, input border 3.2:1. */
-    --paper-morning: #f3eee3;
+    /* The paper's day, flat colours only (no gradients). Dawn is a warm kinari, never
+       a white. Contrast on the darkest stop (dusk): ink 12.1:1, muted 5.4:1, cobalt
+       5.5:1, input border 3.2:1; on dawn: ink 14.6:1, muted 6.6:1, cobalt 6.7:1. */
+    --paper-morning: #efe4cd;
     --paper-midday: #efe7d8;
     --paper-afternoon: #eadfca;
     --paper-dusk: #e4d3b9;
@@ -137,7 +140,7 @@
 
 @utility text-display {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: clamp(2.75rem, 1.6rem + 5.2vw, 5.25rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -145,7 +148,7 @@
 
 @utility text-title {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
   line-height: 1.1;
   letter-spacing: -0.015em;
@@ -166,6 +169,52 @@
   line-height: 1.45;
 }
 
+/*
+ * Hero "Amanecer". The stage is one viewport under the 64px navbar. The name is set
+ * by its cap height (--cap): the type clamp, bounded by the content width (the stacked
+ * logotype is 5.785 caps wide) and by the stage height (so the lockup, the CTAs and the
+ * calm left of the sea always fit). --logo-w / --logo-h are the stacked SVG's box
+ * (components/ui/Logo, LogoStacked).
+ */
+@utility hero-frame {
+  --gutter: 24px;
+  --hero-h: max(560px, calc(100svh - 64px));
+  --cap: min(clamp(3.75rem, 1.5rem + 11.5vw, 13rem), (min(100vw, 1280px) - 2 * var(--gutter)) * 0.1728, (var(--hero-h) - 380px) * 0.45);
+  --logo-w: calc(var(--cap) * 5.785);
+  --logo-h: calc(var(--cap) * 2.215);
+  --pt: clamp(24px, 5vh, 56px);
+
+  @media (width >= 768px) {
+    --gutter: 40px;
+  }
+}
+
+/* The hero lead: the greeting, line by line, at display size. Bounded by the
+   viewport height so the pinned scene always fits. */
+@utility text-hero-lead {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: min(clamp(1.75rem, 1rem + 3.2vw, 3.75rem), max(1.75rem, 6vh));
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+/* Transparencia, Innovación, Compromiso: one large row. */
+@utility text-values {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: min(clamp(1.75rem, 1rem + 2.4vw, 3.5rem), max(1.75rem, 5vh));
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+
+/* SplitText line masks (class split-line-mask): room for the mincho's accents and
+   descenders, so a risen line is never cropped. Hidden lines start at yPercent ≥ 125, wholly outside the mask. */
+.split-line-mask {
+  padding-block: 0.08em 0.16em;
+  margin-block: -0.08em -0.16em;
+}
 
 @layer base {
   * {

@@ -1,5 +1,6 @@
 'use client'
 import Heading from "@/components/ui/Heading";
+import { RevealTitle } from "@/components/ui/TextReveal";
 import { EmakiFan } from "@/components/ui/EmakiFan";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useEmakiScroll } from "@/hooks/useEmakiScroll";
@@ -47,7 +48,9 @@ export const ServiciosSection = () => {
             className="group/emaki section-pad scroll-mt-16 [--emaki-sky:clamp(80px,15vh,168px)] focus:outline-none data-[emaki=pinned]:flex data-[emaki=pinned]:h-screen data-[emaki=pinned]:flex-col data-[emaki=pinned]:justify-center data-[emaki=pinned]:pt-16 data-[emaki=pinned]:pb-0"
         >
             <div ref={ref} className="container">
-                <Heading data-emaki-heading is="h2" className="max-w-[18ch] xl:max-w-none">Conoce lo que puedo ofrecerte</Heading>
+                <div data-emaki-heading>
+                    <RevealTitle text="Conoce lo que puedo ofrecerte" className="max-w-[18ch] xl:max-w-none" />
+                </div>
             </div>
 
             <div

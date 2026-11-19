@@ -1,4 +1,4 @@
-import { gsap, useGSAP, SplitText } from "@/lib/gsap";
+import { gsap, useGSAP } from "@/lib/gsap";
 
 // One motion grammar: reveals 0.6–1.1s on expo.out / power3.out, once, on enter.
 const REVEAL = { ease: "expo.out", duration: 1 } as const;
@@ -10,10 +10,11 @@ const onEnter = (trigger: Element, start = "top 85%") => ({ trigger, start, once
  * and only animates transforms, opacity and clip-path, so nothing shifts and
  * nothing is hidden without JavaScript. Reduced motion: nothing runs.
  *
- * - section headings (h2): lines rise out of a mask, yPercent 100 → 0, stagger 0.08;
- * - lead paragraphs: lines fade in, stagger 0.08 (calmer than words);
+ * Text reveals are not here: section headings and leads are components/ui/TextReveal
+ * (the React Bits SplitText), the page's one text-reveal primitive.
+ *
  * - Mi enfoque: the two columns rise in turn as their top hairlines draw left to right;
- * - Sobre mí: the arched portrait is uncovered from the bottom (clip-path inset);
+ * - Sobre mí: Eve's bust rises out of its seigaiha band (clip-path inset from the bottom);
  * - Contacto: the form fields cascade in; on a fine pointer the send pill
  *   follows the cursor by at most 6px.
  */
@@ -22,38 +23,6 @@ export function usePageMotion() {
         const mm = gsap.matchMedia();
 
         mm.add("(prefers-reduced-motion: no-preference)", () => {
-            const splits: SplitText[] = [];
-
-            gsap.utils.toArray<HTMLElement>("main section:not(#home) h2").forEach((heading) => {
-                splits.push(SplitText.create(heading, {
-                    type: "lines",
-                    mask: "lines",
-                    linesClass: "split-line",
-                    autoSplit: true,
-                    onSplit: (self) => gsap.from(self.lines, {
-                        ...REVEAL,
-                        yPercent: 100,
-                        stagger: 0.08,
-                        scrollTrigger: onEnter(heading, "top 88%"),
-                    }),
-                }));
-            });
-
-            gsap.utils.toArray<HTMLElement>("main section:not(#home) .text-lead").forEach((lead) => {
-                splits.push(SplitText.create(lead, {
-                    type: "lines",
-                    linesClass: "split-line",
-                    autoSplit: true,
-                    onSplit: (self) => gsap.from(self.lines, {
-                        opacity: 0,
-                        duration: 0.9,
-                        ease: "power3.out",
-                        stagger: 0.08,
-                        scrollTrigger: onEnter(lead),
-                    }),
-                }));
-            });
-
             const columns = gsap.utils.toArray<HTMLElement>("[data-focus-column]");
             if (columns.length) {
                 const timeline = gsap.timeline({ scrollTrigger: onEnter(columns[0]) });
@@ -73,7 +42,6 @@ export function usePageMotion() {
                 gsap.from(form.children, { opacity: 0, y: 16, duration: 0.7, ease: "power3.out", stagger: 0.08, scrollTrigger: onEnter(form) });
             }
 
-            return () => splits.forEach((split) => split.revert());
         });
 
         mm.add("(prefers-reduced-motion: no-preference) and (pointer: fine)", () => {

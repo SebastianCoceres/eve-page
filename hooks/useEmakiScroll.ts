@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { gsap, useGSAP, ScrollTrigger, SplitText } from "@/lib/gsap";
+import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
 
 /** ScrollTrigger id of the pinned emakimono: `ScrollTrigger.getById(EMAKI_PIN_ID)`. */
 export const EMAKI_PIN_ID = "emaki-pin";
@@ -33,7 +33,7 @@ const drawFan = (panel: Element, delay = 0) =>
  * The emakimono (horizontal hand-scroll) behaviour of a section.
  *
  * Markup contract, inside the returned `scope`:
- * - `[data-emaki-heading]`: revealed line by line (SplitText, masked lines, expo.out);
+ * - `[data-emaki-heading]`: the heading block (its reveal is components/ui/TextReveal);
  * - `[data-emaki-viewport]` > `[data-emaki-track]`: the track that translates;
  * - `[data-emaki-panel]` (one per item) holding a `[data-emaki-fan]` with `[data-emaki-arc]` paths.
  *
@@ -52,40 +52,13 @@ export function useEmakiScroll(count: number) {
 
     useGSAP(() => {
         const section = scope.current;
-        const heading = section?.querySelector<HTMLElement>("[data-emaki-heading]");
         const viewport = section?.querySelector<HTMLElement>("[data-emaki-viewport]");
         const track = section?.querySelector<HTMLElement>("[data-emaki-track]");
-        if (!section || !heading || !viewport || !track) return;
+        if (!section || !viewport || !track) return;
         const panels = gsap.utils.toArray<HTMLElement>("[data-emaki-panel]", section);
         const arcs = section.querySelectorAll("[data-emaki-arc]");
 
         const mm = gsap.matchMedia();
-
-        // The heading, line by line, once.
-        mm.add("(prefers-reduced-motion: no-preference)", () => {
-            let played = false;
-            const split = SplitText.create(heading, {
-                type: "lines",
-                mask: "lines",
-                autoSplit: true,
-                onSplit(self) {
-                    if (played) return;
-                    return gsap.from(self.lines, {
-                        yPercent: 105,
-                        duration: 1.1,
-                        ease: "expo.out",
-                        stagger: 0.08,
-                        scrollTrigger: {
-                            trigger: heading,
-                            start: "top 85%",
-                            once: true,
-                            onEnter: () => { played = true; },
-                        },
-                    });
-                },
-            });
-            return () => split.revert();
-        });
 
         mm.add(PINNED, () => {
             section.dataset.emaki = "pinned";

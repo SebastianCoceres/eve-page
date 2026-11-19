@@ -1,20 +1,20 @@
 'use client'
-import { useFadeStagger } from "@/hooks/useFadeStagger";
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { Heading } from "@/components/ui/Heading";
+import { RevealLead, RevealTitle } from "@/components/ui/TextReveal";
 
 export const Intro = () => {
     const { ref } = useIsInViewWithStore("focus")
-    const scope = useFadeStagger()
 
     return (
         <section id="focus" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
-            <div ref={scope} className="container">
+            <div className="container">
                 <div ref={ref} className="grid gap-y-8 md:grid-cols-12 md:gap-x-6">
-                    <Heading is="h2" className="reveal md:col-span-12 xl:col-span-4">Mi enfoque</Heading>
-                    <p className="reveal max-w-[40ch] text-lead text-foreground md:col-span-10 xl:col-span-8 xl:col-start-5">
-                        Mientras que el marketing tradicional se centra principalmente en la venta de productos o servicios mediante estrategias persuasivas y a menudo intrusivas, el marketing consciente prioriza la integridad y la conexión genuina con la audiencia. En lugar de buscar simplemente aumentar las ventas a cualquier costo, el marketing consciente se preocupa por el bienestar tanto de los consumidores como de la sociedad en general.
-                    </p>
+                    <RevealTitle text="Mi enfoque" className="md:col-span-12 xl:col-span-4" />
+                    <RevealLead
+                        className="max-w-[40ch] md:col-span-10 xl:col-span-8 xl:col-start-5"
+                        text="Mientras que el marketing tradicional se centra principalmente en la venta de productos o servicios mediante estrategias persuasivas y a menudo intrusivas, el marketing consciente prioriza la integridad y la conexión genuina con la audiencia. En lugar de buscar simplemente aumentar las ventas a cualquier costo, el marketing consciente se preocupa por el bienestar tanto de los consumidores como de la sociedad en general."
+                    />
 
                     <div data-focus-column className="relative mt-8 pt-8 md:col-span-6 md:mt-16 xl:col-span-4 xl:col-start-5">
                         {/* The top hairline is its own element so it can draw left to right (usePageMotion). */}

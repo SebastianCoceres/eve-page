@@ -8,7 +8,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/Form";
-import Heading from "@/components/ui/Heading";
+import { RevealLead, RevealTitle } from "@/components/ui/TextReveal";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
@@ -94,8 +94,8 @@ export const Contacto = () => {
                     help line toward the footer sea (useTravelingSun). */}
                 <div ref={ref} className="grid gap-y-10 md:grid-cols-12 md:gap-x-6 md:gap-y-14">
                     <div className="reveal md:col-span-12 xl:col-span-5">
-                        <Heading is="h2">Hablemos de tu proyecto</Heading>
-                        <p className="mt-4 max-w-[40ch] text-lead text-foreground">¡Estoy aquí para ti!</p>
+                        <RevealTitle text="Hablemos de tu proyecto" />
+                        <RevealLead text="¡Estoy aquí para ti!" className="mt-4 max-w-[40ch]" />
                         <p className="mt-6 max-w-[36ch] text-[15px] leading-[1.6] text-muted-foreground">
                             Si prefieres, déjame tu número de teléfono y charlamos sobre tu proyecto.
                         </p>
