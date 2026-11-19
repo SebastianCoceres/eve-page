@@ -95,3 +95,24 @@ Verification:
   - the status clears on the next edit.
 
 Next step: the client decides on the phone line and on distilling Servicios.
+
+## T8 Servicios points, optional phone, whole afternoon sun
+
+Client-approved: distil Servicios while keeping the emakimono's look; add an optional phone field; remove the seigaiha waves under the Sobre mí sun.
+
+- [x] T8.1 Servicios distilled. Route: delegated Opus writer (2+ non-trivial files). Each service keeps its name, order and `key` (the form preselect depends on them) and is said in two or three short points taken only from Eve's copy for that service (`points` in `lib/services.ts`, renamed from `.tsx`). Dropped: "resultados excepcionales", "garantizando", "impulsan el crecimiento y el éxito de tu negocio", "el éxito de tu negocio en el mundo digital", "cautivan a tu audiencia", "orientación experta", "generar un impacto significativo", "experiencia en línea atractiva y envolvente". Panels keep fans, pin, horizon, sun crossing, the "Me interesa" / "Servicio elegido" cue and `aria-pressed`. Pinned panels are now 420–520px from 1280 (34vw) and 460–520px at 1024–1279 (50vw), 400–520px tall (56vh), with the cue at the panel's foot; the pin is ≈1250px at 1440 (was ≈1900) and ≈1620px at 1024 (was ≈2030). Commit c2dcee5.
+- [x] T8.2 Optional phone. Route: same writer. "Teléfono (opcional)" between Correo and the service (`type="tel"`, `inputMode="tel"`, `autoComplete="tel"`, 48px, half a row from 768). One schema in `lib/contact.ts` shared by the form and `app/api/send/route.ts`: checked on blur only when filled, digits/spaces/hyphens/parentheses/leading +, 6–20 digits; errors name the fix. The route returns 400 with the issues on invalid bodies, HTML-escapes every email field and adds the phone only when present. The help line about the phone is now true. Commit c9ac331.
+- [x] T8.3 Whole afternoon sun. Route: same writer. The band, the paper strip and the unused `band` sea preset are gone. The disc is 198px (174px on phones), flush left under the heading. The parked sun never sinks, it only warms; from 1280 it slides out to the west margin during the last 35% vh of the sticky travel (it keeps its viewport height, so it never rides under the navbar and stays ≥48px from Contacto's section mark), then sinks; at 768–1279 (column not sticky) it arrives at 62% vh, keeps its place on the page and slides out over 22% vh before its top could reach the navbar (an eased variant that drifted down the page came within 23px of the opening line at 1024 and was dropped); on phones it arrives at 62% vh and is gone by 20%. Reduced motion shows the same whole disc. Commit 97c1f3a. Follow-up eee5155: the loose-column exit (above) and, at 768–1023 where the gap above Sobre mí is too tight to cross in view with 48px to spare, the sun leaves its Servicios zone east and switches to the west out of view (the old in-view crossing came within 20px of a "Me interesa" cue at 800).
+- [x] T8.4 Docs: AGENTS.md, DESIGN.md, PRODUCT.md (Servicios exception, phone), `.impeccable/design.json`. Commit: see below.
+
+Verification (T8):
+- `pnpm exec tsc --noEmit`: pass.
+- `pnpm build`: pass.
+- `pnpm exec eslint .`: 0 problems.
+- Sun sweep (40px steps, whole page): no discontinuities and no text closer than 48px at any width. Minimum gaps: 48px at 1440, 55px at 1280, 51px at 1024, 52px at 800, 53px at 390. No horizontal overflow at 1440/1280/1024/800/390.
+- Navbar check, Sobre mí to footer (20px steps): no visible disc under the 64px navbar and the parked disc never cropped at 1440, 1280, 1024, 800 and 390. Contacto section mark gap: 48px at 1440 (900 and 720 tall), ≥223px at 1280.
+- Form (mocked `/api/send`, 1440/1024/390): labels in order Nombre, Correo, Teléfono (opcional), Me interesa un servicio, Mensaje; empty phone sends (`"phone":""`); "abc 12" shows "Revisa el número: usa solo dígitos, espacios o el prefijo +." and blocks the send; "12 34" shows the 6–20 digits message; "+34 (600) 123-456" clears the error and is in the payload.
+- Route: invalid phone, short phone, empty email and non-JSON bodies all return 400 with the field messages. Validator unit check (node, `lib/contact.ts`): 19/19 pass.
+- Reduced motion: stacked panels, whole 198/174px disc visible, no horizontal overflow, no console errors at 1440/1024/390.
+
+Next step: client review of the distilled service points; push/PR remain the user's decision.

@@ -144,7 +144,7 @@ components:
 
 **Creative North Star: "Washi y cobalto"**
 
-The page is one day on warm washi paper, made with the means of Japanese print and editorial craft. The ground turns from a kinari dawn to an autumn dusk as the reader scrolls, one cobalt ink marks every decision and draws the seigaiha, and one orange sun (a hinomaru disc) crosses the whole page under a single owner. Services unroll as an emakimono, the afternoon sun stands on a seigaiha band in Sobre mí, and an EB hanko stamps the end of the day.
+The page is one day on warm washi paper, made with the means of Japanese print and editorial craft. The ground turns from a kinari dawn to an autumn dusk as the reader scrolls, one cobalt ink marks every decision and draws the seigaiha, and one orange sun (a hinomaru disc) crosses the whole page under a single owner. Services unroll as an emakimono, the afternoon sun rests whole beside Eve's milestones in Sobre mí, and an EB hanko stamps the end of the day.
 
 The system is minimal, flat and editorial: type is the protagonist, color is rare, there are no photographs, and hierarchy comes from size and weight only. Copy is said in short points, not paragraphs: a large mincho line with at most one short Geist note. Structure is 1px hairlines; there are no boxes, cards, shadows, gradients, blur or texture. Curves belong to two things only: the sun (circles) and the seigaiha (concentric semicircles), generated in code, never drawn as illustration. It refuses the cream personal-brand template and it refuses Japanese kitsch (no invented kanji, torii or sakura).
 
@@ -156,7 +156,7 @@ Motion is one grammar: content enters once (expo.out / power3.out, 0.6 to 1.1s),
 - One orange sun, warming to persimmon, with one timeline owner across the page.
 - Zen Old Mincho for the voice, Geist for body and UI; never uppercase outside the logotype.
 - Flat: 1px hairlines are the only structure.
-- Seigaiha generated in code: seas, section marks, fans, value separators, the Sobre mí band.
+- Seigaiha generated in code: seas, section marks, fans, value separators.
 
 ## Colors
 
@@ -224,7 +224,7 @@ One content column: 1200px max, 24px gutter below 768px and 40px from 768px. Onl
 
 ## Elevation & Depth
 
-Completely flat. There are no box-shadows (the `--shadow-*` namespace is reset), no gradients, no blur. Depth is made the way a print makes it: occlusion. Seigaiha rows are drawn back to front with opaque paper fills so nearer rows hide farther ones exactly, the sea hides the sun, the Sobre mí band hides the parked disc's lower edge, and per-row stroke opacities (flat values, light far to dark near) give recession.
+Completely flat. There are no box-shadows (the `--shadow-*` namespace is reset), no gradients, no blur. Depth is made the way a print makes it: occlusion. Seigaiha rows are drawn back to front with opaque paper fills so nearer rows hide farther ones exactly, the sea hides the sun, and per-row stroke opacities (flat values, light far to dark near) give recession.
 
 **The Occlusion Rule.** Depth is something in front of something else on the same paper, never a shadow or a glow.
 
@@ -251,6 +251,7 @@ Quiet and confident: one cobalt pill per decision.
 - **Style:** 48px tall, paper-light fill, 1px Field Stone border, 6px radius, 16px side padding; labels above in Geist 500 at 14px.
 - **Focus:** border turns cobalt and the 2px cobalt ring appears at 2px offset. Hover darkens the border to Warm Ash.
 - **Error / Disabled:** error-red border with a message below that names the fix (an empty email asks for it; limits name their number); disabled at 60% opacity.
+- **Optional phone:** "Teléfono (opcional)" sits between Correo and the service, half a row wide from 768px, a `tel` field (tel keyboard and autofill). It is checked on blur only when filled, with a lenient international pattern (digits, spaces, hyphens, parentheses, a leading +; 6 to 20 digits), and its errors say how to fix it.
 - **Sent:** the confirmation stays under the send pill as a mincho lead ("Mensaje enviado. Te responderé pronto.", a polite status) until a new message is started; no success toast.
 
 ### Navigation
@@ -261,16 +262,16 @@ Quiet and confident: one cobalt pill per decision.
 Generated in code (`lib/seigaiha`), never as an image. Seas: whole scales in three depth tiers with a swell line, flat per-row opacities and the nearest rows dissolving into the paper. Marks: a single 48px scale at the column edge between chapters, drawn from the centre outward once on enter. Fans: a single scale used as the emakimono's resting fans, the values' separators and Sobre mí's milestones.
 
 ### The Sun (signature)
-One orange disc with one timeline owner. It rises from the hero sea, stands right of the problem in Mi enfoque and crosses the sky to stand left of the answer (pinned from 1024px), crosses the emakimono's sky, parks as the afternoon disc on the Sobre mí band (sticky from 1280px), and sets into the footer sea in persimmon. Static anchors stand in for it under reduced motion.
+One orange disc with one timeline owner. It rises from the hero sea, stands right of the problem in Mi enfoque and crosses the sky to stand left of the answer (pinned from 1024px), crosses the emakimono's sky, parks whole as the afternoon disc in Sobre mí (sticky from 1280px; it only warms there, never sinks or gets cropped, and slides out to the west margin before the column lets go), and sets into the footer sea in persimmon. Static anchors stand in for it under reduced motion.
 
 ### Emakimono (signature)
-Servicios as a hand-scroll pinned from 1024px: tall panels joined by 1px hairlines, one continuous cobalt horizon at 45%, a fan resting on it at an uneven position in each panel, and a row of 1px progress ticks (active in cobalt). A panel's hover and focus frame turns its hairlines to solid cobalt; the selected service shows the 6px sun dot. Every panel ends in a visible cue in the link style, "Me interesa" ("Servicio elegido" once picked), whose underline turns solid with the panel frame: the panel is the button, and touch has no hover to reveal it. Stacked with cobalt top rules below 1024px.
+Servicios as a hand-scroll pinned from 1024px: panels (about a third of the viewport wide, 420 to 520px) joined by 1px hairlines, one continuous cobalt horizon at 45%, a fan resting on it at an uneven position in each panel, and a row of 1px progress ticks (active in cobalt). A panel's hover and focus frame turns its hairlines to solid cobalt; the selected service shows the 6px sun dot. Each panel says its service in points: the mincho title and two or three short Geist lines in Warm Ash, split by 1px hairlines, distilled only from Eve's copy for that service (no promises such as "resultados excepcionales" or "garantizando"). Every panel ends in a visible cue in the link style, "Me interesa" ("Servicio elegido" once picked), resting at the panel's foot when pinned, whose underline turns solid with the panel frame: the panel is the button, and touch has no hover to reveal it. Stacked with cobalt top rules below 1024px.
 
 ### Mi enfoque in two acts (signature)
 The problem, then the answer: "El marketing tradicional" as three points on the left with the sun on the right; the sun crosses the sky; "El marketing consciente" as four points on the right with the sun on the left. Each point rises in Warm Ash, turns to Sumi Ink and holds.
 
 ### Sol de la tarde (signature)
-No photograph: in Sobre mí a pure sun disc stands on a three-row seigaiha band that hides its lower edge, beside five milestones that arrive one at a time.
+No photograph: in Sobre mí a pure, whole sun disc rests under the heading, flush with its left edge, beside five milestones that arrive one at a time. Nothing stands in front of it (no band, no paper strip): the traveling sun parks as it and only warms while the text is read.
 
 ### Hanko seal (signature)
 The final stamp: a 42px persimmon square, an inset 1.25px paper border and an E and B joined by their bars in 1.5px paper strokes, on the right edge of the content grid in the footer.
