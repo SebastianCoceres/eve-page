@@ -35,6 +35,9 @@
   --color-sun: var(--sun);
   --color-sun-warm: var(--sun-warm);
   --color-sun-now: var(--sun-now);
+  /* The traveling sun: --sun-now, warmed further toward persimmon by --sun-late
+     (0 to 1, set on the sun layer while it rests behind Eve; useTravelingSun). */
+  --color-sun-live: color-mix(in oklab, var(--sun-now), var(--sun-warm) calc(var(--sun-late, 0) * 100%));
   --color-paper: var(--paper);
 
   /* One mincho voice for every heading, lead and the values (Zen Old Mincho, see
@@ -208,6 +211,17 @@
   letter-spacing: -0.01em;
 }
 
+
+/* A statement in the mincho voice, read line by line: the Mi enfoque paragraph and
+   questions, and the Sobre mí close. Bounded by the viewport height so the pinned
+   Mi enfoque scene always fits. */
+@utility text-statement {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: min(clamp(1.5rem, 1rem + 2vw, 2.625rem), max(1.5rem, 4.8vh));
+  line-height: 1.24;
+  letter-spacing: -0.01em;
+}
 
 /* SplitText line masks (class split-line-mask): room for the mincho's accents and
    descenders, so a risen line is never cropped. Hidden lines start at yPercent ≥ 125, wholly outside the mask. */

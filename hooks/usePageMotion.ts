@@ -1,19 +1,17 @@
 import { gsap, useGSAP } from "@/lib/gsap";
 
 // One motion grammar: reveals 0.6–1.1s on expo.out / power3.out, once, on enter.
-const REVEAL = { ease: "expo.out", duration: 1 } as const;
 const onEnter = (trigger: Element, start = "top 85%") => ({ trigger, start, once: true });
 
 /**
- * Page-wide entrances for the sections below the hero (the hero and Servicios
- * own their motion). Everything starts from the visible, server-rendered layout
+ * Page-wide entrances for the sections below the hero (the hero, Mi enfoque,
+ * Servicios and the Sobre mí text own their motion). Everything starts from the visible, server-rendered layout
  * and only animates transforms, opacity and clip-path, so nothing shifts and
  * nothing is hidden without JavaScript. Reduced motion: nothing runs.
  *
  * Text reveals are not here: section headings and leads are components/ui/TextReveal
  * (the React Bits SplitText), the page's one text-reveal primitive.
  *
- * - Mi enfoque: the two columns rise in turn as their top hairlines draw left to right;
  * - Sobre mí: Eve's bust rises out of its seigaiha band (clip-path inset from the bottom);
  * - Contacto: the form fields cascade in; on a fine pointer the send pill
  *   follows the cursor by at most 6px.
@@ -23,13 +21,6 @@ export function usePageMotion() {
         const mm = gsap.matchMedia();
 
         mm.add("(prefers-reduced-motion: no-preference)", () => {
-            const columns = gsap.utils.toArray<HTMLElement>("[data-focus-column]");
-            if (columns.length) {
-                const timeline = gsap.timeline({ scrollTrigger: onEnter(columns[0]) });
-                timeline.from(columns, { ...REVEAL, opacity: 0, y: 24, stagger: 0.12 }, 0);
-                timeline.from("[data-focus-rule]", { duration: 1.1, ease: "power3.out", scaleX: 0, transformOrigin: "left center", stagger: 0.12 }, 0);
-            }
-
             gsap.utils.toArray<HTMLElement>("[data-portrait-photo]").forEach((photo) => {
                 gsap.fromTo(photo,
                     { clipPath: "inset(100% 0% 0% 0%)" },

@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { gsap, useGSAP, ScrollTrigger, SplitText } from "@/lib/gsap";
+import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
+import { splitLines } from "@/lib/splitLines";
 
 /** ScrollTrigger id of the pinned hero: `ScrollTrigger.getById(HERO_PIN_ID)`. */
 export const HERO_PIN_ID = "hero-pin";
@@ -102,20 +103,13 @@ export function useHeroAnimation() {
                     animation: scene,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
-                    // Refresh first: every trigger below (emakimono, sun, paper) includes its spacing.
-                    refreshPriority: 2,
+                    // Refresh first: every trigger below (Mi enfoque, emakimono, sun, paper) includes its spacing.
+                    refreshPriority: 3,
                 });
                 return scene;
             };
 
-            const split = SplitText.create(lead, {
-                type: "lines",
-                mask: "lines",
-                linesClass: "split-line",
-                autoSplit: true,
-                aria: "auto",
-                onSplit: (self) => build(self.lines),
-            });
+            const split = splitLines(lead, build);
             ScrollTrigger.refresh();
 
             return () => {
@@ -127,19 +121,12 @@ export function useHeroAnimation() {
         });
 
         mm.add(FLOW, () => {
-            const split = SplitText.create(lead, {
-                type: "lines",
-                mask: "lines",
-                linesClass: "split-line",
-                autoSplit: true,
-                aria: "auto",
-                onSplit: (self) => gsap.from(self.lines, {
-                    yPercent: 130,
-                    ease: "power3.out",
-                    stagger: 0.25,
-                    scrollTrigger: { trigger: lead, start: "top 92%", end: "bottom 62%", scrub: 0.6 },
-                }),
-            });
+            const split = splitLines(lead, (lines) => gsap.from(lines, {
+                yPercent: 130,
+                ease: "power3.out",
+                stagger: 0.25,
+                scrollTrigger: { trigger: lead, start: "top 92%", end: "bottom 62%", scrub: 0.6 },
+            }));
             const drift = gsap.from(values, {
                 x: (index: number) => 48 + index * 40,
                 opacity: 0,

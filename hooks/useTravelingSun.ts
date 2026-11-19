@@ -3,11 +3,31 @@ import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
 import { CLEARANCE, NAVBAR, findZone, parkedScroll, route, type Point, type Rect, type Zone } from "@/lib/sunPath";
 import { getHeroPinRange } from "@/hooks/useHeroAnimation";
 import { getEmakiPinRange } from "@/hooks/useEmakiScroll";
+import { getFocusPinRange } from "@/hooks/useFocusScene";
 
 const docRect = (element: Element): Rect => {
     const r = element.getBoundingClientRect();
     return { l: r.left, t: r.top + window.scrollY, r: r.right, b: r.bottom + window.scrollY };
 };
+
+/**
+ * A sticky block's travel (Sobre mí's portrait column, `[data-sun-sticky]`, which
+ * rests at the top of its grid cell): how far it has moved down its cell now and
+ * at most (px), and the scroll range over which it moves. Null when it is not
+ * sticky at this width.
+ */
+type StickyTravel = { now: number; total: number; start: number; end: number };
+function stickyTravel(sticky: HTMLElement | null): StickyTravel | null {
+    const cell = sticky?.parentElement;
+    if (!sticky || !cell) return null;
+    const style = getComputedStyle(sticky);
+    if (style.position !== "sticky") return null;
+    const top = parseFloat(style.top) || 0;
+    const c = docRect(cell);
+    const total = Math.max(0, c.b - c.t - sticky.offsetHeight);
+    const now = sticky.getBoundingClientRect().top - cell.getBoundingClientRect().top;
+    return { now, total, start: c.t - top, end: c.t - top + total };
+}
 
 /**
  * Hidden from assistive tech and from the sun's clearance alike, except the pieces
@@ -23,10 +43,22 @@ const isDecorative = (element: Element) => {
 /**
  * Every text line and opaque surface the sun must keep clear of, in document
  * coordinates. The hero is left out: it pins, and its own choreography keeps the
- * sun clear of its text (see Hero and the hero leg below).
+ * sun clear of its text (see Hero and the hero leg below). Text in a sticky block
+ * is measured where it rests once the block has travelled its whole cell (where
+ * it stays for everything after it, like the descent).
  */
 function collectObstacles(): Rect[] {
     const rects: Rect[] = [];
+    const travels = new Map<Element, number>();
+    const stickyShift = (element: Element) => {
+        const sticky = element.closest<HTMLElement>("[data-sun-sticky]");
+        if (!sticky) return 0;
+        if (!travels.has(sticky)) {
+            const travel = stickyTravel(sticky);
+            travels.set(sticky, travel ? travel.total - travel.now : 0);
+        }
+        return travels.get(sticky) ?? 0;
+    };
     document.querySelectorAll("main, footer").forEach((scope) => {
         const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
         let node: Node | null;
@@ -37,14 +69,17 @@ function collectObstacles(): Rect[] {
             range.selectNodeContents(node);
             // A heading line that has not risen yet (TextReveal) is measured where it will rest.
             const line = parent.closest<HTMLElement>(".split-line");
-            const shift = line ? Number(gsap.getProperty(line, "y")) + (Number(gsap.getProperty(line, "yPercent")) / 100) * line.offsetHeight : 0;
+            const shift = (line ? Number(gsap.getProperty(line, "y")) + (Number(gsap.getProperty(line, "yPercent")) / 100) * line.offsetHeight : 0) - stickyShift(parent);
             for (const r of range.getClientRects()) {
                 rects.push({ l: r.left, t: r.top + window.scrollY - shift, r: r.right, b: r.bottom + window.scrollY - shift });
             }
         }
         // The emakimono's fans are drawn on the sky: never under the sun either.
-        scope.querySelectorAll("input, textarea, button, [role='combobox'], .bg-surface, [data-section-mark], [data-emaki-fan]").forEach((element) => {
-            if (!element.closest("#home")) rects.push(docRect(element));
+        scope.querySelectorAll("input, textarea, button, [role='combobox'], .bg-surface, [data-section-mark], [data-emaki-fan], [data-chapter-mark]").forEach((element) => {
+            if (element.closest("#home")) return;
+            const r = docRect(element);
+            const shift = stickyShift(element);
+            rects.push({ ...r, t: r.t + shift, b: r.b + shift });
         });
     });
     return rects;
@@ -71,6 +106,10 @@ const SINK = 1.06;
 
 /** Share of the hero pin over which the sun climbs (done before the greeting's second line); it then rides the pin at rest. */
 const HERO_RISE = 0.4;
+/** Share of the Mi enfoque pin over which the sun climbs to midday; it rests there for the rest of it. */
+const FOCUS_RISE = 0.85;
+/** How far the sun sinks behind Eve while her text is read, as a share of its diameter (the paper strip under the band hides it). */
+const PARK_SINK = 0.12;
 
 type Leg = {
     points: Point[];
@@ -245,7 +284,15 @@ export function useTravelingSun() {
                 const textTop = (rect: Rect) => Math.min(rect.b, ...inside(rect).map((o) => o.t));
                 const textBottom = (rect: Rect) => Math.max(rect.t, ...inside(rect).map((o) => o.b));
                 const aboutAnchor = document.querySelector('[data-sun-anchor="about"]');
-                const about = aboutAnchor && aboutAnchor.getBoundingClientRect().width > 0 ? anchorZone(aboutAnchor) : null;
+                // Sobre mí's portrait column is sticky from 1280px: the disc's place is a
+                // function of the scroll. `about` is where it rests before the column sticks.
+                const aboutTravel = aboutAnchor ? stickyTravel(aboutAnchor.closest<HTMLElement>("[data-sun-sticky]")) : null;
+                const aboutRest = aboutAnchor && aboutAnchor.getBoundingClientRect().width > 0 ? anchorZone(aboutAnchor) : null;
+                const about = aboutRest && aboutTravel ? { ...aboutRest, y: aboutRest.y - aboutTravel.now } : aboutRest;
+                const aboutY = (scroll: number) => (about ? about.y : 0)
+                    + (aboutTravel ? Math.min(aboutTravel.total, Math.max(0, scroll - aboutTravel.start)) : 0);
+                let warmFrom = -1;
+                let warmTo = -1;
 
                 if (vw >= 768) {
                     let previous: Zone = start;
@@ -272,7 +319,9 @@ export function useTravelingSun() {
                     }
 
                     const emakiPin = vw >= 1024 ? getEmakiPinRange() : null;
+                    const focusPin = getFocusPinRange();
                     let fromWestEdge: Zone | null = null;
+                    let parkedAbout = false;
 
                     for (const chapter of CHAPTERS) {
                         const section = document.getElementById(chapter.id);
@@ -324,6 +373,31 @@ export function useTravelingSun() {
                             }
                         }
 
+                        // 2a. Mi enfoque, pinned: it comes in from the right margin to the free
+                        // zone right of the text as the pin begins, then climbs to midday.
+                        if (chapter.id === "focus" && focusPin) {
+                            const textRight = Math.max(contentLeft, ...inside(rect).map((o) => o.r));
+                            const fit = chapter.sizes.find((d) => textRight + CLEARANCE + d / 2 <= vw - d / 2 - 8) ?? chapter.sizes[chapter.sizes.length - 1];
+                            const x = Math.min(vw - fit / 2 - 8, Math.max(textRight + CLEARANCE + fit / 2, vw * chapter.targetX));
+                            const high = NAVBAR + 40 + fit / 2;
+                            const low = Math.max(high, Math.min(vh * 0.62, vh - 24 - fit / 2));
+                            const span = Math.max(1, focusPin.end - focusPin.start);
+                            const pin = focusPin;
+                            const zoneIn: Zone = { x, y: low + pin.start, d: fit };
+                            const gapY = Math.min(zoneIn.y, Math.max(previous.y, (textBottom(previousRect) + textTop(rect)) / 2));
+                            legs.push({ points: route(previous, zoneIn, gapY, vw, contentLeft, contentRight), zone: zoneIn, at: Math.max(previousTime + 1, pin.start) });
+                            legs.push({
+                                points: [],
+                                zone: { x, y: high + pin.end, d: fit },
+                                at: pin.end,
+                                track: (scroll) => ({ x, y: lerp(low, high, sine((scroll - pin.start) / (span * FOCUS_RISE))) + scroll, d: fit }),
+                            });
+                            previous = { x, y: high + pin.end, d: fit };
+                            previousRect = rect;
+                            previousTime = pin.end;
+                            continue;
+                        }
+
                         const anchored = chapter.anchor ? about : null;
                         const zone = anchored ?? findZone({
                             section: rect,
@@ -339,10 +413,21 @@ export function useTravelingSun() {
                         // 3. After the emakimono: down the west margin out of view, then one
                         // horizontal glide in behind Eve's portrait.
                         if (anchored && fromWestEdge) {
-                            const edge: Zone = { x: -zone.d / 2 - 4, y: zone.y, d: zone.d };
                             const glide = Math.min(vh * 0.55, Math.max(1, (at - previousTime) * 0.6));
-                            legs.push({ points: [previous, edge], zone: edge, at: Math.max(previousTime + 1, at - glide) });
-                            legs.push({ points: [edge, zone], zone, at });
+                            const glideFrom = Math.max(previousTime + 1, at - glide);
+                            const edge: Zone = { x: -zone.d / 2 - 4, y: aboutY(glideFrom), d: zone.d };
+                            legs.push({ points: [previous, edge], zone: edge, at: glideFrom });
+                            // One horizontal glide in behind her, following the column if it already sticks.
+                            legs.push({
+                                points: [],
+                                zone: { ...zone, y: aboutY(at) },
+                                at,
+                                track: (scroll) => ({
+                                    x: lerp(edge.x, zone.x, sine((scroll - glideFrom) / Math.max(1, at - glideFrom))),
+                                    y: aboutY(scroll),
+                                    d: zone.d,
+                                }),
+                            });
                         } else {
                             const gapY = Math.min(zone.y, Math.max(previous.y, (textBottom(previousRect) + textTop(rect)) / 2));
                             legs.push({ points: route(previous, zone, gapY, vw, contentLeft, contentRight), zone, at });
@@ -350,16 +435,30 @@ export function useTravelingSun() {
                         previous = zone;
                         previousRect = rect;
                         previousTime = at;
+                        if (anchored) parkedAbout = true;
                     }
                     // 4. It rests as the portrait's disc for a while (moving with her), then
                     // slides out from behind her, west, at the same height, easing to the
                     // sunset's size on the way, before it sinks.
-                    if (about && previous === about) {
-                        const hold = Math.min(maxScroll - 3, previousTime + vh * 0.25);
-                        const out: Zone = { x: contentLeft - CLEARANCE - end.d / 2, y: about.y, d: end.d };
+                    // While the portrait column sticks it stays locked to the disc, sinking a
+                    // little (PARK_SINK) and warming (--sun-late) as the text is read.
+                    if (about && parkedAbout) {
+                        const parkFrom = previousTime;
+                        const hold = Math.min(maxScroll - 3, Math.max(parkFrom + vh * 0.25, aboutTravel ? aboutTravel.end : 0));
+                        const sink = about.d * PARK_SINK;
+                        const sinking = (scroll: number) => sink * sine((scroll - parkFrom) / Math.max(1, hold - parkFrom));
+                        const rest: Zone = { ...about, y: aboutY(hold) + sink };
+                        legs.push({
+                            points: [],
+                            zone: rest,
+                            at: hold,
+                            track: (scroll) => ({ ...about, y: aboutY(scroll) + sinking(scroll) }),
+                        });
+                        warmFrom = parkFrom;
+                        warmTo = hold;
+                        const out: Zone = { x: contentLeft - CLEARANCE - end.d / 2, y: rest.y, d: end.d };
                         const slideAt = Math.min(maxScroll - 2, hold + vh * 0.35);
-                        legs.push({ points: [about, about], zone: about, at: hold });
-                        legs.push({ points: [about, out], zone: out, at: slideAt });
+                        legs.push({ points: [rest, out], zone: out, at: slideAt });
                         previous = out;
                         previousTime = slideAt;
                     }
@@ -499,7 +598,13 @@ export function useTravelingSun() {
                     if (leg.hidden) timeline.set(root, { opacity: 1 }, time + duration);
                     time += duration;
                 }
-                // The colour warms with the paper's day (--sun-now, usePaperDay).
+                // The colour warms with the paper's day (--sun-now, usePaperDay), and further,
+                // to persimmon, while it rests behind Eve (--sun-late, see --color-sun-live).
+                if (warmTo > warmFrom && warmFrom >= 0) {
+                    timeline.fromTo(root, { "--sun-late": 0 }, { "--sun-late": 1, duration: warmTo - warmFrom, ease: "none" }, warmFrom);
+                } else {
+                    gsap.set(root, { "--sun-late": 0 });
+                }
                 // Timeline seconds equal scroll pixels.
                 if (timeline.duration() < maxScroll) timeline.set({}, {}, maxScroll);
 
