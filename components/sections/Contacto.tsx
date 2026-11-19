@@ -15,35 +15,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useFadeStagger } from "@/hooks/useFadeStagger";
 import { Services } from "@/lib/services";
+import { contactSchema, type ContactValues } from "@/lib/contact";
 import { useServicesStore } from "@/stores/service/service-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
 const SEND_ERROR = "No se pudo enviar el mensaje. Inténtalo de nuevo o escríbeme por Instagram."
 
-const servicesMap = Object.fromEntries(Services.map((service) => ([service.key, service.key])))
-const formSchema = z.object({
-    username: z.string().trim().min(2, { message: "Escribe tu nombre (mínimo 2 caracteres)." }).max(50, { message: "Usa como máximo 50 caracteres." }),
-    email: z.string().trim().min(1, { message: "Escribe tu correo para que pueda responderte." }).email({ message: "Revisa el correo: debe tener el formato nombre@dominio.com." }),
-    asunto: z.nativeEnum({ ...servicesMap }).optional(),
-    message: z.string().trim().min(10, { message: "Cuéntame un poco más (mínimo 10 caracteres)." }).max(500, { message: "Usa como máximo 500 caracteres." }),
-})
-
-type ContactValues = z.infer<typeof formSchema>
 
 export const Contacto = () => {
     const { ref } = useIsInViewWithStore("contact")
     const scope = useFadeStagger()
     const selectedService = useServicesStore(state => state.selectedService)
     const form = useForm<ContactValues>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(contactSchema),
         defaultValues: {
             username: "",
             email: "",
+            phone: "",
             asunto: selectedService,
             message: "",
         },
@@ -72,7 +64,7 @@ export const Contacto = () => {
             })
             if (!res.ok) throw new Error("send failed")
             form.clearErrors("root")
-            form.reset({ username: "", email: "", asunto: undefined, message: "" })
+            form.reset({ username: "", email: "", phone: "", asunto: undefined, message: "" })
             setSent(true)
         } catch {
             toast.error(SEND_ERROR)
@@ -130,6 +122,21 @@ export const Contacto = () => {
                                             <FormLabel>Correo</FormLabel>
                                             <FormControl>
                                                 <Input type="email" inputMode="email" placeholder="nombre@empresa.com" autoComplete="email" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Optional: checked on blur only once something is typed. */}
+                                <FormField
+                                    control={form.control}
+                                    name="phone"
+                                    render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel>Teléfono (opcional)</FormLabel>
+                                            <FormControl>
+                                                <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+34 600 000 000" className="md:max-w-[calc(50%-12px)]" {...field} value={field.value ?? ""} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
