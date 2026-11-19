@@ -36,7 +36,7 @@ Single-page landing in Spanish. Sections: Hero, Mi enfoque, Servicios, Sobre mí
 
 ## Evidence on Hand
 
-- Portrait photo `public/fondo-hero.webp` is used exactly once: in Sobre mí, under the heading, inside an arched doorway frame, printed on the washi paper. The hero has no photo (the logotype and the code-generated seigaiha sea and sun lead it). Do not add it anywhere else.
+- Portrait: `public/eve-bust.webp` (655×510, with alpha) is derived from the cutout `public/fondo-hero-no-bg.png` (2016×1134): cropped to Eve's bust only (no laptop, stray fragment or chair), alpha eroded by 1px, slight warm grade. It is used exactly once: in Sobre mí, under the heading, Eve standing in front of the parked sun disc and rising from a narrow seigaiha band. `public/fondo-hero.png` (2016×1134) is the full photo, kept for any other need; `public/fondo-hero.webp` is no longer used. The hero has no photo (the logotype and the code-generated seigaiha sea and sun lead it). Do not add the portrait anywhere else.
 - Logo: `public/logo-sin-fondo.png`, `public/logotipo.svg`.
 - No testimonials, client logos, case studies, or metrics exist. Do not fabricate any.
 

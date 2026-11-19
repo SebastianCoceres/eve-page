@@ -1,6 +1,6 @@
 # Feature: mediterranean-redesign
 
-Objective: redesign the landing into the "Cal y cobalto" direction: minimalist, subtle, elegant, professional. It takes its light and color relationships from the Mediterranean reference and preserves all behavior. Copy changes are limited to the user-approved addendum.
+Objective: redesign the landing into the "Cal y cobalto" direction: minimalist, subtle, elegant, professional. Its art direction is Japanese print and editorial craft (washi, seigaiha, one sun, the hanko, the emakimono, a mincho voice), and it preserves all behavior. Copy changes are limited to the user-approved addendum.
 
 Problem: the original page was a generic cream/earth template. Its problems:
 - the same grayscale photo was used 3 times;
