@@ -30,9 +30,9 @@ const FLOW = "(max-width: 767.98px) and (prefers-reduced-motion: no-preference)"
  * - 0–25%: the name shrinks to 42% toward the top left; the subline and CTAs ride up
  *   with it, the hairline fades, the sea sinks as the sun climbs (the sun itself is
  *   driven by useTravelingSun over the same range, read from this pin);
- * - 20–75%: the greeting is spoken line by line (SplitText lines with masks); the
- *   previous line dims slightly, and every line returns to full ink at the end;
- * - 70–100%: the values arrive from the right as one row and settle.
+ * - 18–58%: the greeting is spoken line by line (SplitText lines with masks); the
+ *   previous line dims slightly; at 58–63% every line returns to full ink and holds;
+ * - 64–~92%: the values arrive from the right as one row and settle; held to the unpin.
  * Below 768px nothing pins: the greeting's lines rise with the scroll as it passes,
  * and the values drift in. Reduced motion: nothing runs, everything is visible.
  */
@@ -76,21 +76,22 @@ export function useHeroAnimation() {
                     .to(rule, { opacity: 0, duration: 0.1 }, 0)
                     .to(sea, { yPercent: 45, duration: 0.45, ease: "power1.inOut" }, 0);
 
-                const step = 0.5 / Math.max(1, lines.length);
+                const step = 0.38 / Math.max(1, lines.length);
                 lines.forEach((line, index) => {
-                    const at = 0.2 + index * step;
+                    const at = 0.18 + index * step;
                     scene.fromTo(line, { yPercent: 130 }, { yPercent: 0, duration: step * 1.2, ease: "power3.out" }, at);
                     if (index > 0) scene.to(lines[index - 1], { opacity: 0.42, duration: step * 0.6 }, at);
                 });
-                scene.to(lines, { opacity: 1, duration: 0.06 }, 0.74);
+                // Every line back to full ink well before the unpin, and held there.
+                scene.to(lines, { opacity: 1, duration: 0.05 }, 0.58);
 
                 scene.fromTo(values,
                     { x: (index: number) => window.innerWidth * (0.42 + index * 0.14), opacity: 0 },
-                    { x: 0, opacity: 1, duration: 0.24, ease: "power3.out", stagger: 0.03 },
-                    0.7,
+                    { x: 0, opacity: 1, duration: 0.22, ease: "power3.out", stagger: 0.03 },
+                    0.64,
                 );
-                // A short hold at the end, so the settled row is read before the unpin.
-                scene.to({}, { duration: 0.04 }, 0.96);
+                // A hold at the end, so the greeting in full ink and the settled row are read before the unpin.
+                scene.set({}, {}, 1);
 
                 pin = ScrollTrigger.create({
                     id: HERO_PIN_ID,

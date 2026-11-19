@@ -3,7 +3,7 @@ import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
 import { CLEARANCE, NAVBAR, findZone, parkedScroll, route, type Point, type Rect, type Zone } from "@/lib/sunPath";
 import { getHeroPinRange } from "@/hooks/useHeroAnimation";
 import { getEmakiPinRange } from "@/hooks/useEmakiScroll";
-import { getFocusPinRange } from "@/hooks/useFocusScene";
+import { FOCUS_PIN_TOP, FOCUS_SCENE, getFocusPinRange } from "@/hooks/useFocusScene";
 
 const docRect = (element: Element): Rect => {
     const r = element.getBoundingClientRect();
@@ -11,7 +11,7 @@ const docRect = (element: Element): Rect => {
 };
 
 /**
- * A sticky block's travel (Sobre mí's portrait column, `[data-sun-sticky]`, which
+ * A sticky block's travel (Sobre mí's left column, `[data-sun-sticky]`, which
  * rests at the top of its grid cell): how far it has moved down its cell now and
  * at most (px), and the scroll range over which it moves. Null when it is not
  * sticky at this width.
@@ -90,7 +90,7 @@ function collectObstacles(): Rect[] {
 // size by time of day: smallest at midday, larger toward the horizon (as a low
 // sun looks). Sizes are tried largest first and shrink only to fit a free zone.
 // A chapter with an `anchor` parks on that element instead of a computed zone:
-// in Sobre mí the afternoon sun becomes the disc behind Eve's portrait. Contacto is
+// in Sobre mí the afternoon sun becomes the disc standing on the band. Contacto is
 // not a parking spot: from Sobre mí the sun only goes down (see the descent below).
 const CHAPTERS: ReadonlyArray<{ id: string; targetX: number; height: number; sizes: number[]; anchor?: string }> = [
     { id: "focus", targetX: 0.82, height: 0.3, sizes: [180, 150, 120] },
@@ -106,9 +106,9 @@ const SINK = 1.06;
 
 /** Share of the hero pin over which the sun climbs (done before the greeting's second line); it then rides the pin at rest. */
 const HERO_RISE = 0.4;
-/** Share of the Mi enfoque pin over which the sun climbs to midday; it rests there for the rest of it. */
-const FOCUS_RISE = 0.85;
-/** How far the sun sinks behind Eve while her text is read, as a share of its diameter (the paper strip under the band hides it). */
+/** Share of the Mi enfoque pin over which the sun climbs beside the problem (done before the crossing). */
+const FOCUS_PROBLEM_RISE = FOCUS_SCENE.CROSS[0];
+/** How far the parked sun sinks into the Sobre mí band while the text is read, as a share of its diameter (the paper strip under the band hides it). */
 const PARK_SINK = 0.12;
 
 type Leg = {
@@ -195,20 +195,27 @@ function descentTrack(keys: Zone[], window: number) {
  * - hero pin: the sun rises from the hero anchor, out of the sea, to the
  *   `hero-high` anchor in the upper right, shrinking as it climbs, then rides
  *   the rest of the pin at rest;
- * - Mi enfoque: it parks in the section's free zone (at least 48px from any text,
- *   fully below the navbar; see lib/sunPath), travelling only through whitespace
- *   (out to the side margin, along it, across the gap, in; MotionPath sine.inOut);
+ * - Mi enfoque, pinned from 1024px (two acts, see useFocusScene): it comes in from
+ *   the right margin as the pin begins and stands right of the problem (48px+
+ *   from its text), climbing a little; as the problem steps back it crosses the
+ *   sky to the left in one arc (FOCUS_SCENE.CROSS) and stands left of the answer
+ *   until the unpin, then leaves by the west edge at its height. Not pinned
+ *   (768–1023px or a stage too tall), it parks in the section's free zone (at
+ *   least 48px from any text, fully below the navbar; see lib/sunPath),
+ *   travelling only through whitespace (out to the side margin, along it, across
+ *   the gap, in; MotionPath sine.inOut);
  * - emakimono (pinned from 1024px): it slides into the sky band from the right as
- *   the pin begins and crosses it east to west for the whole unroll, above the
- *   horizon and below the heading, behind the fans, never over panel text; it
- *   leaves by the west edge as the pin ends;
- * - out of view, it comes down the west margin to the height of the disc behind
- *   Eve's portrait and slides in behind her from the west: a calm leg whose
+ *   the pin begins (from Mi enfoque's west it crosses out of view, transparent,
+ *   never west to east in view) and crosses it east to west for the whole
+ *   unroll, above the horizon and below the heading, behind the fans, never over
+ *   panel text; it leaves by the west edge as the pin ends;
+ * - out of view, it comes down the west margin to the height of the
+ *   afternoon sun's disc in Sobre mí and slides in from the west: a calm leg whose
  *   visible part is one horizontal glide (narrower: the classic margin route);
  * - Sobre mí: it parks exactly as that disc (`[data-sun-anchor="about"]`);
  * - from there it only sinks: one continuous descent, linear in scroll and faster
  *   than the page (SINK), so it moves down the viewport the whole way. From
- *   1280px it slips out from behind her to the left margin before Contacto,
+ *   1280px it slips out from its column to the left margin before Contacto,
  *   comes back in under Contacto's left column, and goes straight down between
  *   the footer's logo and socials into the sea. Narrower, it leaves by its side
  *   margin, sinks out of view and slides in low, under the footer text, to set.
@@ -218,7 +225,7 @@ function descentTrack(keys: Zone[], window: number) {
  * Phones (<768px): never beside text. After rising in the hero it slides out to
  * the right; it peeks in from the right edge in the empty band between Mi
  * enfoque and Servicios; it switches sides out of view and slides in from the
- * west behind Eve's portrait, parks as its disc, slides back out to the west
+ * west to the Sobre mí disc, parks as it, slides back out to the west
  * and finally sets in the footer sea.
  * Reduced motion: never runs; the static anchors show instead.
  */
@@ -284,7 +291,7 @@ export function useTravelingSun() {
                 const textTop = (rect: Rect) => Math.min(rect.b, ...inside(rect).map((o) => o.t));
                 const textBottom = (rect: Rect) => Math.max(rect.t, ...inside(rect).map((o) => o.b));
                 const aboutAnchor = document.querySelector('[data-sun-anchor="about"]');
-                // Sobre mí's portrait column is sticky from 1280px: the disc's place is a
+                // Sobre mí's left column is sticky from 1280px: the disc's place is a
                 // function of the scroll. `about` is where it rests before the column sticks.
                 const aboutTravel = aboutAnchor ? stickyTravel(aboutAnchor.closest<HTMLElement>("[data-sun-sticky]")) : null;
                 const aboutRest = aboutAnchor && aboutAnchor.getBoundingClientRect().width > 0 ? anchorZone(aboutAnchor) : null;
@@ -347,14 +354,29 @@ export function useTravelingSun() {
                                 const xOut = -d / 2 - 8;
                                 const span = Math.max(1, emakiPin.end - emakiPin.start);
                                 const zoneIn: Zone = { x: xIn, y: skyY + emakiPin.start, d };
-                                const gapY = Math.min(zoneIn.y, Math.max(previous.y, (textBottom(previousRect) + textTop(rect)) / 2));
-                                legs.push({
-                                    points: route(previous, zoneIn, gapY, vw, contentLeft, contentRight),
-                                    zone: zoneIn,
-                                    at: Math.max(previousTime + 1, emakiPin.start),
-                                    // A tight last corner: it enters the sky level, never dipping toward the panels.
-                                    curviness: 0.2,
-                                });
+                                const enterAt = Math.max(previousTime + 1, emakiPin.start);
+                                if (previous.x < vw / 2) {
+                                    // From the west (Mi enfoque's answer): out by the west edge at its
+                                    // height, across out of view (transparent), and in from the east
+                                    // along the sky as the pin begins. Never west to east in view.
+                                    const room = enterAt - previousTime;
+                                    const exitAt = previousTime + Math.max(1, Math.min(vh * 0.3, room * 0.35));
+                                    const inFrom = Math.max(exitAt + 1, enterAt - Math.min(vh * 0.35, room * 0.4));
+                                    const westOut: Zone = { x: -previous.d / 2 - 8, y: previous.y, d: previous.d };
+                                    const eastOut: Zone = { x: vw + d / 2 + 8, y: zoneIn.y, d };
+                                    legs.push({ points: [previous, westOut], zone: westOut, at: exitAt });
+                                    legs.push({ points: [westOut, eastOut], zone: eastOut, at: inFrom, hidden: true });
+                                    legs.push({ points: [eastOut, zoneIn], zone: zoneIn, at: enterAt });
+                                } else {
+                                    const gapY = Math.min(zoneIn.y, Math.max(previous.y, (textBottom(previousRect) + textTop(rect)) / 2));
+                                    legs.push({
+                                        points: route(previous, zoneIn, gapY, vw, contentLeft, contentRight),
+                                        zone: zoneIn,
+                                        at: enterAt,
+                                        // A tight last corner: it enters the sky level, never dipping toward the panels.
+                                        curviness: 0.2,
+                                    });
+                                }
                                 legs.push({
                                     points: [],
                                     zone: { x: xOut, y: skyY + emakiPin.end, d },
@@ -373,26 +395,60 @@ export function useTravelingSun() {
                             }
                         }
 
-                        // 2a. Mi enfoque, pinned: it comes in from the right margin to the free
-                        // zone right of the text as the pin begins, then climbs to midday.
-                        if (chapter.id === "focus" && focusPin) {
-                            const textRight = Math.max(contentLeft, ...inside(rect).map((o) => o.r));
-                            const fit = chapter.sizes.find((d) => textRight + CLEARANCE + d / 2 <= vw - d / 2 - 8) ?? chapter.sizes[chapter.sizes.length - 1];
-                            const x = Math.min(vw - fit / 2 - 8, Math.max(textRight + CLEARANCE + fit / 2, vw * chapter.targetX));
-                            const high = NAVBAR + 40 + fit / 2;
-                            const low = Math.max(high, Math.min(vh * 0.62, vh - 24 - fit / 2));
-                            const span = Math.max(1, focusPin.end - focusPin.start);
+                        // 2a. Mi enfoque, pinned (from 1024px): two acts. It comes in from the
+                        // right margin as the pin begins and stands right of the problem,
+                        // climbing a little; as the problem steps back it crosses the sky to
+                        // the left (one arc, through the room the acts leave), and stands left
+                        // of the answer until the unpin.
+                        const focusStage = chapter.id === "focus" && focusPin ? section.querySelector("[data-focus-stage]") : null;
+                        const problemAct = focusStage?.querySelector("[data-focus-act='problem']");
+                        const answerAct = focusStage?.querySelector("[data-focus-act='answer']");
+                        if (focusPin && focusStage && problemAct && answerAct) {
+                            // Horizontal text extents (the scene only moves its acts vertically).
+                            const extent = (element: Element) => {
+                                const range = document.createRange();
+                                range.selectNodeContents(element);
+                                return range.getBoundingClientRect();
+                            };
+                            const problemRight = extent(problemAct).right;
+                            const answerLeft = extent(answerAct).left;
+                            const stageTop = focusStage.getBoundingClientRect().top;
+                            const heading = focusStage.querySelector("h2");
+                            // The heading's bottom in the viewport while the stage is pinned.
+                            const headingBottom = FOCUS_PIN_TOP + (heading ? heading.getBoundingClientRect().bottom - stageTop : 0);
+                            const fits = (d: number) => problemRight + CLEARANCE + d / 2 <= vw - d / 2 - 8 && answerLeft - CLEARANCE - d / 2 >= d / 2 + 8;
+                            const d = chapter.sizes.find(fits) ?? chapter.sizes[chapter.sizes.length - 1];
+                            const east = Math.min(vw - d / 2 - 8, Math.max(problemRight + CLEARANCE + d / 2, vw * chapter.targetX));
+                            const west = Math.max(d / 2 + 8, Math.min(answerLeft - CLEARANCE - d / 2, vw * (1 - chapter.targetX)));
+                            // Midday: high, but whole under the navbar and 48px+ under the heading.
+                            const high = Math.max(NAVBAR + 40 + d / 2, headingBottom + CLEARANCE + d / 2);
+                            const rest = Math.max(high, vh * 0.42);
+                            const low = Math.max(rest, Math.min(vh * 0.62, vh - 24 - d / 2));
+                            const lift = Math.max(0, Math.min(vh * 0.06, rest - high));
                             const pin = focusPin;
-                            const zoneIn: Zone = { x, y: low + pin.start, d: fit };
+                            const span = Math.max(1, pin.end - pin.start);
+                            const [crossFrom, crossTo] = FOCUS_SCENE.CROSS;
+                            const at = (scroll: number) => (scroll - pin.start) / span;
+                            const zoneIn: Zone = { x: east, y: low + pin.start, d };
                             const gapY = Math.min(zoneIn.y, Math.max(previous.y, (textBottom(previousRect) + textTop(rect)) / 2));
                             legs.push({ points: route(previous, zoneIn, gapY, vw, contentLeft, contentRight), zone: zoneIn, at: Math.max(previousTime + 1, pin.start) });
                             legs.push({
                                 points: [],
-                                zone: { x, y: high + pin.end, d: fit },
+                                zone: { x: west, y: rest + pin.end, d },
                                 at: pin.end,
-                                track: (scroll) => ({ x, y: lerp(low, high, sine((scroll - pin.start) / (span * FOCUS_RISE))) + scroll, d: fit }),
+                                track: (scroll) => {
+                                    const p = at(scroll);
+                                    const t = Math.min(1, Math.max(0, (p - crossFrom) / (crossTo - crossFrom)));
+                                    const climb = sine(p / FOCUS_PROBLEM_RISE);
+                                    return {
+                                        x: lerp(east, west, sine(t)),
+                                        // Climbs while the problem is told, arcs over the crossing.
+                                        y: lerp(low, rest, climb) - lift * Math.sin(Math.PI * t) + scroll,
+                                        d,
+                                    };
+                                },
                             });
-                            previous = { x, y: high + pin.end, d: fit };
+                            previous = { x: west, y: rest + pin.end, d };
                             previousRect = rect;
                             previousTime = pin.end;
                             continue;
@@ -411,13 +467,13 @@ export function useTravelingSun() {
                         const at = Math.min(maxScroll - 1, Math.max(previousTime + 1, parkedScroll(zone, chapter.height, vh)));
 
                         // 3. After the emakimono: down the west margin out of view, then one
-                        // horizontal glide in behind Eve's portrait.
+                        // horizontal glide in to the Sobre mí disc.
                         if (anchored && fromWestEdge) {
                             const glide = Math.min(vh * 0.55, Math.max(1, (at - previousTime) * 0.6));
                             const glideFrom = Math.max(previousTime + 1, at - glide);
                             const edge: Zone = { x: -zone.d / 2 - 4, y: aboutY(glideFrom), d: zone.d };
                             legs.push({ points: [previous, edge], zone: edge, at: glideFrom });
-                            // One horizontal glide in behind her, following the column if it already sticks.
+                            // One horizontal glide in, following the column if it already sticks.
                             legs.push({
                                 points: [],
                                 zone: { ...zone, y: aboutY(at) },
@@ -437,10 +493,10 @@ export function useTravelingSun() {
                         previousTime = at;
                         if (anchored) parkedAbout = true;
                     }
-                    // 4. It rests as the portrait's disc for a while (moving with her), then
-                    // slides out from behind her, west, at the same height, easing to the
+                    // 4. It rests as the Sobre mí disc for a while (moving with its column), then
+                    // slides out of the column, west, at the same height, easing to the
                     // sunset's size on the way, before it sinks.
-                    // While the portrait column sticks it stays locked to the disc, sinking a
+                    // While the column sticks it stays locked to the disc, sinking a
                     // little (PARK_SINK) and warming (--sun-late) as the text is read.
                     if (about && parkedAbout) {
                         const parkFrom = previousTime;
@@ -480,7 +536,7 @@ export function useTravelingSun() {
                     if (vw >= 1280 && contact) {
                         const r = dMax / 2;
                         const mx = contentLeft - CLEARANCE - r;
-                        // Out to the margin (from behind the portrait) before anything below it in its column.
+                        // Out to the margin (from the parked disc) before anything below it in its column.
                         const y1 = below(previous.y, mx - r, Math.max(previous.x, end.x) + r) - CLEARANCE - r;
                         // Back in under Contacto's left column, then down the footer's open lane.
                         const contactRect = docRect(contact);
@@ -504,7 +560,7 @@ export function useTravelingSun() {
                         const outX = (which: "left" | "right") => (which === "left" ? -dMax / 2 - 4 : vw + dMax / 2 + 4);
                         const low = end.y - 12;
                         const slide = Math.min(vh * 0.35, (maxScroll - previousTime) / 3);
-                        // Leaves sinking (from behind the portrait, never toward text below it).
+                        // Leaves sinking (from the parked disc, never toward text below it).
                         const r = dMax / 2;
                         const exitY = Math.max(previous.y, Math.min(
                             previous.y + vh * 0.3 * SINK,
@@ -519,7 +575,7 @@ export function useTravelingSun() {
                         legs.push({ points: [{ x: outX("left"), y: low }, end], zone: end, at: maxScroll });
                     }
                 } else {
-                    // Phones: peeks and the portrait's disc only, never beside text.
+                    // Phones: peeks and the Sobre mí disc only, never beside text.
                     let time = 0;
                     let from: Zone = start;
                     const hop = (zone: Zone, when: number, hidden = false) => {
@@ -552,7 +608,7 @@ export function useTravelingSun() {
                         }
                     }
                     let side: "left" | "right" = "right";
-                    // West: slides in behind Eve's portrait, parks as its disc, slides back out.
+                    // West: slides in to the Sobre mí disc, parks as it, slides back out.
                     if (about) {
                         hop(out("left", about.y, about.d), about.y - vh * 1.05, true);
                         hop(about, parkedScroll(about, 0.42, vh));
@@ -599,7 +655,7 @@ export function useTravelingSun() {
                     time += duration;
                 }
                 // The colour warms with the paper's day (--sun-now, usePaperDay), and further,
-                // to persimmon, while it rests behind Eve (--sun-late, see --color-sun-live).
+                // to persimmon, while it rests in Sobre mí (--sun-late, see --color-sun-live).
                 if (warmTo > warmFrom && warmFrom >= 0) {
                     timeline.fromTo(root, { "--sun-late": 0 }, { "--sun-late": 1, duration: warmTo - warmFrom, ease: "none" }, warmFrom);
                 } else {

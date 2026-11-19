@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
-import { revealLinesOnEnter, splitLines } from "@/lib/splitLines";
 
 /** ScrollTrigger id of the pinned Mi enfoque stage: `ScrollTrigger.getById(FOCUS_PIN_ID)`. */
 export const FOCUS_PIN_ID = "focus-pin";
@@ -12,38 +11,58 @@ export function getFocusPinRange(): { start: number; end: number } | null {
 }
 
 /** Pin length as a share of the viewport height. */
-export const FOCUS_PIN_LENGTH = 1.6;
+export const FOCUS_PIN_LENGTH = 2.8;
 /** Where the stage pins: 32px under the 64px navbar. */
-const PIN_TOP = 96;
-
-const PINNED = "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
-const FLOW = "(max-width: 767.98px) and (prefers-reduced-motion: no-preference)";
+export const FOCUS_PIN_TOP = 96;
 
 /**
- * Mi enfoque: a contrast told line by line, then a mondō (question and answer).
+ * The scene's phases, as shares of the pin. The sun's leg (useTravelingSun) reads
+ * the same numbers, so the two acts and the sun's crossing stay in one rhythm.
+ * - act 1, the problem (text left, sun right): its items arrive from PROBLEM_FROM,
+ *   ITEM_STEP apart, each reaching full ink INK_AFTER later; then a hold, and the act
+ *   steps back over [PROBLEM_OUT, PROBLEM_OUT + OUT];
+ * - the sun crosses from right to left over CROSS;
+ * - act 2, the answer (text right, sun left): its label at ANSWER_FROM and its items
+ *   from ANSWER_FROM + LABEL, ITEM_STEP apart, all in full ink well before the end.
+ */
+export const FOCUS_SCENE = {
+    PROBLEM_FROM: 0.02,
+    PROBLEM_OUT: 0.34,
+    OUT: 0.06,
+    CROSS: [0.37, 0.57] as const,
+    ANSWER_FROM: 0.53,
+    LABEL: 0.04,
+    ITEM_STEP: 0.07,
+    ANSWER_STEP: 0.07,
+    /** An item rises over RISE and turns from muted to ink over [RISE / 2, INK_AFTER]. */
+    RISE: 0.05,
+    INK_AFTER: 0.08,
+} as const;
+
+const PINNED = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
+const FLOW = "(max-width: 1023.98px) and (prefers-reduced-motion: no-preference)";
+
+/**
+ * Mi enfoque in two acts: the problem, then the answer.
  *
  * Markup contract, inside the returned `scope` (the section):
  * - `[data-focus-stage]`: the heading and the scene, the element that pins;
- * - `[data-focus-lead]`: the statement, whose first half is a muted span and whose
- *   second half (from "el marketing consciente prioriza…") is in full ink;
- * - `[data-focus-pair]` (two), each with `[data-focus-question]` and `[data-focus-answer]`.
+ * - `[data-focus-act]` (two: "problem", then "answer"), each with a
+ *   `[data-focus-label]` and its `[data-focus-item]`s, each item holding a
+ *   `[data-focus-point]` (the mincho headline) and an optional `[data-focus-note]`.
  *
- * From 768px with motion, the section gets `data-focus="pinned"` (CSS lays the lead
- * and the two pairs in one cell) and the stage pins 96px from the top for 160% of
- * the viewport height. One scrubbed scene runs from the moment the stage is at 80%
- * of the viewport to the end of the pin:
- * - 3–40%: the statement is spoken line by line (masked lines, yPercent 130 → 0);
- *   the previous line dims to 0.42, so the muted half reads quieter still;
- * - 40–50%: every line returns to full opacity: the muted half and the ink half
- *   stand side by side (the turn);
- * - 50–55%: the statement steps back (up and out);
- * - 54–76%: the first question rises, its answer settles below (centred in the
- *   room the statement held), a short read, then it steps back;
- * - 75–100%: the second question and its answer, read to the unpin.
- * The sun rises to midday in the free zone to the right during the pin
- * (useTravelingSun, which reads this pin's range). If the stage cannot fit under
- * the navbar the section stays in the flow, as below 768px: the lines fade in on
- * enter and each question rises with its answer. Reduced motion: nothing runs.
+ * From 1024px with motion the section gets `data-focus="pinned"` (CSS lays both acts
+ * in one grid row: the problem on the left, the answer on the right) and the stage
+ * pins 96px from the top for 280% of the viewport height, scrubbed exactly like the
+ * sun (FOCUS_SCENE has the phases):
+ * - act 1: the problem's items rise one by one, each starting in the muted tone and
+ *   turning to full ink; all of them hold in ink for a beat, then the act steps back;
+ * - the sun crosses the sky from right to left (useTravelingSun);
+ * - act 2: the answer's label and items arrive one by one on the right, each turning
+ *   to full ink, and hold in ink until the unpin.
+ * If the stage cannot fit under the navbar the section stays in the flow. Below
+ * 1024px the acts are stacked and each item rises once on enter, already in ink.
+ * Reduced motion and no JS: everything static, stacked and in full ink.
  */
 export function useFocusScene() {
     const scope = useRef<HTMLElement>(null);
@@ -51,30 +70,39 @@ export function useFocusScene() {
     useGSAP(() => {
         const section = scope.current;
         const stage = section?.querySelector<HTMLElement>("[data-focus-stage]");
-        const lead = section?.querySelector<HTMLElement>("[data-focus-lead]");
-        if (!section || !stage || !lead) return;
-        const pairs = gsap.utils.toArray<HTMLElement>("[data-focus-pair]", section);
-        const partsOf = (pair: HTMLElement) => ({
-            question: pair.querySelector<HTMLElement>("[data-focus-question]"),
-            answer: pair.querySelector<HTMLElement>("[data-focus-answer]"),
+        if (!section || !stage) return;
+        const acts = gsap.utils.toArray<HTMLElement>("[data-focus-act]", section);
+        const [problem, answer] = acts;
+        if (!problem || !answer) return;
+        const partsOf = (act: HTMLElement) => ({
+            label: act.querySelector<HTMLElement>("[data-focus-label]"),
+            items: gsap.utils.toArray<HTMLElement>("[data-focus-item]", act),
         });
+        const pieceOf = (item: HTMLElement) => ({
+            point: item.querySelector<HTMLElement>("[data-focus-point]"),
+            note: item.querySelector<HTMLElement>("[data-focus-note]"),
+        });
+        const everything = () => acts.flatMap((act) => {
+            const { label, items } = partsOf(act);
+            return [act, label, ...items, ...items.flatMap((item) => Object.values(pieceOf(item)))];
+        }).filter(Boolean) as HTMLElement[];
 
+        // Below the breakpoint (or when the stage is too tall): each label and item rises once on enter.
         const flow = () => {
-            const split = revealLinesOnEnter(lead);
-            const entrances = pairs.map((pair) => {
-                const { question, answer } = partsOf(pair);
-                const timeline = gsap.timeline({ scrollTrigger: { trigger: pair, start: "top 85%", once: true } });
-                timeline.from(question, { yPercent: 40, opacity: 0, duration: 1, ease: "expo.out" }, 0)
-                    .from(answer, { y: 12, opacity: 0, duration: 0.9, ease: "power3.out" }, 0.15);
-                return timeline;
+            const entrances = acts.flatMap((act) => {
+                const { label, items } = partsOf(act);
+                return [label, ...items].filter(Boolean).map((element) => gsap.from(element, {
+                    y: 24,
+                    opacity: 0,
+                    duration: 0.9,
+                    ease: "power3.out",
+                    scrollTrigger: { trigger: element, start: "top 88%", once: true },
+                }));
             });
-            return () => {
-                entrances.forEach((timeline) => {
-                    timeline.scrollTrigger?.kill();
-                    timeline.revert();
-                });
-                split.revert();
-            };
+            return () => entrances.forEach((tween) => {
+                tween.scrollTrigger?.kill();
+                tween.revert();
+            });
         };
 
         const mm = gsap.matchMedia();
@@ -82,71 +110,57 @@ export function useFocusScene() {
         mm.add(PINNED, () => {
             section.dataset.focus = "pinned";
             // A stage taller than the room under the navbar would be cut: keep the flow.
-            if (stage.offsetHeight > window.innerHeight - PIN_TOP - 16) {
+            if (stage.offsetHeight > window.innerHeight - FOCUS_PIN_TOP - 16) {
                 delete section.dataset.focus;
                 return flow();
             }
-            let pin: ScrollTrigger | null = null;
-            let play: ScrollTrigger | null = null;
+            const css = getComputedStyle(document.documentElement);
+            const muted = css.getPropertyValue("--muted-foreground").trim();
+            const ink = css.getPropertyValue("--foreground").trim();
+            const S = FOCUS_SCENE;
 
-            const build = (lines: HTMLElement[]) => {
-                pin?.kill();
-                play?.kill();
-                const scene = gsap.timeline({ defaults: { ease: "none" } });
-
-                const step = 0.35 / Math.max(1, lines.length);
-                lines.forEach((line, index) => {
-                    const at = 0.03 + index * step;
-                    scene.fromTo(line, { yPercent: 130 }, { yPercent: 0, duration: step * 1.2, ease: "power3.out" }, at);
-                    if (index > 0) scene.to(lines[index - 1], { opacity: 0.42, duration: step * 0.6 }, at);
-                });
-                // The turn: every line back to full opacity, muted half beside ink half.
-                scene.to(lines, { opacity: 1, duration: 0.04 }, 0.4);
-                scene.to(lead, { y: -32, opacity: 0, duration: 0.05, ease: "power2.in" }, 0.5);
-
-                pairs.forEach((pair, index) => {
-                    const { question, answer } = partsOf(pair);
-                    const at = 0.54 + index * 0.21;
-                    scene.fromTo(question, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.07, ease: "power3.out" }, at);
-                    scene.fromTo(answer, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.07, ease: "power3.out" }, at + 0.04);
-                    if (index < pairs.length - 1) scene.to(pair, { y: -24, opacity: 0, duration: 0.04, ease: "power2.in" }, at + 0.17);
-                });
-                // Held to the end, so the last answer is read before the unpin.
-                scene.to({}, { duration: 0.02 }, 0.98);
-
-                pin = ScrollTrigger.create({
-                    id: FOCUS_PIN_ID,
-                    trigger: stage,
-                    start: `top ${PIN_TOP}px`,
-                    end: () => `+=${Math.round(window.innerHeight * FOCUS_PIN_LENGTH)}`,
-                    pin: true,
-                    anticipatePin: 1,
-                    invalidateOnRefresh: true,
-                    // After the hero (its spacer moves this one), before the emakimono and the sun.
-                    refreshPriority: 2,
-                });
-                const range = pin;
-                play = ScrollTrigger.create({
-                    trigger: stage,
-                    start: "top 80%",
-                    end: () => range.end,
-                    // Exact, like the sun's timeline: the scene and the rising sun stay in step.
-                    scrub: true,
-                    animation: scene,
-                    invalidateOnRefresh: true,
-                    refreshPriority: 2,
-                });
-                return scene;
+            const scene = gsap.timeline({ defaults: { ease: "none" } });
+            // An item rises in the muted tone, then turns to full ink while it settles.
+            const arrive = (item: HTMLElement, at: number) => {
+                const { point, note } = pieceOf(item);
+                scene.fromTo(item, { y: 32, opacity: 0 }, { y: 0, opacity: 1, duration: S.RISE, ease: "power3.out" }, at);
+                if (point) scene.fromTo(point, { color: muted }, { color: ink, duration: S.INK_AFTER - S.RISE / 2 }, at + S.RISE / 2);
+                if (note) scene.fromTo(note, { opacity: 0 }, { opacity: 1, duration: S.RISE }, at + S.RISE / 2);
             };
 
-            const split = splitLines(lead, build);
+            const first = partsOf(problem);
+            first.items.forEach((item, index) => arrive(item, S.PROBLEM_FROM + index * S.ITEM_STEP));
+            // All in ink, held; then the problem steps back as the sun starts to cross.
+            scene.to(problem, { y: -40, opacity: 0, duration: S.OUT, ease: "power2.in" }, S.PROBLEM_OUT);
+
+            const second = partsOf(answer);
+            if (second.label) {
+                scene.fromTo(second.label, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: S.LABEL, ease: "power3.out" }, S.ANSWER_FROM);
+            }
+            second.items.forEach((item, index) => arrive(item, S.ANSWER_FROM + S.LABEL + index * S.ANSWER_STEP));
+            // Held in ink to the unpin.
+            scene.set({}, {}, 1);
+
+            const pin = ScrollTrigger.create({
+                id: FOCUS_PIN_ID,
+                trigger: stage,
+                start: `top ${FOCUS_PIN_TOP}px`,
+                end: () => `+=${Math.round(window.innerHeight * FOCUS_PIN_LENGTH)}`,
+                pin: true,
+                // Exact, like the sun's timeline: the acts and the crossing sun stay in step.
+                scrub: true,
+                animation: scene,
+                anticipatePin: 1,
+                invalidateOnRefresh: true,
+                // After the hero (its spacer moves this one), before the emakimono and the sun.
+                refreshPriority: 2,
+            });
             ScrollTrigger.refresh();
 
             return () => {
-                pin?.kill();
-                play?.kill();
-                split.revert();
-                gsap.set([lead, ...pairs, ...pairs.flatMap((pair) => Object.values(partsOf(pair)))].filter(Boolean), { clearProps: "transform,opacity" });
+                pin.kill();
+                scene.kill();
+                gsap.set(everything(), { clearProps: "transform,opacity,color" });
                 delete section.dataset.focus;
             };
         });
