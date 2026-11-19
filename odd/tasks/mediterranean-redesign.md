@@ -116,3 +116,21 @@ Verification (T8):
 - Reduced motion: stacked panels, whole 198/174px disc visible, no horizontal overflow, no console errors at 1440/1024/390.
 
 Next step: client review of the distilled service points; push/PR remain the user's decision.
+
+## T9 A calm sun
+
+User report: "while I scroll, the sun goes up and down the whole time; I scroll slowly and it is very annoying; make the transition smoother."
+
+- [x] T9.1 Diagnose with data. Route: inline (one hook, the probe in the scratchpad). A Playwright probe scrolled the whole page in 10px steps (40ms settle) and with real 24px wheel steps at 1440, 1024 and 390, and recorded the sun's viewport centre per step (`scratchpad/t9/probe.mjs`, traces `trace-before.json` / `trace-final.json`, summaries `summary-*.txt`). Root cause: the legs between pinned chapters were MotionPath routes in document coordinates, while the pins hold the sun in the viewport. On a document-space leg the sun rode up with the page at 1px per px on every level stretch, then plunged along the margin (up to 2.18px per scroll px) to reach the next pin's viewport target, and inside Mi enfoque it entered low (62% vh) and climbed again, then arced up and down over the crossing. At 1440: 5 vertical reversals, 2108px up and 974px down (308px of vertical travel per 1000px of scroll). No tween conflicts or refresh jumps were involved.
+- [x] T9.2 Fix. Route: inline (one hook plus lib/sunPath). Passages between chapters now leave and enter sideways in the frame of each chapter (held by a pin, or riding with the page) and change height only out of view (transparent when they change sides). Mi enfoque: enters at its resting height (42% vh) and holds; the crossing sinks 4% vh (`FOCUS_SINK`) instead of arcing. The sunrise uses a gentler ease (peak 1.29x the mean speed). The timeline now computes the exact place at the real scroll and a ticker draws it with an exponential ease (`SMOOTHING` 0.3s, like a 0.8s scrub, capped at 20% vh of lag) applied only to the sun's own motion, per leg frame, so a pin never drifts from it. `route()` was removed from lib/sunPath. Commit e5a77cc.
+- [x] T9.3 Reload. Coordinator report: after F5 the sun did not appear. Caused by T9.2, not pre-existing (the previous build passed the same reload probe): each track leg was a fromTo that rendered its start on creation, so the goal held a late leg's start (out of view by the footer), and `time(0)` on a fresh timeline renders nothing. Track legs no longer render immediately and each build renders the timeline once through every leg. Commit 972d3f1.
+- [x] T9.4 Docs: AGENTS.md and DESIGN.md sun rules (calm, frames, passages, smoothing). Commit: see below.
+
+Verification (T9, final tree including T10):
+- Probe, 10px steps / wheel, before → after:
+  - 1440: 5 / 4 → 2 / 2 reversals (the sunrise and the sunset); 308 / 302 → 125 / 127px of vertical travel per 1000px; max 2.18 → 1.02 / 1.00px per scroll px.
+  - 1024: 2 / 2 → 1 / 1 reversals; 246 / 242 → 136 / 146px per 1000px; max 1.23 → 1.23 / 1.04 (the remaining peak is the sunrise).
+  - 390: 0 / 0 → 0 / 0 reversals; 205 / 192 → 237 / 253px per 1000px, all of it riding with the page (max 1.00 both): on phones the sun only rests beside the page, and the eased sideways exits keep it in view slightly longer.
+- Reload probe (`scratchpad/t10/reload.mjs`: F5 and a hard reload at 0, mid-hero, Mi enfoque, Servicios and Sobre mí; 1440/1024/390): 0 failures; the sun is at its place and visible (or transparent only on a designed side switch) right after load.
+- Whole-page sweep (40px steps, settled): no discontinuities, no text closer than 48px (min 48 at 1440, 54 at 1280, 51 at 1024, 52 at 800, 53 at 390), no horizontal overflow at 1440/1280/1024/800/390.
+- `pnpm exec tsc --noEmit`: pass. `pnpm exec eslint .`: 0 problems. `pnpm build`: pass.
