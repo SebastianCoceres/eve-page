@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
-import { journeyOwnsFans } from "@/lib/scaleJourney";
 
 /** ScrollTrigger id of the pinned emakimono: `ScrollTrigger.getById(EMAKI_PIN_ID)`. */
 export const EMAKI_PIN_ID = "emaki-pin";
@@ -43,9 +42,7 @@ const drawFan = (panel: Element, delay = 0) =>
  * (one scrubbed translate). Each fan draws as its panel enters and drifts gently
  * along the horizon. Focusing inside a panel scrolls the pin so the panel is fully
  * in view. Below 1024px the panels stack and cascade in; reduced motion shows
- * everything static. Without JS the stacked layout is the default. While the scale
- * journey is on the page (lib/scaleJourney) the fans are not drawn in here: they
- * stay whole and the journey shows each one when its drifting scales land on it.
+ * everything static. Without JS the stacked layout is the default.
  *
  * Returns the scope ref and the active panel index (for a progress indicator).
  */
@@ -62,13 +59,10 @@ export function useEmakiScroll(count: number) {
         const arcs = section.querySelectorAll("[data-emaki-arc]");
 
         const mm = gsap.matchMedia();
-        // Fans revealed by the scale journey stay whole; otherwise they draw in.
-        const owned = journeyOwnsFans();
-        const fanStart = owned ? "0% 100%" : "50% 50%";
 
         mm.add(PINNED, () => {
             section.dataset.emaki = "pinned";
-            gsap.set(arcs, { drawSVG: fanStart });
+            gsap.set(arcs, { drawSVG: "50% 50%" });
 
             const fans = panels.map((panel) => panel.querySelector<HTMLElement>("[data-emaki-fan]"));
             const setFanX = fans.map((fan) => (fan ? gsap.quickSetter(fan, "x", "px") : () => { }));
@@ -86,7 +80,7 @@ export function useEmakiScroll(count: number) {
                     const left = panel.offsetLeft + x;
                     const center = left + panel.offsetWidth / 2;
                     setFanX[index](gsap.utils.clamp(-1, 1, (center - width / 2) / width) * DRIFT);
-                    if (!owned && entered && !drawn.has(index) && left < width * 0.8) {
+                    if (entered && !drawn.has(index) && left < width * 0.8) {
                         drawn.add(index);
                         draws.push(drawFan(panel, drawn.size === 1 ? 0.15 : 0));
                     }
@@ -167,14 +161,14 @@ export function useEmakiScroll(count: number) {
 
         mm.add(STACKED, () => {
             gsap.set(panels, { opacity: 0, y: 16 });
-            gsap.set(arcs, { drawSVG: fanStart });
+            gsap.set(arcs, { drawSVG: "50% 50%" });
             const tweens: gsap.core.Tween[] = [];
             const triggers = ScrollTrigger.batch(panels, {
                 start: "top 88%",
                 once: true,
                 onEnter: (batch) => {
                     tweens.push(gsap.to(batch, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", stagger: 0.08 }));
-                    if (!owned) batch.forEach((panel, index) => tweens.push(drawFan(panel, 0.2 + index * 0.08)));
+                    batch.forEach((panel, index) => tweens.push(drawFan(panel, 0.2 + index * 0.08)));
                 },
             });
             return () => {

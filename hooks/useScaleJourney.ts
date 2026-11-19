@@ -1,19 +1,18 @@
 import { useRef } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
 import { looseCrestFor, seaFor, RINGS, type SeigaihaScale } from "@/lib/seigaiha";
-import { docRect, stickyTravel, type StickyTravel } from "@/lib/sunPath";
+import { SKY_TOP } from "@/lib/sunPath";
 import { getSunTrack, onSunTrack, sunAt, type SunSample, type SunTrack } from "@/lib/sunTrack";
 import { getEmakiPinRange } from "@/hooks/useEmakiScroll";
 import { getHeroPinRange } from "@/hooks/useHeroAnimation";
 import {
-    CLEARANCE_RAMP, MOMIJI, TEXT_CLEARANCE, bezier, boxGap, clamp01, haloAngle, hash, lerp, smooth, span,
+    CLEARANCE_RAMP, GULL, TEXT_CLEARANCE, bezier, boxGap, clamp01, gullWings, haloAngle, hash, lerp, smooth, span,
 } from "@/lib/scaleJourney";
 
-/** Scales that settle into each emakimono fan: one becomes the fan, the rest fold into it. */
-const PER_FAN = { wide: 8, narrow: 3 };
-/** Line opacity of a scale in the air, and of a fan (EmakiFan). */
+/** How many lifted scales become gulls: a calm flock. The rest flip away as they lift. */
+const FLOCK = { wide: 32, narrow: 14 };
+/** Line opacity of a scale in the air. */
 const AIR_OPACITY = 0.55;
-const FAN_OPACITY = 0.7;
 
 type Box = { l: number; t: number; r: number; b: number; c: number };
 type Lines = { element: Element; lines: number[] };
@@ -21,42 +20,33 @@ type Lines = { element: Element; lines: number[] };
 interface Particle {
     index: number;
     home: SeigaihaScale;
-    /** Emakimono fan it settles into, or -1 (it becomes a leaf). */
-    fan: number;
-    /** The one scale of its fan that becomes the fan (the others fold into it). */
-    lead: boolean;
+    /** Its row in the hero sea (0 = the horizon). */
+    row: number;
+    /** One of the flock; the others flip away (edge on, gone) as they lift. */
+    gull: boolean;
     /** Scroll px it trails the sun by. */
     lag: number;
-    /** Its place on the halo: angle off the halo's opening, and how far out (0–1). */
+    /** Its place around the sun: angle off the flock's opening, and how far out (0–1). */
     theta: number;
     reach: number;
     tilt: number;
     detach: number;
     rise: number;
-    /** Leaf: when it turns, settles, leaves its lane, starts to sink and is in the sea. */
-    turn: number;
-    settle: number;
-    leave: number;
+    /** When it turns into a kamome (once clear of the crest). */
+    gullFrom: number;
+    gullTo: number;
+    /** Wingbeat: scroll px per beat, its phase and its depth (0–1). */
+    beat: number;
+    phase: number;
+    wing: number;
+    /** When it starts down to the footer sea, and when it is in it. */
     sink: number;
     sea: number;
-    /** Leaf: place in its lane (0–1), size, and whether it is a print of the sun's colour. */
-    laneX: number;
-    laneY: number;
-    size: number;
-    filled: boolean;
-    /** Footer crest scale it sinks into. */
+    /** Footer crest scale it lands on. */
     target: SeigaihaScale | null;
     /** The hero sea's own copy of this scale. */
     group: SVGGElement | null;
     hidden: boolean;
-}
-
-interface Fan {
-    svg: SVGSVGElement;
-    /** Scroll positions where its scales set off and where they land. */
-    from: number;
-    land: number;
-    shown: boolean | null;
 }
 
 interface Plan {
@@ -65,25 +55,22 @@ interface Plan {
     vh: number;
     maxScroll: number;
     particles: Particle[];
-    fans: Fan[];
     sea: SVGSVGElement | null;
     footerSea: SVGSVGElement | null;
     blocks: Lines[];
     floating: HTMLElement | null;
     aboutDisc: Element | null;
-    sticky: HTMLElement | null;
-    stickyTitle: Element | null;
-    aboutOpen: Element | null;
-    travel: StickyTravel | null;
-    gutter: number;
-    /** Until when the wake is held inside the viewport (the hero's spray stays in view). */
+    /** Until when the flock is held above the hero's crest. */
     heroEnd: number;
+    /** The hero sea's rows (horizon first) and when each one dissolves. */
+    rows: Array<{ group: SVGGElement; from: number; to: number; shown: string }>;
     /** The highest crest apex in the hero sea's own box (px from its top). */
     crestTop: number;
-    /** Scroll range over which the halo flattens into the emakimono's sky band. */
+    /** Scroll range over which the flock flattens into the emakimono's sky band. */
     band: { from: number; to: number } | null;
     primary: string;
 }
+
 
 /** Hidden from assistive tech and from the clearance alike, except the pieces of a split text. */
 const isDecorative = (element: Element) => {
@@ -125,35 +112,33 @@ function collectBlocks(): Lines[] {
 }
 
 /**
- * "Las escamas viajan con el sol": the seigaiha scales are the thread that
- * follows the sun through the day.
+ * "Las escamas viajan con el sol": the hero's seigaiha sea becomes a flock of
+ * kamome that follows the sun through the day, and lands in the sunset sea.
  *
- * 1. Hero: the sea's crest breathes with the scroll while the sun rises; then its
- *    crest scales lift off one by one (nearest the sun first), as spray, and rise
- *    into the sun's wake. Each one leaves the sea (its own SVG copy is hidden): it
- *    is never drawn twice.
- * 2. In the air they trail the sun (its place a few scroll px ago) and ring it as
- *    a halo that opens away from the text (east of the middle it opens east, west
- *    of it west, turning over the top in between), flattened into the sky band in
- *    the emakimono. In Mi enfoque they follow its crossing as a wake.
- * 3. Servicios: a few scales settle into each panel's fan as it comes in; the
- *    last one becomes the fan (same geometry, same line) and the fan is shown in
- *    that frame, the others fold into it.
- * 4. Sobre mí, autumn: the others turn into momiji (a flip: the scale goes edge on
- *    and comes back a leaf) and fall slowly in the left column, near the parked
- *    sun, never over text or the disc.
- * 5. Footer: they follow the setting sun down, turn back into scales and sink
- *    into the sunset sea behind its crest, where the hanko stamps the day.
+ * 1. Hero: the sea's crest breathes with the scroll while the sun rises; its crest
+ *    scales lift off one by one (nearest the sun first) and the whole sea
+ *    dissolves behind them, row after row from the horizon to the front, so no
+ *    wave is left when the hero ends. A lifted scale leaves the sea (its own SVG
+ *    copy is hidden): it is never drawn twice. Most flip away as they lift; a
+ *    flock of them, once clear of the crest, turns into gulls (the flip: edge on,
+ *    back as a kamome).
+ * 2. In the air the gulls trail the sun (its place a few scroll px ago) as a loose
+ *    flock around it, opening away from the text, flattened into the sky band in
+ *    the emakimono, banking with the sun's motion and beating their wings with
+ *    the scroll. They stay on screen with the sun the whole way.
+ * 3. Footer: they follow the setting sun down, turn back into scales (the same
+ *    flip) and land in the sunset sea behind its crest, where the hanko stamps
+ *    the day.
  *
  * Drawn on one canvas, fixed to the viewport, behind the sun, main and the footer
- * (so the sun and the seas occlude the scales the way rows of a print do). It reads the
+ * (the sun and the seas occlude it the way rows of a print do). It reads the
  * sun's path (lib/sunTrack) instead of owning a sun: every place is an exact
  * function of the live scroll, like the sun's; nothing is eased in time, nothing
  * trails or springs back. Every piece keeps 24px from any text, control or the
  * floating Contáctame, and fades out before it would come closer.
  * The work stops while the scroll is still (after the scrubbed emakimono settles)
- * and while the tab is hidden. Reduced motion: nothing runs, the seas and fans
- * are drawn as they are.
+ * and while the tab is hidden. Reduced motion: nothing runs, the seas are drawn
+ * as they are.
  */
 export function useScaleJourney() {
     const scope = useRef<HTMLCanvasElement>(null);
@@ -185,7 +170,10 @@ export function useScaleJourney() {
 
             const release = () => {
                 plan?.particles.forEach((p) => p.group?.style.removeProperty("visibility"));
-                plan?.fans.forEach((fan) => fan.svg.style.removeProperty("opacity"));
+                plan?.rows.forEach((row) => {
+                    row.group.style.removeProperty("opacity");
+                    row.group.style.removeProperty("transform");
+                });
                 context.setTransform(1, 0, 0, 1, 0, 0);
                 context.clearRect(0, 0, canvas.width, canvas.height);
             };
@@ -204,7 +192,8 @@ export function useScaleJourney() {
 
                 // The hero sea's loose crest (the same generator and width as SeaField).
                 const seaWidth = Math.round(sea.getBoundingClientRect().width);
-                const crest = seaFor("hero", seaWidth, looseCrestFor(seaWidth)).crest;
+                const heroField = seaFor("hero", seaWidth, looseCrestFor(seaWidth));
+                const crest = heroField.crest;
                 const groups = new Map<number, SVGGElement>();
                 sea.querySelectorAll<SVGGElement>("[data-sea-scale]").forEach((g) => groups.set(Number(g.dataset.seaScale), g));
                 if (crest.length === 0 || groups.size === 0) return;
@@ -214,79 +203,26 @@ export function useScaleJourney() {
                 const hero = heroPin ?? { start: 0, end: vh * 0.9 };
                 const heroSpan = Math.max(1, hero.end - hero.start);
 
-                // Emakimono fans: when each one's scales set off and land.
-                const emakiPin = getEmakiPinRange();
-                const fanSvgs = [...document.querySelectorAll<SVGSVGElement>("[data-emaki-fan] svg")];
-                const fans: Fan[] = [];
-                const emakiTrack = document.querySelector<HTMLElement>("[data-emaki-track]");
-                const viewport = document.querySelector<HTMLElement>("[data-emaki-viewport]");
-                if (emakiPin && emakiTrack && viewport) {
-                    const pinSpan = Math.max(1, emakiPin.end - emakiPin.start);
-                    const distance = Math.max(1, emakiTrack.scrollWidth - viewport.clientWidth);
-                    const x = Number(gsap.getProperty(emakiTrack, "x")) || 0;
-                    const flight = pinSpan * 0.2;
-                    let previous = emakiPin.start;
-                    fanSvgs.forEach((svg, g) => {
-                        const r = svg.getBoundingClientRect();
-                        // Its centre at the start of the unroll, and where it lands (60% across).
-                        const atStart = (r.left + r.right) / 2 - x;
-                        const progress = (atStart - vw * 0.6) / distance;
-                        const land = Math.min(emakiPin.end, Math.max(emakiPin.start + progress * pinSpan, previous + pinSpan * 0.07, emakiPin.start + flight + g * 8));
-                        previous = land;
-                        fans.push({ svg, from: land - flight, land, shown: null });
-                    });
-                } else {
-                    // Stacked: the fan lands as its base reaches 62% of the viewport.
-                    fanSvgs.forEach((svg) => {
-                        const base = docRect(svg).b;
-                        const land = Math.max(1, base - vh * 0.62);
-                        fans.push({ svg, from: land - vh * 0.4, land, shown: null });
-                    });
-                }
+                // The whole hero sea dissolves with the hero, row after row from the
+                // horizon down to the front: no wave is left when the hero ends.
+                const rowGroups = [...sea.children].filter((g): g is SVGGElement => g instanceof SVGGElement);
+                const rowBases = heroField.rows.map((row) => row.base);
+                const rows = rowGroups.map((group, k) => {
+                    const from = hero.start + heroSpan * (0.32 + 0.53 * (k / Math.max(1, rowGroups.length - 1)));
+                    return { group, from, to: from + heroSpan * 0.15, shown: "" };
+                });
 
-                // Sobre mí: when the sun is parked as the disc (read off its path).
-                const aboutDisc = document.querySelector('[data-sun-anchor="about"]');
-                const sticky = document.querySelector<HTMLElement>("[data-sun-sticky]");
-                const travel = stickyTravel(sticky);
-                let parkFrom = -1;
-                let parkTo = -1;
-                if (aboutDisc && aboutDisc.getBoundingClientRect().width > 0) {
-                    const rest = docRect(aboutDisc);
-                    const restY = (rest.t + rest.b) / 2 - (travel ? travel.now : 0);
-                    const restX = (rest.l + rest.r) / 2;
-                    const sample: SunSample = { x: 0, y: 0, d: 0, o: 0 };
-                    for (let s = 0; s <= maxScroll; s += track.step) {
-                        sunAt(track, s, sample);
-                        const y = restY + (travel ? Math.min(travel.total, Math.max(0, s - travel.start)) : 0);
-                        if (Math.abs(sample.x - restX) < 3 && Math.abs(sample.y - y) < 3) {
-                            if (parkFrom < 0) parkFrom = s;
-                            parkTo = s;
-                        }
-                    }
-                }
-                const about = document.getElementById("about");
-                if (parkFrom < 0 && about) {
-                    const top = docRect(about).t;
-                    parkFrom = top - vh * 0.4;
-                    parkTo = top + vh * 0.6;
-                }
-                // Where the column does not stick, the leaves fall beside the disc for as
-                // long as it is in view, not only while the sun rests on it.
-                if (!travel && aboutDisc && aboutDisc.getBoundingClientRect().width > 0) {
-                    const rest = docRect(aboutDisc);
-                    parkFrom = Math.min(parkFrom, rest.t - vh * 0.75);
-                    parkTo = Math.max(parkTo, rest.b - vh * 0.2);
-                }
-                const leafSpan = Math.max(vh * 0.4, parkTo - parkFrom);
+                // The flock: spread over the crest, not one end of it.
+                const flockSize = Math.min(crest.length, FLOCK[wide ? "wide" : "narrow"]);
+                const order = crest.map((_, k) => k).sort((a, b) => hash(a, 7) - hash(b, 7));
+                const flock = new Map(order.slice(0, flockSize).map((k, n) => [k, n]));
 
                 // The footer sea's crest, nearest the setting sun first (clear of the seal).
                 const footerSea = document.querySelector<SVGSVGElement>('[data-sea-field="footer"] [data-sea-svg]');
                 const footerWidth = footerSea ? Math.round(footerSea.getBoundingClientRect().width) : vw;
                 const sunset = track.x[track.x.length - 1];
-                const fanCount = fans.length * PER_FAN[wide ? "wide" : "narrow"];
-                const leafCount = Math.max(0, crest.length - fanCount);
-                const sinkInto = footerSea
-                    ? seaFor("footer", footerWidth, leafCount * 2).crest
+                const landOn = footerSea
+                    ? seaFor("footer", footerWidth, flockSize * 2).crest
                         .filter((s) => s.cx + s.radius < footerWidth - 120)
                         .sort((a, b) => Math.abs(a.cx - sunset) - Math.abs(b.cx - sunset))
                     : [];
@@ -294,74 +230,57 @@ export function useScaleJourney() {
                 // Lift order: nearest the sun (east) first.
                 const byX = [...crest].sort((a, b) => b.cx - a.cx);
                 const rank = new Map(byX.map((s, k) => [s, k]));
-                // Which scales settle into fans: spread over the crest, not one end of it.
-                const order = crest.map((_, k) => k).sort((a, b) => hash(a, 7) - hash(b, 7));
-                const fanOf = new Map<number, number>();
-                const leads = new Set<number>();
-                order.slice(0, fanCount).forEach((k, n) => {
-                    fanOf.set(k, n % Math.max(1, fans.length));
-                    if (n < fans.length) leads.add(k);
-                });
 
-                let leaf = 0;
                 const particles: Particle[] = crest.map((home, index) => {
-                    const fan = fanOf.get(index) ?? -1;
                     const k = (rank.get(home) ?? 0) / Math.max(1, crest.length - 1);
-                    const detach = hero.start + heroSpan * (0.04 + 0.5 * k + 0.04 * hash(index, 1));
-                    const leafIndex = fan < 0 ? leaf++ : -1;
-                    const u = hash(index, 5);
-                    const turn = parkFrom - vh * 0.1 + u * Math.min(vh * 0.3, leafSpan * 0.3);
-                    const settle = turn + Math.min(vh * 0.25, leafSpan * 0.3);
-                    const leave = Math.max(settle + vh * 0.1, parkTo - vh * 0.05 + hash(index, 6) * vh * 0.2);
+                    const detach = hero.start + heroSpan * (0.04 + 0.32 * k + 0.04 * hash(index, 1));
+                    const n = flock.get(index);
+                    const rise = heroSpan * 0.32;
+                    const gullFrom = detach + rise * (0.5 + 0.25 * hash(index, 13));
+                    const gullTo = gullFrom + rise * 0.45;
                     const sea = maxScroll - hash(index, 8) * vh * 0.1;
                     return {
                         index,
                         home,
-                        fan,
-                        lead: leads.has(index),
+                        row: Math.max(0, rowBases.indexOf(home.base)),
+                        gull: n !== undefined,
                         lag: hash(index, 2) * vh * (wide ? 0.22 : 0.15),
                         theta: (hash(index, 3) - 0.5) * 3.3,
                         reach: hash(index, 4),
                         tilt: (hash(index, 9) - 0.5) * 1.2,
                         detach,
-                        rise: heroSpan * 0.32,
-                        turn,
-                        settle,
-                        leave,
-                        sink: Math.max(leave + vh * 0.3, sea - vh * 0.75),
+                        rise,
+                        gullFrom,
+                        gullTo,
+                        beat: 220 + 140 * hash(index, 15),
+                        phase: hash(index, 16) * Math.PI * 2,
+                        wing: 0.55 + 0.45 * hash(index, 17),
+                        sink: Math.max(gullTo + 1, sea - vh * 0.75),
                         sea,
-                        laneX: hash(index, 10),
-                        laneY: hash(index, 11),
-                        size: hash(index, 12),
-                        filled: leafIndex % 3 === 1,
-                        target: leafIndex >= 0 && sinkInto.length ? sinkInto[leafIndex % sinkInto.length] : null,
+                        target: n !== undefined && landOn.length ? landOn[n % landOn.length] : null,
                         group: groups.get(home.id) ?? null,
                         hidden: false,
                     };
                 });
 
-                // The halo flattens into the emakimono's sky band (it never reaches the heading).
+                // The flock flattens into the emakimono's sky band (it never reaches the heading).
+                const emakiPin = getEmakiPinRange();
                 const band = emakiPin ? { from: emakiPin.start, to: emakiPin.end } : null;
                 const css = getComputedStyle(document.documentElement);
                 plan = {
-                    track, vw, vh, maxScroll, particles, fans, sea, footerSea,
+                    track, vw, vh, maxScroll, particles, sea, footerSea,
                     heroEnd: hero.end,
+                    rows,
                     crestTop: Math.min(...crest.map((s) => s.base - s.radius)),
                     blocks: collectBlocks(),
                     floating: document.querySelector<HTMLElement>("[data-floating-contact]"),
-                    aboutDisc,
-                    sticky,
-                    stickyTitle: sticky?.querySelector("h2") ?? null,
-                    aboutOpen: document.querySelector("[data-about-open]"),
-                    travel,
-                    gutter: vw >= 1280 ? Math.max(40, (vw - 1200) / 2) : wide ? 40 : 24,
+                    aboutDisc: document.querySelector('[data-sun-anchor="about"]'),
                     band,
                     primary: css.getPropertyValue("--primary").trim() || "#1e4ba8",
                 };
                 canvas.dataset.particles = String(particles.length);
-                canvas.dataset.leaves = String(leafCount);
-                canvas.dataset.park = `${Math.round(parkFrom)},${Math.round(parkTo)}`;
-                canvas.dataset.fans = fans.map((fan) => Math.round(fan.land)).join(",");
+                canvas.dataset.gulls = String(flockSize);
+                canvas.dataset.hero = `${Math.round(hero.start)},${Math.round(hero.end)}`;
                 lastScroll = -1;
             };
 
@@ -375,11 +294,26 @@ export function useScaleJourney() {
                 }
                 context.stroke();
             };
-            const leafOutline = new Path2D(MOMIJI.outline);
-            const leafStem = new Path2D(MOMIJI.stem);
-
-            // A leaf's radius: larger beside the wide sticky column, smaller on phones.
-            const leafSize = (q: Particle) => (plan && plan.vw >= 768 ? 13 + 7 * q.size : 10 + 4 * q.size);
+            /** Draws one kamome: half-span `half`, body at (0, 0), wings at `flap` of their beat. */
+            const gullAt = (half: number, flap: number, ink: string) => {
+                const { tip, shoulder } = gullWings(flap);
+                context.lineWidth = GULL.line;
+                context.lineJoin = "round";
+                context.lineCap = "round";
+                context.beginPath();
+                context.moveTo(-half, tip * half);
+                context.quadraticCurveTo(-half * 0.45, shoulder * half, 0, 0);
+                context.quadraticCurveTo(half * 0.45, shoulder * half, half, tip * half);
+                context.stroke();
+                // A hint of body: a small flat wedge under the join.
+                context.fillStyle = ink;
+                context.beginPath();
+                context.moveTo(-half * 0.09, -half * 0.03);
+                context.lineTo(half * 0.09, -half * 0.03);
+                context.lineTo(0, half * GULL.body);
+                context.closePath();
+                context.fill();
+            };
 
             const render = (scroll: number) => {
                 const p = plan;
@@ -389,7 +323,6 @@ export function useScaleJourney() {
                 // Reads first (live boxes), then the canvas and the few DOM writes.
                 const seaBox = p.sea?.getBoundingClientRect();
                 const footBox = p.footerSea?.getBoundingClientRect();
-                const fanBoxes = p.fans.map((fan) => fan.svg.getBoundingClientRect());
                 const boxes: Box[] = [];
                 for (const block of p.blocks) {
                     const r = block.element.getBoundingClientRect();
@@ -405,34 +338,14 @@ export function useScaleJourney() {
                 }
                 const disc = p.aboutDisc?.getBoundingClientRect();
                 if (disc && disc.width > 0) boxes.push({ l: disc.left, t: disc.top, r: disc.right, b: disc.bottom, c: 10 });
-                // Sobre mí's leaf lane: the left column under its heading (sticky from 1280px),
-                // or beside the disc where the column does not stick.
-                let lane: { l: number; t: number; r: number; b: number } | null = null;
-                if (disc && disc.width > 0) {
-                    if (p.travel && p.sticky) {
-                        const column = p.sticky.getBoundingClientRect();
-                        const title = p.stickyTitle?.getBoundingClientRect();
-                        const open = p.aboutOpen?.getBoundingClientRect();
-                        lane = {
-                            l: column.left,
-                            r: Math.min(column.left + Math.max(disc.width * 2.2, 240), open ? open.left - 40 : column.right),
-                            t: (title ? title.bottom : column.top) + 36,
-                            b: Math.min(vh - 40, column.bottom + vh * 0.5),
-                        };
-                    } else {
-                        lane = { l: disc.right + 36, r: vw - p.gutter - 8, t: disc.top - 4, b: disc.bottom + 24 };
-                    }
-                    if (lane.r - lane.l < 40) lane = null;
-                }
-                const sunColor = document.documentElement.style.getPropertyValue("--sun-now").trim() || getComputedStyle(document.documentElement).getPropertyValue("--sun").trim();
 
                 context.setTransform(dpr, 0, 0, dpr, 0, 0);
                 context.clearRect(0, 0, vw, vh);
                 context.lineWidth = 1;
                 context.strokeStyle = p.primary;
-                context.fillStyle = sunColor;
 
                 const sun: SunSample = { x: 0, y: 0, d: 0, o: 0 };
+                const before: SunSample = { x: 0, y: 0, d: 0, o: 0 };
                 const flat = p.band ? span(scroll, p.band.from - vh * 0.2, p.band.from) * (1 - span(scroll, p.band.to, p.band.to + vh * 0.2)) : 0;
 
                 for (const q of p.particles) {
@@ -448,27 +361,40 @@ export function useScaleJourney() {
                     let y = homeY + breath;
                     let radius = home.radius;
                     let tilt = 0;
-                    let morph = 0;
+                    let gull = 0;
+                    let flip = 1;
                     let ink = home.opacity;
                     let alpha = 1;
                     let visible = scroll >= 1;
+                    // Not lifted yet: it dissolves with its row.
+                    const row = p.rows[q.row];
+                    if (row && scroll <= q.detach) alpha = 1 - span(scroll, row.from, row.to);
 
                     if (scroll > q.detach) {
-                        // In the sun's wake: where the sun was `lag` px of scroll ago, on its halo.
-                        sunAt(track, scroll - q.lag, sun);
+                        // In the sun's wake: where the sun was `lag` px of scroll ago, around it.
+                        const back = scroll - q.lag;
+                        sunAt(track, back, sun);
                         const cx = sun.x;
-                        const cy = sun.y - (scroll - q.lag);
-                        const angle = haloAngle(cx, vw) + q.theta + 0.18 * Math.sin(scroll / 520 + q.index);
+                        const cy = sun.y - back;
+                        // In the sky band the flock spreads to both sides of the sun.
+                        const angle = haloAngle(cx, vw) + q.theta * (1 + flat) + 0.18 * Math.sin(scroll / 520 + q.index);
                         const out = sun.d / 2 + 22 + q.reach * (sun.d * 0.32 + 36);
-                        // Flattened and spread along the emakimono's sky band; held in view
-                        // through the hero, so the spray is seen before it follows the sun out.
                         const airRadius = home.radius * 0.72;
+                        // Over the hero's crest until the hero ends; always on screen, with the sun.
                         const hold = 1 - span(scroll, p.heroEnd, p.heroEnd + vh * 0.4);
-                        const free = cx + Math.cos(angle) * out * (1 + 1.4 * flat);
-                        const wx = lerp(free, Math.min(vw - airRadius - 8, Math.max(airRadius + 8, free)), hold);
-                        const sky = cy + Math.sin(angle) * out * (1 - 0.7 * flat);
-                        // Never back down into the sea it left (the rising sun is still behind it).
-                        const wy = seaBox ? lerp(sky, Math.min(sky, seaBox.top + p.crestTop - airRadius - 16 - q.reach * 90), hold) : sky;
+                        const margin = airRadius * GULL.span + 8;
+                        // Where the sun is near an edge, the flock is pressed into the room it has
+                        // (its shape kept, never piled against the edge).
+                        const reachMax = sun.d * 0.82 + 58;
+                        const dx = Math.cos(angle) * out * (1 + 1.4 * flat);
+                        const dy = Math.sin(angle) * out * (1 - 0.7 * flat);
+                        const roomX = dx >= 0 ? vw - margin - cx : cx - margin;
+                        const roomY = dy < 0 ? cy - SKY_TOP - margin : vh - 48 - cy;
+                        const kx = Math.min(1, Math.max(0.3, roomX / (reachMax * (1 + 1.4 * flat))));
+                        const ky = Math.min(1, Math.max(0.3, roomY / (reachMax * (1 - 0.7 * flat))));
+                        const wx = Math.min(vw - margin, Math.max(margin, cx + dx * kx));
+                        const onScreen = Math.min(vh - 48, Math.max(SKY_TOP + margin, cy + dy * ky));
+                        const wy = seaBox ? lerp(onScreen, Math.min(onScreen, seaBox.top + p.crestTop - airRadius - 16 - q.reach * 90), hold) : onScreen;
                         const airTilt = q.tilt * Math.sin(scroll / 700 + q.index * 1.7);
 
                         // The lift: up off the crest, then over to the wake.
@@ -481,48 +407,31 @@ export function useScaleJourney() {
                         ink = lerp(home.opacity, AIR_OPACITY, e);
                         alpha = lerp(1, sun.o, e);
 
-                        if (q.fan >= 0) {
-                            // 3. Into its fan, then gone: the fan itself takes over.
-                            const fan = p.fans[q.fan];
-                            const box = fanBoxes[q.fan];
-                            if (scroll >= fan.land) visible = false;
-                            else if (scroll > fan.from && box.width > 0) {
-                                const f = clamp01((scroll - fan.from) / (fan.land - fan.from));
-                                const tx = (box.left + box.right) / 2;
-                                const ty = box.bottom;
-                                // Down (or up) to the fan's line first, then along it.
-                                x = lerp(x, tx, smooth(f));
-                                y = lerp(y, ty, smooth(Math.min(1, f * 1.8)));
-                                radius = lerp(radius, box.width / 2, smooth(f));
-                                tilt = lerp(tilt, 0, smooth(f));
-                                ink = lerp(ink, FAN_OPACITY, f);
-                                alpha = lerp(alpha, 1, smooth(f * 2));
-                                // The others fold into the one that becomes the fan.
-                                if (!q.lead) alpha *= 1 - smooth((f - 0.55) / 0.45);
+                        if (!q.gull) {
+                            // Not of the flock: it flips away (edge on, gone) as it lifts.
+                            const away = span(scroll, q.detach + q.rise * 0.2, q.detach + q.rise * 0.65);
+                            flip = Math.cos((Math.PI / 2) * away);
+                            if (away >= 1) visible = false;
+                        } else {
+                            // A gull once clear of the crest, banking along the sun's own motion on screen.
+                            gull = span(scroll, q.gullFrom, q.gullTo);
+                            if (gull > 0) {
+                                const earlier = back - 24;
+                                sunAt(track, earlier, before);
+                                const vx = cx - before.x;
+                                const vy = cy - (before.y - earlier);
+                                const bank = Math.max(-0.42, Math.min(0.42, Math.atan2(vy, Math.abs(vx)) * Math.sign(vx) * 0.7)) * clamp01(Math.abs(vx) / 6);
+                                tilt = lerp(tilt, bank + airTilt * 0.25, clamp01(gull * 2));
                             }
-                        } else if (scroll > q.turn) {
-                            // 4. A momiji in Sobre mí's left column, then 5. back into the wake.
-                            const inLane = span(scroll, q.turn, q.settle) * (1 - span(scroll, q.leave, q.leave + vh * 0.35));
-                            morph = span(scroll, q.turn, q.settle);
-                            if (lane) {
-                                const fall = clamp01(q.laneY * 0.55 + 0.45 * (scroll - q.turn) / Math.max(1, q.leave - q.turn));
-                                const size = leafSize(q);
-                                const lx = lane.l + size + q.laneX * Math.max(0, lane.r - lane.l - 2 * size) + 9 * Math.sin(scroll / 260 + q.index);
-                                const ly = lane.t + size + fall * Math.max(0, lane.b - lane.t - 2 * size);
-                                x = lerp(x, lx, inLane);
-                                y = lerp(y, ly, inLane);
-                                alpha = lerp(alpha, 1, inLane);
-                                tilt = lerp(tilt, q.tilt * 0.8 + 0.5 * Math.sin(scroll / 300 + q.index * 2.3), inLane);
-                            }
-                            radius = lerp(radius, leafSize(q), morph);
                             if (q.target && footBox && scroll > q.sink) {
-                                // Down into the sunset sea, a scale again, behind its crest.
+                                // Down into the sunset sea: a scale again (the same flip), behind its crest.
                                 const s = clamp01((scroll - q.sink) / Math.max(1, q.sea - q.sink));
                                 const tx = footBox.left + q.target.cx;
                                 const ty = footBox.top + q.target.base;
                                 x = lerp(x, tx, smooth(Math.min(1, s * 1.6)));
                                 y = lerp(y, ty, s * s);
-                                morph *= 1 - smooth(s * 1.8);
+                                // Still a gull on the way down; a scale again just before it lands.
+                                gull *= 1 - span(s, 0.45, 0.8);
                                 radius = lerp(radius, q.target.radius, smooth(s));
                                 tilt = lerp(tilt, 0, smooth(s));
                                 ink = lerp(ink, q.target.opacity, s);
@@ -535,11 +444,11 @@ export function useScaleJourney() {
                     }
 
                     if (!visible || alpha <= 0.01) continue;
-                    // Half extents of the piece: a scale is a half disc on its base line.
-                    const leafish = morph >= 0.5;
-                    const half = radius;
-                    const top = y - half;
-                    const bottom = leafish ? y + half : y;
+                    // Extents of the piece: a scale is a half disc on its base line.
+                    const gullish = gull >= 0.5;
+                    const half = gullish ? radius * GULL.span : radius;
+                    const top = gullish ? y - half * 0.75 : y - half;
+                    const bottom = gullish ? y + half * 0.4 : y;
                     if (x + half < 0 || x - half > vw || bottom < 0 || top > vh) continue;
                     let clear = 1;
                     for (const box of boxes) {
@@ -555,40 +464,39 @@ export function useScaleJourney() {
                     context.save();
                     context.translate(x, y);
                     context.rotate(tilt);
-                    // The turn: edge on, then the other face (a scale becomes a leaf, and back).
-                    context.scale(Math.max(0.04, Math.abs(Math.cos(Math.PI * morph))), 1);
-                    if (!leafish) {
-                        context.globalAlpha = alpha * ink;
-                        scaleAt(radius);
+                    // The turn: edge on, then the other face (a scale becomes a gull, and back).
+                    context.scale(Math.max(0.04, flip * Math.abs(Math.cos(Math.PI * gull))), 1);
+                    if (gullish) {
+                        // The wingbeat runs with the scroll (still when the page is still).
+                        context.globalAlpha = alpha * Math.max(ink, GULL.ink);
+                        gullAt(half, q.wing * Math.sin((2 * Math.PI * scroll) / q.beat + q.phase), p.primary);
                     } else {
-                        const k = radius / 50;
-                        context.scale(k, k);
-                        context.lineWidth = 1 / k;
-                        if (q.filled) {
-                            context.globalAlpha = alpha * 0.9;
-                            context.fill(leafOutline);
-                            context.stroke(leafStem);
-                        } else {
-                            context.globalAlpha = alpha * 0.8;
-                            context.stroke(leafOutline);
-                            context.stroke(leafStem);
-                        }
+                        context.globalAlpha = alpha * ink;
+                        context.lineWidth = 1;
+                        scaleAt(radius);
                     }
                     context.restore();
                 }
 
-                // DOM writes, only on change: the sea's copies and the fans.
+                // DOM writes, only on change: the sea's rows and its loose copies.
+                for (const row of p.rows) {
+                    const t = span(scroll, row.from, row.to);
+                    const shown = t <= 0 ? "" : t.toFixed(3);
+                    if (row.shown === shown) continue;
+                    row.shown = shown;
+                    if (t <= 0) {
+                        row.group.style.removeProperty("opacity");
+                        row.group.style.removeProperty("transform");
+                    } else {
+                        row.group.style.opacity = (1 - t).toFixed(3);
+                        row.group.style.transform = `translateY(${(-6 * t).toFixed(2)}px)`;
+                    }
+                }
                 for (const q of p.particles) {
                     if (!q.group) continue;
                     const want = q.hidden ? "hidden" : "";
                     if (q.group.style.visibility !== want) q.group.style.visibility = want;
                 }
-                p.fans.forEach((fan) => {
-                    const shown = scroll >= fan.land;
-                    if (fan.shown === shown) return;
-                    fan.shown = shown;
-                    fan.svg.style.opacity = shown ? "1" : "0";
-                });
             };
 
             const tick = () => {

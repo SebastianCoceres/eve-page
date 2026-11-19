@@ -1,23 +1,15 @@
 /**
  * Shared maths for "Las escamas viajan con el sol" (hooks/useScaleJourney): the
- * seigaiha scales that leave the hero sea, follow the sun as a wake and a halo,
- * settle into the emakimono's fans, fall as momiji in Sobre mí and sink into the
- * footer sea. Pure functions, no DOM: every value here is a function of the
- * scroll position (and of the layout measured by the hook).
+ * seigaiha scales that leave the hero sea, turn into kamome (gulls) that follow
+ * the sun across the page, and turn back into scales to land in the footer sea.
+ * Pure functions, no DOM: every value here is a function of the scroll position
+ * (and of the layout measured by the hook).
  */
 
-/** The layer's marker: while it is mounted the journey owns the emakimono fans' reveal. */
+/** The layer's marker. */
 export const JOURNEY_ATTR = "data-scale-journey";
 
-/**
- * True when the scale journey is on the page (it is not rendered under reduced
- * motion): the emakimono fans are then revealed by the scales that land on them,
- * not drawn in on their own (hooks/useEmakiScroll).
- */
-export const journeyOwnsFans = () =>
-    typeof document !== "undefined" && document.querySelector(`[${JOURNEY_ATTR}]`) !== null;
-
-/** Least room between a scale or a leaf and any text, control or the floating button (px). */
+/** Least room between a scale or a gull and any text, control or the floating button (px). */
 export const TEXT_CLEARANCE = 24;
 /** Over this many px past the clearance a piece comes back to full ink. */
 export const CLEARANCE_RAMP = 14;
@@ -64,26 +56,19 @@ export const bezier = (a: number, c: number, b: number, t: number) => {
 };
 
 /**
- * A momiji (maple) leaf as a flat print: seven broad, pointed lobes cut halfway to
- * the heart, and a stem. Unit: the leaf fits a circle of radius 50 around its
- * heart (0, 0), stem pointing down. Straight segments only, so it reads as a cut
- * stamp, not an illustration.
+ * A kamome (gull) as a woodblock-print glyph: a shallow gull-wing "M" in one
+ * cobalt line with a hint of body. Unit: a half-span of 1 (wing tips at x = ±1),
+ * the body at (0, 0), y down. `span` is the half-span as a share of the scale's
+ * radius; `line` its stroke (the seas' 1px line, a touch firmer to hold at 12px).
  */
-export const MOMIJI = (() => {
-    // Lobes: angle from straight up (degrees) and length (share of 50).
-    const lobes: Array<[number, number]> = [[-112, 0.5], [-72, 0.8], [-36, 0.94], [0, 1], [36, 0.94], [72, 0.8], [112, 0.5]];
-    const point = (deg: number, length: number) => {
-        const a = ((deg - 90) * Math.PI) / 180;
-        return `${(Math.cos(a) * 50 * length).toFixed(2)} ${(Math.sin(a) * 50 * length).toFixed(2)}`;
-    };
-    let outline = `M${point(-140, 0.2)}`;
-    lobes.forEach(([deg, length], index) => {
-        const before = index === 0 ? -140 : (lobes[index - 1][0] + deg) / 2;
-        const after = index === lobes.length - 1 ? 140 : (lobes[index + 1][0] + deg) / 2;
-        // Notch, shoulder, tip, shoulder: a broad lobe that narrows to its point.
-        outline += `L${point(before, 0.44)}L${point(deg - (deg - before) * 0.62, length * 0.7)}L${point(deg, length)}`;
-        outline += `L${point(deg + (after - deg) * 0.62, length * 0.7)}`;
-    });
-    outline += `L${point(140, 0.44)}L${point(140, 0.2)}Z`;
-    return { outline, stem: "M0 8L0 30" };
-})();
+export const GULL = { span: 1.05, line: 1.25, body: 0.22, ink: 0.8 };
+
+/**
+ * The wings at a point of the beat: `flap` in [-1, 1], -1 wings raised, 1 wings
+ * lowered. Returns each wing's tip height and its shoulder (the quadratic control
+ * that lifts the wing's middle), in the glyph's unit.
+ */
+export const gullWings = (flap: number) => ({
+    tip: -0.05 + 0.34 * flap,
+    shoulder: -0.72 + 0.3 * flap,
+});
