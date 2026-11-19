@@ -42,3 +42,22 @@ Commits: deferred. The branch carries the user's pre-existing uncommitted WIP (H
 
 ## Progress
 - T0 done. T1 is running with the Opus writer.
+
+## Feedback round: points instead of paragraphs (Mi enfoque, Sobre mí)
+
+Client feedback: users do not read; present the message as short, high-impact points. Mi enfoque: the problem on the left with the sun on the right, then the sun moves left and the answer is summarised on the right. Sobre mí: remove the image and stop showing all the text at once. The muted-to-ink scroll reveal must reach full ink and hold. The client authorised distilling the copy, deriving every point only from Eve's existing words.
+
+- [x] T4 Mi enfoque in two acts + sun crossing + held ink (hero greeting included). Route: delegated writer (Opus). Commit: b4f73ef.
+  - Act 1 "El marketing tradicional": Centrado en vender / Estrategias persuasivas / Ventas a cualquier costo. Act 2 "El marketing consciente": Integridad y conexión genuina / Valores éticos / Transparencia y bienestar / Relaciones duraderas.
+  - Pin from 1024px (280% of the viewport); phases in `FOCUS_SCENE`, shared by the sun leg: act 1 in ink at 24%, held to 34%; sun crosses east to west at 37–57%; act 2 in ink at 86%, held to the unpin. After the pin the sun leaves west and re-enters the emakimono sky from the east out of view.
+- [x] T5 Sobre mí without the portrait: afternoon sun on the seigaiha band (sticky from 1280px) + opening line + five milestones, each turning to ink with a hold. `public/eve-bust.webp` deleted. Route: delegated writer (Opus). Commit: b394ba1.
+- [x] T6 Docs: AGENTS.md, DESIGN.md (Point and Held Ink rules, new signatures), PRODUCT.md (no photos, distilled-copy exception), `.impeccable/design.json`. Route: delegated writer (Opus).
+
+Verification (T4–T6):
+- `pnpm exec tsc --noEmit`: pass.
+- `pnpm build`: pass.
+- `pnpm exec eslint .`: the 5 known errors only (Carousel.tsx, stores/*-provider.tsx).
+- Playwright sun sweep (40px steps, whole page): 1440 no discontinuities, min text gap 48px; 1024 none, 56px; 390 none, 58px; no horizontal overflow at 390/768/1024/1440.
+- Ink check: every Mi enfoque point computes to the ink token at 33% (act 1), 92% and 99.5% (act 2) of the pin; Sobre mí points all ink once read; hero greeting lines back to opacity 1 from 63% of its pin. Reduced motion: stacked, static, all ink, static disc.
+
+Next step: client review of the distilled copy; push/PR remain the user's decision.

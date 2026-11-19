@@ -44,11 +44,11 @@ typography:
     fontWeight: 400
     lineHeight: 1.12
     letterSpacing: "-0.01em"
-  question:
+  point:
     fontFamily: "Zen Old Mincho, Yu Mincho, Hiragino Mincho ProN, serif"
-    fontSize: "min(clamp(1.75rem, 1rem + 2.6vw, 3.125rem), max(1.75rem, 5.6vh))"
+    fontSize: "min(clamp(1.625rem, 0.9rem + 2vw, 2.75rem), max(1.5rem, 4.6vh))"
     fontWeight: 400
-    lineHeight: 1.15
+    lineHeight: 1.12
     letterSpacing: "-0.015em"
   values:
     fontFamily: "Zen Old Mincho, Yu Mincho, Hiragino Mincho ProN, serif"
@@ -67,11 +67,6 @@ typography:
     fontSize: "clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem)"
     fontWeight: 400
     lineHeight: 1.45
-  answer:
-    fontFamily: "Geist, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(1.125rem, 1rem + 0.4vw, 1.375rem)"
-    fontWeight: 400
-    lineHeight: 1.55
   item:
     fontFamily: "Geist, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.25rem"
@@ -149,11 +144,11 @@ components:
 
 **Creative North Star: "Washi y cobalto"**
 
-The page is one day on warm washi paper, made with the means of Japanese print and editorial craft. The ground turns from a kinari dawn to an autumn dusk as the reader scrolls, one cobalt ink marks every decision and draws the seigaiha, and one orange sun (a hinomaru disc) crosses the whole page under a single owner. Services unroll as an emakimono, Eve's portrait stands in front of the sun like a figure on a print, and an EB hanko stamps the end of the day.
+The page is one day on warm washi paper, made with the means of Japanese print and editorial craft. The ground turns from a kinari dawn to an autumn dusk as the reader scrolls, one cobalt ink marks every decision and draws the seigaiha, and one orange sun (a hinomaru disc) crosses the whole page under a single owner. Services unroll as an emakimono, the afternoon sun stands on a seigaiha band in Sobre mí, and an EB hanko stamps the end of the day.
 
-The system is minimal, flat and editorial: type is the protagonist, color is rare, the photograph is a single object, and hierarchy comes from size and weight only. Structure is 1px hairlines; there are no boxes, cards, shadows, gradients, blur or texture. Curves belong to two things only: the sun (circles) and the seigaiha (concentric semicircles), generated in code, never drawn as illustration. It refuses the cream personal-brand template and it refuses Japanese kitsch (no invented kanji, torii or sakura).
+The system is minimal, flat and editorial: type is the protagonist, color is rare, there are no photographs, and hierarchy comes from size and weight only. Copy is said in short points, not paragraphs: a large mincho line with at most one short Geist note. Structure is 1px hairlines; there are no boxes, cards, shadows, gradients, blur or texture. Curves belong to two things only: the sun (circles) and the seigaiha (concentric semicircles), generated in code, never drawn as illustration. It refuses the cream personal-brand template and it refuses Japanese kitsch (no invented kanji, torii or sakura).
 
-Motion is one grammar: content enters once (expo.out / power3.out, 0.6 to 1.1s), micro-interactions take 150ms, and scroll-driven motion is reserved for chapters (the hero "Amanecer" pin, the Mi enfoque pin, the emakimono, the Sobre mí journey, and the sun with the paper's day). Under reduced motion everything is static and visible. Implementation conventions (GSAP ownership, hooks, anchors) live in AGENTS.md.
+Motion is one grammar: content enters once (expo.out / power3.out, 0.6 to 1.1s), micro-interactions take 150ms, and scroll-driven motion is reserved for chapters (the hero "Amanecer" pin, the Mi enfoque pin, the emakimono, the Sobre mí milestones, and the sun with the paper's day). Under reduced motion everything is static and visible. Implementation conventions (GSAP ownership, hooks, anchors) live in AGENTS.md.
 
 **Key Characteristics:**
 - A live paper ground (`--paper`) tweened through four flat stops by one scrubbed timeline; static midday under reduced motion.
@@ -161,7 +156,7 @@ Motion is one grammar: content enters once (expo.out / power3.out, 0.6 to 1.1s),
 - One orange sun, warming to persimmon, with one timeline owner across the page.
 - Zen Old Mincho for the voice, Geist for body and UI; never uppercase outside the logotype.
 - Flat: 1px hairlines are the only structure.
-- Seigaiha generated in code: seas, section marks, fans, value separators, the portrait's band.
+- Seigaiha generated in code: seas, section marks, fans, value separators, the Sobre mí band.
 
 ## Colors
 
@@ -182,7 +177,7 @@ A warm paper that changes with the day, an ink, one cobalt and one sun; nothing 
 - **Paper Light** (field): a fixed 28% step of the paper toward light; form fields and toasts.
 - **Paper Hairline** (hairline): a fixed 13% step of the paper toward ink; every border by default.
 - **Sumi Ink** (foreground): headings, body text, emphasis.
-- **Warm Ash** (muted-foreground): secondary text, descriptions, the traditional half of the Mi enfoque statement; 5.4:1 on dusk.
+- **Warm Ash** (muted-foreground): secondary text, notes, act labels, and the starting tone of every point revealed to ink; 5.4:1 on dusk.
 - **Field Stone** (input-border): form field borders and inactive progress ticks; 3.2:1 on dusk.
 - **Error Red** (error) and **Moss** (success): form validation and toasts only.
 
@@ -198,24 +193,28 @@ A warm paper that changes with the day, an ink, one cobalt and one sun; nothing 
 **Display Font:** Zen Old Mincho (with Yu Mincho, Hiragino Mincho ProN, serif)
 **Body Font:** Geist (with ui-sans-serif, system-ui, sans-serif)
 
-**Character:** A Japanese old-style mincho with full Latin carries Eve's voice (headings, leads, the greeting, the values, statements and questions); Geist carries reading and interface. The mincho has no italic, so emphasis is tonal.
+**Character:** A Japanese old-style mincho with full Latin carries Eve's voice (headings, leads, the greeting, the values, points and statements); Geist carries reading and interface. The mincho has no italic, so emphasis is tonal.
 
 ### Hierarchy
 - **Display** (600, fluid to 5.25rem, 1.1): page-level h1 style; the hero h1 is the brand logotype SVG, sized by its cap height.
 - **Title** (600, fluid to 3.25rem, 1.1): section headings, revealed line by line out of a mask.
 - **Subtitle** (400, fluid to 2rem, 1.2): h3 default.
 - **Hero lead** (400, height-bounded, 1.12): the greeting, spoken line by line in the pin.
-- **Question / Values / Statement** (400, height-bounded): the mondō questions, the values row, the Mi enfoque statement and the Sobre mí close. Height-bounded with `min(clamp(), max(_, vh))` so pinned scenes always fit.
+- **Point / Values / Statement** (400, height-bounded): the Mi enfoque points and the Sobre mí milestones (point, fluid to 2.75rem, 1.12), the values row, and the Sobre mí opening line and close (statement). Height-bounded with `min(clamp(), max(_, vh))` so pinned scenes always fit.
 - **Lead** (400, fluid to 1.5rem, 1.45): section leads.
-- **Answer** (Geist 400, fluid to 1.375rem, 1.55): mondō answers, at most 52ch, beside a 1px hairline.
+- **Note** (Geist 400, 16px, 18px from 768px): the one short line under a point, in Warm Ash, at most 40 to 44ch.
 - **Item** (Geist 500, 1.25rem, 1.35): list headings; service titles override it with the mincho at 400.
-- **Body** (Geist 400, 16px, 1.6): paragraphs, 60 to 62ch; 17px / 1.7 for Sobre mí chapters from 768px.
+- **Body** (Geist 400, 16px, 1.6): paragraphs, 60 to 62ch.
 - **Label** (Geist 500, 15px): buttons, nav, form labels (14px).
 
 ### Named Rules
-**The Tonal Emphasis Rule.** Emphasis is Geist 500 in full ink inside a muted paragraph, or the muted-to-ink contrast within a statement. Never italic, never synthetic oblique.
+**The Tonal Emphasis Rule.** Emphasis is tonal: Geist 500 in full ink inside a muted paragraph, or a point that turns from muted to full ink as it is read. Never italic, never synthetic oblique.
 
-**The Lowercase Voice Rule.** Never uppercase outside the logotype (EVELYN / BOGADO and its subline). No eyebrows, kickers or section numerals above headings.
+**The Held Ink Rule.** Anything revealed from muted to ink reaches full ink with room to spare and holds there (in a pinned scene, an explicit pause before the next act or the unpin). Nothing is read half dark.
+
+**The Point Rule.** Say it in points: two to six words in the mincho, at most one short Geist note under it, revealed one at a time. Distill only from the confirmed copy; never add claims.
+
+**The Lowercase Voice Rule.** Never uppercase outside the logotype (EVELYN / BOGADO and its subline). No eyebrows, kickers or section numerals above headings (Mi enfoque's act labels are h3 subtitles in Warm Ash under the heading, not above it).
 
 ## Layout
 
@@ -225,7 +224,7 @@ One content column: 1200px max, 24px gutter below 768px and 40px from 768px. Onl
 
 ## Elevation & Depth
 
-Completely flat. There are no box-shadows (the `--shadow-*` namespace is reset), no gradients, no blur. Depth is made the way a print makes it: occlusion. Seigaiha rows are drawn back to front with opaque paper fills so nearer rows hide farther ones exactly, the sea hides the sun, the portrait band hides the bust's edge, and per-row stroke opacities (flat values, light far to dark near) give recession.
+Completely flat. There are no box-shadows (the `--shadow-*` namespace is reset), no gradients, no blur. Depth is made the way a print makes it: occlusion. Seigaiha rows are drawn back to front with opaque paper fills so nearer rows hide farther ones exactly, the sea hides the sun, the Sobre mí band hides the parked disc's lower edge, and per-row stroke opacities (flat values, light far to dark near) give recession.
 
 **The Occlusion Rule.** Depth is something in front of something else on the same paper, never a shadow or a glow.
 
@@ -258,16 +257,19 @@ Quiet and confident: one cobalt pill per decision.
 - **Mobile:** "Menú" alone on the right opens a full paper panel of mincho links at 32px, closed by "Cerrar".
 
 ### Seigaiha (signature)
-Generated in code (`lib/seigaiha`), never as an image. Seas: whole scales in three depth tiers with a swell line, flat per-row opacities and the nearest rows dissolving into the paper. Marks: a single 48px scale at the column edge between chapters, drawn from the centre outward once on enter. Fans: a single scale used as the emakimono's resting fans, the values' separators and Sobre mí's chapter milestones.
+Generated in code (`lib/seigaiha`), never as an image. Seas: whole scales in three depth tiers with a swell line, flat per-row opacities and the nearest rows dissolving into the paper. Marks: a single 48px scale at the column edge between chapters, drawn from the centre outward once on enter. Fans: a single scale used as the emakimono's resting fans, the values' separators and Sobre mí's milestones.
 
 ### The Sun (signature)
-One orange disc with one timeline owner. It rises from the hero sea, climbs to midday beside Mi enfoque, crosses the emakimono's sky, parks as the disc behind Eve's portrait (sticky from 1280px), and sets into the footer sea in persimmon. Static anchors stand in for it under reduced motion.
+One orange disc with one timeline owner. It rises from the hero sea, stands right of the problem in Mi enfoque and crosses the sky to stand left of the answer (pinned from 1024px), crosses the emakimono's sky, parks as the afternoon disc on the Sobre mí band (sticky from 1280px), and sets into the footer sea in persimmon. Static anchors stand in for it under reduced motion.
 
 ### Emakimono (signature)
 Servicios as a hand-scroll pinned from 1024px: tall panels joined by 1px hairlines, one continuous cobalt horizon at 45%, a fan resting on it at an uneven position in each panel, and a row of 1px progress ticks (active in cobalt). A panel's hover and focus frame turns its hairlines to solid cobalt; the selected service shows the 6px sun dot. Stacked with cobalt top rules below 1024px.
 
-### Retrato frente al sol (signature)
-The one photograph: a warm color cut-out bust in front of the sun disc, its head breaking out above it, rising from a three-row seigaiha band that hides its straight edge.
+### Mi enfoque in two acts (signature)
+The problem, then the answer: "El marketing tradicional" as three points on the left with the sun on the right; the sun crosses the sky; "El marketing consciente" as four points on the right with the sun on the left. Each point rises in Warm Ash, turns to Sumi Ink and holds.
+
+### Sol de la tarde (signature)
+No photograph: in Sobre mí a pure sun disc stands on a three-row seigaiha band that hides its lower edge, beside five milestones that arrive one at a time.
 
 ### Hanko seal (signature)
 The final stamp: a 42px persimmon square, an inset 1.25px paper border and an E and B joined by their bars in 1.5px paper strokes, on the right edge of the content grid in the footer.
