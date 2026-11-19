@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, createContext, useRef, useContext } from 'react'
+import { type ReactNode, createContext, useContext, useState } from 'react'
 import { type StoreApi, useStore } from 'zustand'
 import {
     type NavbarStore,
@@ -14,12 +14,10 @@ export interface NavbarProviderProps {
 }
 
 export const NavbarProvider = ({ children }: NavbarProviderProps) => {
-    const storeRef = useRef<StoreApi<NavbarStore>>(undefined)
-    if (!storeRef.current) {
-        storeRef.current = createNavbarStore()
-    }
+    // Lazy initializer: one store per provider instance, created once, no ref read during render.
+    const [store] = useState(createNavbarStore)
     return (
-        <NavbarContext.Provider value={storeRef.current}>
+        <NavbarContext.Provider value={store}>
             {children}
         </NavbarContext.Provider>
     )
