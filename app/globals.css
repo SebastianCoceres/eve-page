@@ -173,7 +173,7 @@
 }
 
 /*
- * Hero "Amanecer". The stage is one viewport under the 64px navbar. The name is set
+ * Hero "Amanecer". The stage is one viewport (there is no navbar). The name is set
  * by its cap height (--cap): the type clamp, bounded by the content width (the stacked
  * logotype is 5.785 caps wide) and by the stage height (so the lockup, the CTAs and the
  * calm left of the sea always fit). --logo-w / --logo-h are the stacked SVG's box
@@ -181,7 +181,7 @@
  */
 @utility hero-frame {
   --gutter: 24px;
-  --hero-h: max(560px, calc(100svh - 64px));
+  --hero-h: max(560px, 100svh);
   --cap: min(clamp(3.75rem, 1.5rem + 11.5vw, 13rem), (min(100vw, 1280px) - 2 * var(--gutter)) * 0.1728, (var(--hero-h) - 380px) * 0.45);
   --logo-w: calc(var(--cap) * 5.785);
   --logo-h: calc(var(--cap) * 2.215);

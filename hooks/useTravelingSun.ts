@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { gsap, useGSAP, ScrollTrigger } from "@/lib/gsap";
-import { CLEARANCE, NAVBAR, findZone, parkedScroll, type Point, type Rect, type Zone } from "@/lib/sunPath";
+import { CLEARANCE, SKY_TOP, findZone, parkedScroll, type Point, type Rect, type Zone } from "@/lib/sunPath";
 import { getHeroPinRange } from "@/hooks/useHeroAnimation";
 import { getEmakiPinRange } from "@/hooks/useEmakiScroll";
 import { FOCUS_PIN_TOP, FOCUS_SCENE, getFocusPinRange } from "@/hooks/useFocusScene";
@@ -227,7 +227,7 @@ function descentTrack(keys: Zone[], window: number) {
  *   (FOCUS_SCENE.CROSS), sinking a little, and stands left of the answer until
  *   the unpin, then leaves by the west edge at its height. Not pinned
  *   (768–1023px or a stage too tall), it parks in the section's free zone (at
- *   least 48px from any text, fully below the navbar; see lib/sunPath),
+ *   least 48px from any text, whole in view; see lib/sunPath),
  *   arriving and leaving sideways through the free band beside it;
  * - emakimono (pinned from 1024px): out of view (transparent when it changes
  *   sides, never west to east in view) it reaches the sky's height and slides in
@@ -308,8 +308,8 @@ export function useTravelingSun() {
 
                 const heroPin = getHeroPinRange();
                 const heroRise = heroPin && highAnchor ? {
-                    from: pinnedZone(heroAnchor, hero, NAVBAR),
-                    to: pinnedZone(highAnchor, hero, NAVBAR),
+                    from: pinnedZone(heroAnchor, hero, 0),
+                    to: pinnedZone(highAnchor, hero, 0),
                 } : null;
                 const start: Zone = heroPin && heroRise
                     ? { ...heroRise.from, y: heroRise.from.y + heroPin.start }
@@ -481,8 +481,8 @@ export function useTravelingSun() {
                             const d = chapter.sizes.find(fits) ?? chapter.sizes[chapter.sizes.length - 1];
                             const east = Math.min(vw - d / 2 - 8, Math.max(problemRight + CLEARANCE + d / 2, vw * chapter.targetX));
                             const west = Math.max(d / 2 + 8, Math.min(answerLeft - CLEARANCE - d / 2, vw * (1 - chapter.targetX)));
-                            // Midday: high, but whole under the navbar and 48px+ under the heading.
-                            const high = Math.max(NAVBAR + 40 + d / 2, headingBottom + CLEARANCE + d / 2);
+                            // Midday: high, but whole in view and 48px+ under the heading.
+                            const high = Math.max(SKY_TOP + d / 2, headingBottom + CLEARANCE + d / 2);
                             const rest = Math.max(high, vh * 0.42);
                             const sink = Math.max(0, Math.min(vh * FOCUS_SINK, vh - 24 - d / 2 - rest));
                             const pin = focusPin;
@@ -518,7 +518,7 @@ export function useTravelingSun() {
                         });
                         if (!zone) continue;
                         // Where Sobre mí's column does not stick, the parked disc moves with the
-                        // page: it arrives lower, so it can rest and leave before reaching the navbar.
+                        // page: it arrives lower, so it can rest and leave before reaching the top edge.
                         const height = anchored && !aboutTravel ? ABOUT_LOOSE_HEIGHT : chapter.height;
                         const at = Math.min(maxScroll - 1, Math.max(previousTime + 3, parkedScroll(zone, height, vh)));
                         // 3. A free zone (768–1023px), or the Sobre mí disc: it arrives with the
@@ -537,17 +537,17 @@ export function useTravelingSun() {
                     // - Column sticky (from 1280px): it is locked to the disc and slides out
                     //   during the last stretch of the column's travel, still at the disc's
                     //   height in the viewport, so it is in the margin before the column lets
-                    //   go: it never rides up under the navbar, and Contacto's section mark,
+                    //   go: it never rides up to the top edge, and Contacto's section mark,
                     //   still far below, never meets it. Past the release it already sinks.
                     // - Column loose (below 1280px), the disc moves with the page: it keeps its
                     //   place on the page (so the text below keeps its distance) and slides out
-                    //   quickly, early enough that its top never reaches the navbar.
+                    //   quickly, early enough that its top never reaches the top edge.
                     let slidDown = false;
                     if (about && parkedAbout) {
                         const parkFrom = previousTime;
                         const slide = vh * (aboutTravel ? 0.35 : 0.22);
                         const travelEnd = aboutTravel ? aboutTravel.end : -Infinity;
-                        const latest = aboutTravel ? Infinity : about.y - about.d / 2 - (NAVBAR + 32) - slide;
+                        const latest = aboutTravel ? Infinity : about.y - about.d / 2 - SKY_TOP - slide;
                         const hold = Math.min(maxScroll - 3, Math.max(parkFrom + 1, Math.min(latest, Math.max(parkFrom + vh * 0.25, travelEnd - slide))));
                         const rest: Zone = { ...about, y: aboutY(hold) };
                         legs.push({
@@ -677,7 +677,7 @@ export function useTravelingSun() {
                     if (about) {
                         hop(out("left", about.y, about.d), about.y - vh * 1.05, true);
                         // It moves with the page there (nothing sticks): arrives low, rests, and is
-                        // gone by the west edge before its top could reach the navbar.
+                        // gone by the west edge before its top could reach the top edge.
                         hop(about, parkedScroll(about, 0.62, vh));
                         hop(about, about.y - vh * 0.42);
                         hop(out("left", about.y, about.d), about.y - vh * 0.2);

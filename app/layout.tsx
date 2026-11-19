@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Zen_Old_Mincho } from "next/font/google";
 import "./globals.css";
-import { NavbarProvider } from "@/stores/nav/nav-providers";
 import { ServiceProvider } from "@/stores/service/service-provider";
 import { Toaster } from "@/components/ui/Toaster";
 
@@ -40,9 +39,7 @@ export default function RootLayout({
     <html lang="es" className={`${mincho.variable} ${geist.variable}`}>
       <body className="relative font-sans antialiased">
         <ServiceProvider>
-          <NavbarProvider>
-            {children}
-          </NavbarProvider>
+          {children}
         </ServiceProvider>
         <Toaster />
       </body>

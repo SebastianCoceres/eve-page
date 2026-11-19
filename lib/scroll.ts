@@ -1,8 +1,5 @@
 import { gsap } from "@/lib/gsap";
 
-// Height of the sticky navbar, kept clear above the scrolled-to section.
-const NAV_OFFSET = 64;
-
 /**
  * Scrolls to a section by id: a 0.3s ease, or an instant jump when the visitor
  * prefers reduced motion. Moves focus to the section afterwards so keyboard and
@@ -16,7 +13,7 @@ export function scrollToSection(id: string) {
     const focusTarget = () => target.focus({ preventScroll: true });
 
     if (reduce) {
-        const top = target.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+        const top = target.getBoundingClientRect().top + window.scrollY;
         window.scrollTo({ top, behavior: "auto" });
         focusTarget();
         return;
@@ -25,7 +22,7 @@ export function scrollToSection(id: string) {
     gsap.to(window, {
         duration: 0.3,
         ease: "power2.out",
-        scrollTo: { y: target, offsetY: NAV_OFFSET, autoKill: true },
+        scrollTo: { y: target, autoKill: true },
         onComplete: focusTarget,
     });
 }

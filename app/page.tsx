@@ -2,13 +2,13 @@ import { Metadata } from "next";
 import { Hero } from "@/components/sections/Hero";
 import { Intro } from "@/components/sections/Intro";
 import { SobreMi } from "@/components/sections/SobreMi";
-import { NavbarSection as Navbar } from "@/components/sections/Navbar";
 import Footer from "@/components/sections/Footer";
 import Servicios from "@/components/sections/Servicios";
 import Contacto from "@/components/sections/Contacto";
 import { SectionMark } from "@/components/ui/SectionMark";
 import { TravelingSun } from "@/components/ui/TravelingSun";
 import { PageMotion } from "@/components/ui/PageMotion";
+import { FloatingContact } from "@/components/ui/FloatingContact";
 
 export const metadata: Metadata = {
   title: "Evelyn Bogado",
@@ -24,9 +24,6 @@ export default function Home() {
       >
         Saltar al contenido
       </a>
-      <header className="sticky top-0 z-50">
-        <Navbar />
-      </header>
       {/* "El viaje del sol": one sun behind everything, rising in the hero and setting in the footer. */}
       <TravelingSun />
       <main id="main" tabIndex={-1} className="relative z-10 focus:outline-none">
@@ -40,6 +37,8 @@ export default function Home() {
         <Contacto />
       </main>
       <Footer />
+      {/* No navbar: the one persistent action, shown once the hero's Contáctame has left. */}
+      <FloatingContact />
       <PageMotion />
     </>
   );

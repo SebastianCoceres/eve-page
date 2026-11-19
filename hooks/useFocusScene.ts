@@ -12,8 +12,8 @@ export function getFocusPinRange(): { start: number; end: number } | null {
 
 /** Pin length as a share of the viewport height. */
 export const FOCUS_PIN_LENGTH = 2.8;
-/** Where the stage pins: 32px under the 64px navbar. */
-export const FOCUS_PIN_TOP = 96;
+/** Where the stage pins: 32px under the top of the viewport. */
+export const FOCUS_PIN_TOP = 32;
 
 /**
  * The scene's phases, as shares of the pin. The sun's leg (useTravelingSun) reads
@@ -60,7 +60,7 @@ const FLOW = "(max-width: 1023.98px) and (prefers-reduced-motion: no-preference)
  * - the sun crosses the sky from right to left (useTravelingSun);
  * - act 2: the answer's label and items arrive one by one on the right, each turning
  *   to full ink, and hold in ink until the unpin.
- * If the stage cannot fit under the navbar the section stays in the flow. Below
+ * If the stage cannot fit in the viewport the section stays in the flow. Below
  * 1024px the acts are stacked and each item rises once on enter, already in ink.
  * Reduced motion and no JS: everything static, stacked and in full ink.
  */
@@ -109,7 +109,7 @@ export function useFocusScene() {
 
         mm.add(PINNED, () => {
             section.dataset.focus = "pinned";
-            // A stage taller than the room under the navbar would be cut: keep the flow.
+            // A stage taller than the viewport would be cut: keep the flow.
             if (stage.offsetHeight > window.innerHeight - FOCUS_PIN_TOP - 16) {
                 delete section.dataset.focus;
                 return flow();

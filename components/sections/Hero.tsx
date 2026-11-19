@@ -4,7 +4,6 @@ import { LogoStacked, LogoSubline } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { SeaField } from "@/components/ui/SeaField";
 import { EmakiFan } from "@/components/ui/EmakiFan";
-import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useHeroAnimation } from "@/hooks/useHeroAnimation";
 import { scrollToSection } from "@/lib/scroll";
 
@@ -27,8 +26,8 @@ const PINNED_AFTER = [
  * Hero "Amanecer": the brand's name, giant, over a morning sun rising out of a
  * seigaiha sea, with the two actions visible from the first frame.
  *
- * Without JS, under reduced motion and below 768px the hero is a stage (one viewport
- * under the navbar) followed by the greeting lead and the values in the flow. From
+ * Without JS, under reduced motion and below 768px the hero is a stage (one viewport)
+ * followed by the greeting lead and the values in the flow. From
  * 768px with motion the section pins (useHeroAnimation): the lockup shrinks to the
  * top left, the greeting is spoken line by line, then the values arrive as one row.
  * The sun rises from `[data-sun-anchor="hero"]` toward `[data-sun-anchor="hero-high"]`
@@ -36,12 +35,10 @@ const PINNED_AFTER = [
  * under reduced motion. Text never runs over the waves or the sun.
  */
 export const Hero = () => {
-    const { ref, setSelectedNavbarItem } = useIsInViewWithStore("home")
     const scope = useHeroAnimation();
 
     const goTo = (event: MouseEvent<HTMLAnchorElement>, key: "contact" | "about") => {
         event.preventDefault()
-        setSelectedNavbarItem(key)
         scrollToSection(key)
     }
 
@@ -50,9 +47,9 @@ export const Hero = () => {
             ref={scope}
             id="home"
             tabIndex={-1}
-            className="group/hero hero-frame relative scroll-mt-16 overflow-hidden focus:outline-none"
+            className="group/hero hero-frame relative overflow-hidden focus:outline-none"
         >
-            <div ref={ref} data-hero-stage className="relative h-[var(--hero-h)]">
+            <div data-hero-stage className="relative h-[var(--hero-h)]">
                 {/* Where the sun rises: behind the sea, cropped by the right edge. */}
                 <div
                     data-sun-anchor="hero"

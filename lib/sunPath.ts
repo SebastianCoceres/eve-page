@@ -13,18 +13,18 @@ export interface Point { x: number; y: number }
 export interface Zone extends Point { d: number }
 
 export const CLEARANCE = 48;
-/** The sticky navbar's height: an occupied band at the top of every viewport. */
-export const NAVBAR = 64;
+/** The least room between a parked disc and the top of the viewport. */
+export const SKY_TOP = 32;
 
 /**
  * Scroll position at which a parked sun sits at `fraction` of the viewport
- * height, nudged so the whole disc stays below the navbar (top at least
- * NAVBAR + 32px) and above the bottom edge (24px).
+ * height, nudged so the whole disc stays in view: its top at least
+ * SKY_TOP below the top edge and its bottom 24px above the bottom edge.
  */
 export function parkedScroll(zone: Zone, fraction: number, viewportHeight: number) {
     const radius = zone.d / 2;
     const wanted = zone.y - viewportHeight * fraction;
-    const latest = zone.y - radius - (NAVBAR + 32); // disc top just below the navbar
+    const latest = zone.y - radius - SKY_TOP; // disc top just under the top edge
     const earliest = zone.y + radius + 24 - viewportHeight; // disc bottom above the fold
     return Math.max(earliest, Math.min(wanted, latest));
 }

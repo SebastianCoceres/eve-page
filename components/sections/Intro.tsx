@@ -1,5 +1,4 @@
 'use client'
-import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useFocusScene } from "@/hooks/useFocusScene";
 import { RevealTitle } from "@/components/ui/TextReveal";
 
@@ -53,12 +52,11 @@ const ACT_COLUMNS = {
  * Without JS and under reduced motion: stacked, static, all in full ink.
  */
 export const Intro = () => {
-    const { ref } = useIsInViewWithStore("focus")
     const scope = useFocusScene()
 
     return (
-        <section ref={scope} id="focus" tabIndex={-1} className="group/focus section-pad scroll-mt-16 focus:outline-none">
-            <div ref={ref} className="container">
+        <section ref={scope} id="focus" tabIndex={-1} className="group/focus section-pad focus:outline-none">
+            <div className="container">
                 <div data-focus-stage>
                     <RevealTitle text="Mi enfoque" />
                     <div className="mt-10 grid gap-y-20 md:mt-12 md:grid-cols-12 md:gap-x-6 md:gap-y-28">

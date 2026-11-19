@@ -2,7 +2,6 @@
 import Heading from "@/components/ui/Heading";
 import { RevealTitle } from "@/components/ui/TextReveal";
 import { EmakiFan } from "@/components/ui/EmakiFan";
-import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useEmakiScroll } from "@/hooks/useEmakiScroll";
 import { useServicesStore } from "@/stores/service/service-provider";
 import { Services, type ServiceKeys } from "@/lib/services";
@@ -28,14 +27,12 @@ const FAN_AT = ["0%", "46%", "14%", "58%", "30%"];
  * `data-emaki-start` / `data-emaki-end` in document px.
  */
 export const ServiciosSection = () => {
-    const { ref, setSelectedNavbarItem } = useIsInViewWithStore("services")
     const { scope, active } = useEmakiScroll(Services.length)
     const selectedService = useServicesStore(state => state.selectedService)
     const setSelectedService = useServicesStore(state => state.setSelectedService)
 
     function selectService(key: ServiceKeys) {
         setSelectedService(key)
-        setSelectedNavbarItem("contact")
         scrollToSection("contact")
     }
 
@@ -45,9 +42,9 @@ export const ServiciosSection = () => {
             id="services"
             tabIndex={-1}
             data-emaki-pin
-            className="group/emaki section-pad scroll-mt-16 [--emaki-sky:clamp(80px,15vh,168px)] focus:outline-none data-[emaki=pinned]:flex data-[emaki=pinned]:h-screen data-[emaki=pinned]:flex-col data-[emaki=pinned]:justify-center data-[emaki=pinned]:pt-16 data-[emaki=pinned]:pb-0"
+            className="group/emaki section-pad [--emaki-sky:clamp(80px,15vh,168px)] focus:outline-none data-[emaki=pinned]:flex data-[emaki=pinned]:h-screen data-[emaki=pinned]:flex-col data-[emaki=pinned]:justify-center data-[emaki=pinned]:py-0"
         >
-            <div ref={ref} className="container">
+            <div className="container">
                 <div data-emaki-heading>
                     <RevealTitle text="Conoce lo que puedo ofrecerte" className="max-w-[18ch] xl:max-w-none" />
                 </div>

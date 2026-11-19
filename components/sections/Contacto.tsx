@@ -12,7 +12,6 @@ import { RevealLead, RevealTitle } from "@/components/ui/TextReveal";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
-import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { useFadeStagger } from "@/hooks/useFadeStagger";
 import { Services } from "@/lib/services";
 import { contactSchema, type ContactValues } from "@/lib/contact";
@@ -27,7 +26,6 @@ const SEND_ERROR = "No se pudo enviar el mensaje. Inténtalo de nuevo o escríbe
 
 
 export const Contacto = () => {
-    const { ref } = useIsInViewWithStore("contact")
     const scope = useFadeStagger()
     const selectedService = useServicesStore(state => state.selectedService)
     const form = useForm<ContactValues>({
@@ -83,13 +81,13 @@ export const Contacto = () => {
     }
 
     return (
-        <section id="contact" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
+        <section id="contact" tabIndex={-1} className="section-pad focus:outline-none">
             <div ref={scope} className="container">
                 {/* The left column is the invitation: heading, lead and one quiet line of
                     help. The socials live once, in the footer. From 1280px the column is
                     the sun's last way down: it descends through the open space under the
                     help line toward the footer sea (useTravelingSun). */}
-                <div ref={ref} className="grid gap-y-10 md:grid-cols-12 md:gap-x-6 md:gap-y-14">
+                <div className="grid gap-y-10 md:grid-cols-12 md:gap-x-6 md:gap-y-14">
                     <div className="reveal md:col-span-12 xl:col-span-5">
                         <RevealTitle text="Hablemos de tu proyecto" />
                         <RevealLead text="¡Estoy aquí para ti!" className="mt-4 max-w-[40ch]" />

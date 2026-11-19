@@ -96,7 +96,7 @@ export function useHeroAnimation() {
                 pin = ScrollTrigger.create({
                     id: HERO_PIN_ID,
                     trigger: section,
-                    start: "top 64px",
+                    start: "top top",
                     end: () => `+=${Math.round(window.innerHeight * HERO_PIN_LENGTH)}`,
                     pin: true,
                     // Exact, like the sun's timeline: the lockup, the lines and the rising sun never drift apart.

@@ -4,7 +4,6 @@ import { RevealTitle } from "@/components/ui/TextReveal";
 import { EmakiFan } from "@/components/ui/EmakiFan";
 import { Button } from "@/components/ui/Button";
 import { useAboutJourney } from "@/hooks/useAboutJourney";
-import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
 import { scrollToSection } from "@/lib/scroll";
 
 // Eve's six paragraphs, distilled into milestones (her words, nothing added): one
@@ -36,7 +35,7 @@ const AfternoonSun = () => (
 /**
  * Sobre mí: who Eve is, as an opening line and five milestones.
  *
- * From 1280px the left column (heading and the afternoon sun) is sticky 112px from
+ * From 1280px the left column (heading and the afternoon sun) is sticky 48px from
  * the top while the milestones pass on the right; the column is `[data-sun-sticky]`,
  * so the traveling sun stays locked to its disc, whole, for the whole sticky range
  * and warms as the text is read (useTravelingSun). The opening line is set
@@ -48,21 +47,19 @@ const AfternoonSun = () => (
  * Reduced motion and no JS: everything static, visible and in full ink.
  */
 export const SobreMi = () => {
-    const { ref, setSelectedNavbarItem } = useIsInViewWithStore("about")
     const scope = useAboutJourney()
 
     const goToContact = (event: MouseEvent<HTMLAnchorElement>) => {
         event.preventDefault()
-        setSelectedNavbarItem("contact")
         scrollToSection("contact")
     }
 
     return (
-        <section id="about" tabIndex={-1} className="section-pad scroll-mt-16 focus:outline-none">
+        <section id="about" tabIndex={-1} className="section-pad focus:outline-none">
             <div ref={scope} className="container">
-                <div ref={ref} className="grid gap-y-14 xl:grid-cols-12 xl:gap-x-6">
+                <div className="grid gap-y-14 xl:grid-cols-12 xl:gap-x-6">
                     <div className="xl:col-span-5">
-                        <div data-sun-sticky className="xl:sticky xl:top-[112px]">
+                        <div data-sun-sticky className="xl:sticky xl:top-12">
                             <RevealTitle text="Sobre mí" />
                             <AfternoonSun />
                         </div>
