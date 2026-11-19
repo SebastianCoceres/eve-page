@@ -10,7 +10,7 @@ import { useTravelingSun } from "@/hooks/useTravelingSun";
  * entirely by useTravelingSun, hidden until placed, and never rendered under
  * reduced motion: the static suns in the hero and footer stand in for it.
  * Its colour is --color-sun-live: --sun-now, which warms with the paper's day
- * (usePaperDay), warmed further by --sun-late while it rests behind Eve (useTravelingSun).
+ * (usePaperDay), warmed further by --sun-late while it rests in Sobre mí (useTravelingSun).
  */
 export function TravelingSun() {
     const scope = useTravelingSun();

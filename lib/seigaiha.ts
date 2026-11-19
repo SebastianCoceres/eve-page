@@ -179,9 +179,9 @@ export const SEA_HEIGHT: Record<SeaKind, { wide: number; narrow: number }> = {
  * - footer (sunset): the swell climbs to the right and leaves a calm trough on
  *   the left, where the sun sets, so its lower half sinks behind two or three
  *   crests instead of being cut by a single scale;
- * - band: three rows of small (16px) scales, no swell, no depth tiers: the base
- *   Eve's portrait rises from in Sobre mí (the top row's notches sit 20px below
- *   the band's top edge, see BAND_NOTCH).
+ * - band: three rows of small (16px) scales, no swell, no depth tiers: the sea the
+ *   afternoon sun stands on in Sobre mí (the top row's notches sit 20px below the
+ *   band's top edge, see BAND_NOTCH).
  */
 export function seaFor(kind: SeaKind, width: number): SeigaihaField {
     const wide = width >= 768;
