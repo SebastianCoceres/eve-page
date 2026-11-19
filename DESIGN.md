@@ -185,7 +185,7 @@ A warm paper that changes with the day, an ink, one cobalt and one sun; nothing 
 
 **The No White Rule.** No pure or near-pure white anywhere; the lightest value is the paper-mixed field and the paper-white text on cobalt.
 
-**The One Sun Rule.** Orange is the sun and its two echoes (the selected-service dot and the hanko). There is one traveling sun on the page, owned by one timeline; anchors only mark where it rests.
+**The One Sun Rule.** Orange is the sun and its echoes (the selected-service dot, the hanko and, in Sobre mí only, one momiji in three printed in the sun's live colour). There is one traveling sun on the page, owned by one timeline; anchors only mark where it rests. A scale is never an orange disc.
 
 ## Typography
 
@@ -231,7 +231,7 @@ Completely flat. There are no box-shadows (the `--shadow-*` namespace is reset),
 
 Square by default. Primary actions are full pills; form fields have a 6px radius; everything else, including toasts and the hanko, is square. Circles are the sun. All other curves are seigaiha: concentric semicircles (four rings, innermost first) sharing one base line, at any scale from a 24px chapter mark to a full-bleed sea. Lines are 1px, with non-scaling strokes.
 
-**The Two Curves Rule.** A circle means the sun; an arc means the sea. No other rounded or organic form enters the page.
+**The Two Curves Rule.** A circle means the sun; an arc means the sea. No other rounded or organic form enters the page. The one exception is the momiji the scales turn into in Sobre mí: a flat, straight-edged stamp of seven pointed lobes, never a drawn illustration.
 
 ## Components
 
@@ -263,6 +263,16 @@ Generated in code (`lib/seigaiha`), never as an image. Seas: whole scales in thr
 ### The Sun (signature)
 One orange disc with one timeline owner. It rises from the hero sea, stands right of the problem in Mi enfoque and crosses the sky to stand left of the answer (pinned from 1024px), crosses the emakimono's sky, parks whole as the afternoon disc in Sobre mí (sticky from 1280px; it only warms there, never sinks or gets cropped, and slides out to the west margin before the column lets go), and sets into the footer sea in persimmon. Its motion is calm: it rises once (the hero sunrise) and from then on never bobs. Inside a chapter it moves in one slow direction or holds (it stands still beside the problem, sinks a little while it crosses Mi enfoque's sky, crosses the emakimono level), and between chapters it only leaves and enters sideways, in the frame of the chapter (held in the viewport by a pin, or riding with the page beside text that scrolls); any change of height happens out of view. It is drawn in one coordinate frame, the viewport: a fixed layer the browser never scrolls, placed every frame at its exact place for the live scroll position (document position minus scroll), in the same frame in which the pinned chapters are placed. Nothing is eased in time, so it never trails the scroll, overshoots or bounces back while a smooth wheel scroll animates; where it rides with the page it moves with the page exactly. Its softness lives in the shape of the path (eased segments, a descent that never lurches), not in a lag. Static anchors stand in for it under reduced motion.
 
+### Scale Journey (signature)
+"Las escamas viajan con el sol": the seigaiha scales are the thread that follows the sun through the day, so the sea is never just a border.
+- **Hero:** while the sun rises, the crest breathes with the scroll (a 3px ripple, never a loop); then its crest scales lift off one by one, nearest the sun first, as spray, and rise into the sun's wake. A lifted scale leaves the sea (its copy there is hidden): it is never drawn twice.
+- **In the air (Mi enfoque):** they trail the sun (its place a few scroll px ago) as a wake and ring it as a loose halo that opens away from the text: east while the sun is east of the middle, west once it has crossed, turning over its top in between.
+- **Servicios:** in the emakimono the halo flattens into the sky band. A few scales settle into each panel's fan as it comes in; the last becomes the fan (same geometry, same 70% line) and the fan is shown in that frame, the others fold into it. Nothing that floated disappears: it settles into place.
+- **Sobre mí:** the paper is autumn, so the others turn into momiji (they go edge on and come back as leaves) and fall slowly in the left column, near the parked sun, never over the disc or the text. Two in three are cobalt line prints, one in three is printed flat in the sun's live colour.
+- **Footer:** they follow the setting sun down, turn back into scales and sink into the sunset sea behind its crest, where the hanko stamps the end of the day.
+
+**The Scale Journey Rule.** Every scale is an exact function of the live scroll, like the sun: no easing in time, no trailing, no spring back. They keep 24px from all text, controls and the floating Contáctame (they fade out before coming closer), never cover the sun (they pass behind it and the seas), carry no shadow, gradient or glow, and reuse the seas' exact geometry and 1px cobalt line. About a hundred from 768px, three dozen on phones. Under reduced motion there are none: the seas and fans stay as they are.
+
 ### Emakimono (signature)
 Servicios as a hand-scroll pinned from 1024px: panels (about a third of the viewport wide, 420 to 520px) joined by 1px hairlines, one continuous cobalt horizon at 45%, a fan resting on it at an uneven position in each panel, and a row of 1px progress ticks (active in cobalt). A panel's hover and focus frame turns its hairlines to solid cobalt; the selected service shows the 6px sun dot. Each panel says its service in points: the mincho title and two or three short Geist lines in Warm Ash, split by 1px hairlines, distilled only from Eve's copy for that service (no promises such as "resultados excepcionales" or "garantizando"). Every panel ends in a visible cue in the link style, "Me interesa" ("Servicio elegido" once picked), resting at the panel's foot when pinned, whose underline turns solid with the panel frame: the panel is the button, and touch has no hover to reveal it. Stacked with cobalt top rules below 1024px.
 
@@ -284,6 +294,7 @@ The final stamp: a 42px persimmon square, an inset 1.25px paper border and an E 
 - **Do** set the voice in Zen Old Mincho and reading/UI in Geist; emphasize with Geist 500 in full ink.
 - **Do** use 1px hairlines as the only structure, and occlusion as the only depth.
 - **Do** generate seigaiha in code with 1px non-scaling strokes and flat per-row opacities.
+- **Do** let the scales travel only with the sun, as an exact function of the scroll, clear of text by 24px.
 - **Do** reveal text with the one SplitText primitive (rise or fade by lines), once, and make every scene static under reduced motion.
 
 ### Don't:

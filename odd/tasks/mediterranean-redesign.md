@@ -162,3 +162,17 @@ User report: "the sun still jumps while scrolling; as if it computed its positio
 - [x] T11.3 Docs: DESIGN.md and AGENTS.md (the drawing is unsmoothed, in one frame).
 
 Verification (T11): per-frame probe before / after (`scratchpad/t11/frames-before-gesture.json`, `frames-after-gesture.json`, `summary-*.txt`). `pnpm exec tsc --noEmit`: pass. `pnpm exec eslint .`: 0 problems. `pnpm build`: pass. Skipped at the user's request (they confirmed the fix in the browser): the T9 calm metrics, the reload probe, the clearance/button/overflow sweep.
+
+## T12 The scales travel with the sun
+
+User request: "We should play more with the waves SVG: have them move with the sun, scatter with the scroll and transform into other things. Let's be creative. Right now the waves are hugely wasted." Approved concept: "Las escamas viajan con el sol".
+
+- [x] T12.1 Scale journey. Route: delegated Opus writer (2+ non-trivial files). The hero sea keeps its crest scales apart (`loose` in `lib/seigaiha.ts`, peeled layer by layer; 96 from 768px, 36 on phones; each its own `[data-sea-scale]` group in its row's place, drawn as before without JS). `useTravelingSun` publishes its whole path as a table on every build (`lib/sunTrack.ts`, one sample per 4px of scroll); `docRect` and `stickyTravel` moved to `lib/sunPath.ts`. A companion owner, `hooks/useScaleJourney.ts` with `components/ui/ScaleJourney.tsx`, draws one fixed canvas behind the sun, main and the footer: (1) the crest breathes with the scroll, then lifts off as spray into the sun's wake (each lifted scale is hidden in the SVG, never drawn twice); (2) the scales trail the sun and ring it as a halo that opens away from the text, flattened in the emakimono's sky band; (3) 8 per fan (3 on phones) settle into each emakimono fan, the last becoming it (the fan is shown in that frame; `useEmakiScroll` no longer draws fans while the journey is mounted, `journeyOwnsFans()`); (4) the rest turn into momiji (an edge-on flip; `MOMIJI` in `lib/scaleJourney.ts`) and fall in Sobre mí's left column near the parked sun; (5) they follow the setting sun down, turn back into scales and sink into the footer sea behind its crest. Every place is an exact function of the live scroll (the only live reads are layout boxes); 24px clearance from all text, controls and the floating Contáctame (fade-out ramp); no work while the scroll is still or the tab is hidden. Reduced motion and no-JS: unchanged. Commit 25f04d1.
+- [x] T12.2 Docs: DESIGN.md (Scale Journey signature and rule; the One Sun and Two Curves rules name the momiji exception), AGENTS.md. Commit: see below.
+
+Verification (T12, lean at the user's request):
+- `pnpm exec tsc --noEmit`: pass. `pnpm exec eslint .`: 0 problems. `pnpm build`: pass.
+- One Playwright screenshot pass at 1440 and 390, six points each (hero mid-scroll, Mi enfoque crossing, Servicios assembly, Sobre mí leaves, the footer fall and the page end): `scratchpad/t12/c-*.png`. 0 console errors, 0px horizontal overflow at both widths. Fixed during the pass: a spiky first leaf (now broad lobes), the footer lookup that picked the hanko's SVG, the halo clumping in the emakimono (now spread along the band), phone spray hidden behind the sea (held above the crest through the hero), the phone leaf window (now while the disc is in view), and scales drawn over the setting sun (the canvas now sits behind the sun).
+- Not run: the sun sweeps and per-frame probes of T9–T11 (the sun's path is unchanged; it only publishes it).
+
+Next step: client review of the scale journey in a browser.
