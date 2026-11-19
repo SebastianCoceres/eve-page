@@ -59,7 +59,7 @@ export const ServiciosSection = () => {
             >
                 <div
                     data-emaki-track
-                    className="relative group-data-[emaki=pinned]/emaki:h-[clamp(440px,66vh,600px)] group-data-[emaki=pinned]/emaki:w-max group-data-[emaki=pinned]/emaki:px-[max(40px,calc((100%-1200px)/2))] group-data-[emaki=pinned]/emaki:will-change-transform"
+                    className="relative group-data-[emaki=pinned]/emaki:h-[clamp(400px,56vh,520px)] group-data-[emaki=pinned]/emaki:w-max group-data-[emaki=pinned]/emaki:px-[max(40px,calc((100%-1200px)/2))] group-data-[emaki=pinned]/emaki:will-change-transform"
                 >
                     {/* One horizon through the whole scroll; every fan rests on it. */}
                     <span
@@ -74,7 +74,7 @@ export const ServiciosSection = () => {
                                 <li
                                     key={service.key}
                                     data-emaki-panel
-                                    className="group relative flex flex-col pb-14 last:pb-0 group-data-[emaki=pinned]/emaki:h-full group-data-[emaki=pinned]/emaki:w-[clamp(520px,58vw,600px)] xl:group-data-[emaki=pinned]/emaki:w-[clamp(440px,44vw,620px)] group-data-[emaki=pinned]/emaki:shrink-0 group-data-[emaki=pinned]/emaki:border-l group-data-[emaki=pinned]/emaki:border-hairline group-data-[emaki=pinned]/emaki:pb-0 group-data-[emaki=pinned]/emaki:last:border-r"
+                                    className="group relative flex flex-col pb-14 last:pb-0 group-data-[emaki=pinned]/emaki:h-full group-data-[emaki=pinned]/emaki:w-[clamp(460px,50vw,520px)] xl:group-data-[emaki=pinned]/emaki:w-[clamp(420px,34vw,520px)] group-data-[emaki=pinned]/emaki:shrink-0 group-data-[emaki=pinned]/emaki:border-l group-data-[emaki=pinned]/emaki:border-hairline group-data-[emaki=pinned]/emaki:pb-0 group-data-[emaki=pinned]/emaki:last:border-r"
                                 >
                                     {/* The sky: the fan sits on the horizon line below it. */}
                                     <div className="flex h-10 shrink-0 items-end group-data-[emaki=pinned]/emaki:h-[var(--emaki-sky)] group-data-[emaki=pinned]/emaki:px-10 xl:group-data-[emaki=pinned]/emaki:px-12">
@@ -87,7 +87,7 @@ export const ServiciosSection = () => {
                                         </div>
                                     </div>
 
-                                    <div className="border-t border-primary/45 pt-8 group-data-[emaki=pinned]/emaki:border-t-0 group-data-[emaki=pinned]/emaki:px-10 group-data-[emaki=pinned]/emaki:pt-[clamp(28px,5vh,48px)] xl:group-data-[emaki=pinned]/emaki:px-12">
+                                    <div className="flex flex-col border-t border-primary/45 pt-8 group-data-[emaki=pinned]/emaki:flex-1 group-data-[emaki=pinned]/emaki:border-t-0 group-data-[emaki=pinned]/emaki:px-10 group-data-[emaki=pinned]/emaki:pt-[clamp(28px,5vh,48px)] group-data-[emaki=pinned]/emaki:pb-[clamp(24px,5vh,48px)] xl:group-data-[emaki=pinned]/emaki:px-12">
                                         <Heading
                                             is="h3"
                                             variant="item"
@@ -113,18 +113,24 @@ export const ServiciosSection = () => {
                                                 </span>
                                             </button>
                                         </Heading>
-                                        <div
+                                        {/* Two or three short points, Eve's words only, split by hairlines. */}
+                                        <ul
                                             id={`service-description-${service.key}`}
-                                            className="mt-5 max-w-[62ch] text-muted-foreground group-data-[emaki=pinned]/emaki:text-[15px] xl:group-data-[emaki=pinned]/emaki:text-base [&_p+p]:mt-4 [&_strong]:font-medium [&_strong]:text-foreground"
+                                            className="mt-6 max-w-[40ch] text-base leading-[1.5] text-muted-foreground md:text-lg md:leading-[1.45]"
                                         >
-                                            {service.description}
-                                        </div>
+                                            {service.points.map((point) => (
+                                                <li key={point} className="border-t border-hairline py-3 first:border-t-0 first:pt-0">
+                                                    {point}
+                                                </li>
+                                            ))}
+                                        </ul>
                                         {/* The visible signifier for the panel button: picking a service
                                             carries it into the form. Styled as the one link rule; the
                                             underline turns solid with the panel's hover or focus. It stays in
-                                            the accessibility tree (and in the sun's clearance): real words. */}
+                                            the accessibility tree (and in the sun's clearance): real words.
+                                            Pinned, it rests at the panel's foot, like a colophon. */}
                                         <span
-                                            className="mt-6 inline-flex min-h-11 items-center text-[15px] font-medium text-link underline decoration-link/40 decoration-1 underline-offset-4 transition-[text-decoration-color] duration-150 ease-out group-hover:decoration-link group-has-[:focus-visible]:decoration-link motion-reduce:transition-none"
+                                            className="mt-4 inline-flex min-h-11 self-start items-center group-data-[emaki=pinned]/emaki:mt-auto text-[15px] font-medium text-link underline decoration-link/40 decoration-1 underline-offset-4 transition-[text-decoration-color] duration-150 ease-out group-hover:decoration-link group-has-[:focus-visible]:decoration-link motion-reduce:transition-none"
                                         >
                                             {isSelected ? "Servicio elegido" : "Me interesa"}
                                         </span>
