@@ -4,9 +4,8 @@
  * For each section the sun gets a keyframe "zone": the free spot nearest a target
  * x (east to west across the page) whose disc keeps at least CLEARANCE px from
  * every text block and opaque surface, and that can slide out to its side edge
- * through empty space. Between zones the sun is routed through whitespace only:
- * out to the side margin, along the margin, across the gap between the two
- * sections, then in to the next zone.
+ * through empty space. Between zones the sun leaves sideways through that space
+ * and changes height only out of view (see the passage in useTravelingSun).
  */
 
 export interface Rect { l: number; t: number; r: number; b: number }
@@ -89,23 +88,4 @@ export function findZone({ section, obstacles, viewportWidth, viewportHeight, ta
         if (best) return best;
     }
     return null;
-}
-
-/**
- * Waypoints from one zone to the next through whitespace: out to the side margin,
- * down that margin to the gap between the sections, across the gap if the sides
- * differ, down the other margin, and in.
- */
-export function route(from: Zone, to: Zone, gapY: number, viewportWidth: number, contentLeft: number, contentRight: number): Point[] {
-    const marginX = (side: "left" | "right", d: number) =>
-        side === "right" ? contentRight + 48 + d / 2 : contentLeft - 48 - d / 2;
-    const sideOf = (zone: Zone) => (zone.x >= viewportWidth / 2 ? "right" : "left");
-    const a = sideOf(from);
-    const b = sideOf(to);
-    const d = Math.max(from.d, to.d);
-
-    const points: Point[] = [{ x: from.x, y: from.y }, { x: marginX(a, d), y: from.y }, { x: marginX(a, d), y: gapY }];
-    if (a !== b) points.push({ x: marginX(b, d), y: gapY });
-    points.push({ x: marginX(b, d), y: to.y }, { x: to.x, y: to.y });
-    return points;
 }
