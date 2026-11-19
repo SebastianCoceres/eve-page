@@ -119,6 +119,15 @@ export const ServiciosSection = () => {
                                         >
                                             {service.description}
                                         </div>
+                                        {/* The visible signifier for the panel button: picking a service
+                                            carries it into the form. Styled as the one link rule; the
+                                            underline turns solid with the panel's hover or focus. It stays in
+                                            the accessibility tree (and in the sun's clearance): real words. */}
+                                        <span
+                                            className="mt-6 inline-flex min-h-11 items-center text-[15px] font-medium text-link underline decoration-link/40 decoration-1 underline-offset-4 transition-[text-decoration-color] duration-150 ease-out group-hover:decoration-link group-has-[:focus-visible]:decoration-link motion-reduce:transition-none"
+                                        >
+                                            {isSelected ? "Servicio elegido" : "Me interesa"}
+                                        </span>
                                     </div>
 
                                     {/* Hover and focus frame: the hairline joins turn to solid cobalt. */}
