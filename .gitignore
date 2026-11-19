@@ -34,3 +34,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# agentic tooling config (local only)
+.atl/
+.claude/
+.agents/
+.agent/
+.impeccable/
+.codegraph/
+.cursor/
+.windsurf/
+.codex/
+.gemini/
+.opencode/
+skills-lock.json

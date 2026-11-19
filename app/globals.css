@@ -1,143 +1,290 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/*
+ * "Washi y cobalto": a day on warm washi paper. The paper turns from morning to
+ * an autumn dusk with the scroll (one scrubbed tween on --paper, see
+ * hooks/usePaperDay); one cobalt marks decisions; one orange sun crosses it.
+ * Only two breakpoints exist: md (768px) and xl (1280px).
+ */
 
-@theme inline {
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-
-  --color-error: hsl(var(--error));
-  --color-error-foreground: hsl(var(--error-foreground));
-
-  --color-success: hsl(var(--success));
-  --color-success-foreground: hsl(var(--success-foreground));
-
-  --color-warning: hsl(var(--warning));
-  --color-warning-foreground: hsl(var(--warning-foreground));
-
-  --color-info: hsl(var(--info));
-  --color-info-foreground: hsl(var(--info-foreground));
-
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-
-  --background-image-hero-pattern: url('/fondo.png');
-
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
-  }
-  @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
-  }
+@theme {
+  --breakpoint-sm: initial;
+  --breakpoint-lg: initial;
+  --breakpoint-2xl: initial;
 }
 
-@utility container {
-  margin-inline: auto;
-  padding-inline: 2rem;
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-hairline: var(--hairline);
+  --color-input-border: var(--input-border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+  --color-ring: var(--focus-ring);
+  --color-error: var(--error);
+  --color-success: var(--success);
 
-  @media (width >= theme(--breakpoint-2xl)) {
-    max-width: 1400px;
-  }
+  /* Hero: the seigaiha lines use `primary`; the sun is the one orange disc. */
+  --color-sun: var(--sun);
+  --color-sun-warm: var(--sun-warm);
+  --color-sun-now: var(--sun-now);
+  /* The traveling sun: --sun-now, warmed further toward persimmon by --sun-late
+     (0 to 1, set on the sun layer while it rests in Sobre mí; useTravelingSun). */
+  --color-sun-live: color-mix(in oklab, var(--sun-now), var(--sun-warm) calc(var(--sun-late, 0) * 100%));
+  --color-paper: var(--paper);
+
+  /* One mincho voice for every heading, lead and the values (Zen Old Mincho, see
+     app/layout.tsx); Geist for body and UI. Mincho has no italic. */
+  --font-display: var(--font-mincho), "Yu Mincho", "Hiragino Mincho ProN", serif;
+  --font-serif: var(--font-mincho), "Yu Mincho", "Hiragino Mincho ProN", serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+
+  /* Shape rule: pills for primary actions, 6px for form fields, everything else square. */
+  --radius-field: 6px;
+
+  /* Flat world: no box-shadows anywhere. */
+  --shadow-*: initial;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
   :root {
-    --background: 26 100% 99%;
-    --foreground: 0 0% 13%;
+    /* The paper's day, flat colours only (no gradients). Dawn is a warm kinari, never
+       a white. Contrast on the darkest stop (dusk): ink 12.1:1, muted 5.4:1, cobalt
+       5.5:1, input border 3.2:1; on dawn: ink 14.6:1, muted 6.6:1, cobalt 6.7:1. */
+    --paper-morning: #efe4cd;
+    --paper-midday: #efe7d8;
+    --paper-afternoon: #eadfca;
+    --paper-dusk: #e4d3b9;
+    /* The live paper: tweened by usePaperDay; a static midday under reduced motion. */
+    --paper: var(--paper-morning);
 
-    --primary: 27 33% 42%;
-    --primary-foreground: 0 0% 98%;
+    /* Every surface is the paper or a fixed step of it, so nothing shows a stray rectangle. */
+    --background: var(--paper);
+    --surface: color-mix(in oklab, var(--paper), #6b5233 6%);
+    --field: color-mix(in oklab, var(--paper), #fffcf5 28%);
+    --hairline: color-mix(in oklab, var(--paper), #16181d 13%);
+    --foreground: #16181d;
+    --muted-foreground: #57504a;
+    --input-border: #7d7367;
+    --primary: #1e4ba8;
+    --primary-hover: #173c88;
+    --primary-foreground: #f6f1e7;
+    --accent: #e2672b;
+    --link: #1e4ba8;
+    --focus-ring: #1e4ba8;
+    --error: #b3261e;
+    --success: #2e6a4e;
 
-    --secondary: 200 39% 43%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
-
-    --error: 3 100% 89%;
-    --error-foreground: 0 0% 9%;
-
-    --info: 213 84% 74%;
-    --info-foreground: 0 0% 9%;
-
-    --success: 120 60% 67%;
-    --success-foreground: 0 0% 9%;
-
-    --warning: 60 97% 79%;
-    --warning-foreground: 0 0% 9%;
-
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 4%;
-
-    --radius: 0.5rem;
+    /* The sun warms from orange to persimmon (kaki) as the day turns; --sun-now
+       is tweened together with the paper. */
+    --sun: #e2672b;
+    --sun-warm: #cc4a1e;
+    --sun-now: var(--sun);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --paper: var(--paper-midday);
+    }
+  }
+}
+
+/* Every text link: cobalt, a 1px underline at 40% that turns solid on hover (150ms). */
+@utility link {
+  color: var(--link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in oklab, var(--link) 40%, transparent);
+  transition: text-decoration-color 150ms var(--ease-out);
+
+  &:hover {
+    text-decoration-color: var(--link);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/* Content column: 1200px max, 24px gutter below 768px, 40px from 768px up. */
+@utility container {
+  width: 100%;
+  max-width: calc(1200px + 80px);
+  margin-inline: auto;
+  padding-inline: 24px;
+
+  @media (width >= 768px) {
+    padding-inline: 40px;
+  }
+}
+
+/* Vertical rhythm shared by every content section. */
+@utility section-pad {
+  padding-block: 96px;
+
+  @media (width >= 768px) {
+    padding-block: 128px;
+  }
+
+  @media (width >= 1280px) {
+    padding-block: 160px;
+  }
+}
+
+@utility text-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.75rem, 1.6rem + 5.2vw, 5.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@utility text-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+@utility text-subtitle {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@utility text-lead {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  line-height: 1.45;
+}
+
+/*
+ * Hero "Amanecer". The stage is one viewport (there is no navbar). The name is set
+ * by its cap height (--cap): the type clamp, bounded by the content width (the stacked
+ * logotype is 5.785 caps wide) and by the stage height (so the lockup, the CTAs and the
+ * calm left of the sea always fit). --logo-w / --logo-h are the stacked SVG's box
+ * (components/ui/Logo, LogoStacked).
+ */
+@utility hero-frame {
+  --gutter: 24px;
+  --hero-h: max(560px, 100svh);
+  --cap: min(clamp(3.75rem, 1.5rem + 11.5vw, 13rem), (min(100vw, 1280px) - 2 * var(--gutter)) * 0.1728, (var(--hero-h) - 380px) * 0.45);
+  --logo-w: calc(var(--cap) * 5.785);
+  --logo-h: calc(var(--cap) * 2.215);
+  --pt: clamp(24px, 5vh, 56px);
+
+  @media (width >= 768px) {
+    --gutter: 40px;
+  }
+}
+
+/* The hero lead: the greeting, line by line, at display size. Bounded by the
+   viewport height so the pinned scene always fits. */
+@utility text-hero-lead {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: min(clamp(1.75rem, 1rem + 3.2vw, 3.75rem), max(1.75rem, 6vh));
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+/* Transparencia, Innovación, Compromiso: one large row. */
+@utility text-values {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: min(clamp(1.75rem, 1rem + 2.4vw, 3.5rem), max(1.75rem, 5vh));
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+
+/* A statement in the mincho voice: the Sobre mí opening line and close. */
+@utility text-statement {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: min(clamp(1.5rem, 1rem + 2vw, 2.625rem), max(1.5rem, 4.8vh));
+  line-height: 1.24;
+  letter-spacing: -0.01em;
+}
+
+/* A point: one short line in the mincho voice (the Mi enfoque acts, the Sobre mí
+   milestones). Bounded by the viewport height so the pinned Mi enfoque scene always fits. */
+@utility text-point {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: min(clamp(1.625rem, 0.9rem + 2vw, 2.75rem), max(1.5rem, 4.6vh));
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+
+/* SplitText line masks (class split-line-mask): room for the mincho's accents and
+   descenders, so a risen line is never cropped. Hidden lines start at yPercent ≥ 125, wholly outside the mask. */
+.split-line-mask {
+  padding-block: 0.08em 0.16em;
+  margin-block: -0.08em -0.16em;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-hairline;
   }
 
-  html,
-  body {
-    max-width: 100%;
-    overflow-x: hidden;
+  html {
+    scrollbar-color: var(--input-border) var(--surface);
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     font-size: 16px;
+    line-height: 1.6;
+    font-weight: 400;
+    overflow-x: clip;
   }
 
-  .mask-gradient {
-    mask-image: linear-gradient(to left, black 0%, transparent 90%);
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  input,
+  textarea {
+    caret-color: var(--primary);
   }
 
-  /* For IE, Edge and Firefox */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  a,
+  button,
+  [role="button"],
+  [role="combobox"] {
+    -webkit-tap-highlight-color: transparent;
   }
 
-  p:not([class]) {
-    @apply mb-2;
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 }

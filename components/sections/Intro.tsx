@@ -1,55 +1,81 @@
 'use client'
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/Accordion";
-import { useAccordionAnimation } from "@/hooks/useAccordionAnimation";
-import { useIsInViewWithStore } from "@/hooks/useIsInViewWithStore";
-import { Heading } from "@/components/ui/Heading";
+import { useFocusScene } from "@/hooks/useFocusScene";
+import { RevealTitle } from "@/components/ui/TextReveal";
 
+type Point = { point: string; note?: string }
 
+// Eve's statement and mondō, distilled into short points (her words, nothing added):
+// first what traditional marketing does, then what conscious marketing does instead.
+const acts: ReadonlyArray<{ id: "problem" | "answer"; label: string; points: ReadonlyArray<Point> }> = [
+    {
+        id: "problem",
+        label: "El marketing tradicional",
+        points: [
+            { point: "Centrado en vender", note: "Productos o servicios, ante todo." },
+            { point: "Estrategias persuasivas", note: "Y a menudo intrusivas." },
+            { point: "Ventas a cualquier costo" },
+        ],
+    },
+    {
+        id: "answer",
+        label: "El marketing consciente",
+        points: [
+            { point: "Integridad y conexión genuina", note: "Con tu audiencia, más allá de la venta." },
+            { point: "Valores éticos", note: "Autenticidad y responsabilidad social." },
+            { point: "Transparencia y bienestar", note: "De los consumidores y de la sociedad." },
+            { point: "Relaciones duraderas", note: "Una lealtad más sólida y un mayor compromiso." },
+        ],
+    },
+]
+
+// While pinned (useFocusScene sets data-focus="pinned" from 1024px), both acts share
+// one grid row: the problem on the left (the sun on the right), the answer on the
+// right (the sun on the left).
+const PINNED = "group-data-[focus=pinned]/focus:row-start-1 group-data-[focus=pinned]/focus:self-start"
+const ACT_COLUMNS = {
+    problem: `md:col-span-8 xl:col-span-7 ${PINNED} group-data-[focus=pinned]/focus:col-span-7 group-data-[focus=pinned]/focus:col-start-1`,
+    answer: `md:col-span-8 md:col-start-5 xl:col-span-7 xl:col-start-6 ${PINNED} group-data-[focus=pinned]/focus:col-span-7 group-data-[focus=pinned]/focus:col-start-6`,
+} as const
+
+/**
+ * Mi enfoque: the problem, then the answer, as short points in the mincho.
+ *
+ * Act 1, "El marketing tradicional": three points. Act 2, "El marketing consciente":
+ * four points. Each point is a large mincho line (text-point) with at most one short
+ * Geist note under it. The copy is distilled from Eve's own statement and mondō.
+ *
+ * From 1024px with motion the stage pins and the acts are told in turn with the
+ * scroll (useFocusScene): the problem on the left while the sun stands on the right,
+ * the sun crosses to the left, and the answer arrives on the right; every point turns
+ * from muted to full ink and holds there. Below 1024px the acts are stacked (the
+ * answer offset to the right from 768px) and each point rises once on enter.
+ * Without JS and under reduced motion: stacked, static, all in full ink.
+ */
 export const Intro = () => {
-    const { ref, isInView } = useIsInViewWithStore("focus")
-    const scope = useAccordionAnimation(isInView);
+    const scope = useFocusScene()
 
     return (
-        <section id="focus" className=" flex flex-col justify-center items-center flex-fill min-h-screen bg-background">
-            <div ref={scope} className="container md:max-w-6xl mx-auto">
-                <div ref={ref}>
-                    <Accordion type="single" defaultValue={"item-1"} collapsible>
-                        <AccordionItem value="item-1" className="accordionItem my-8">
-                            <AccordionTrigger><span className="md:text-2xl">¿Qué es el marketing consciente?</span></AccordionTrigger>
-                            <AccordionContent>
-                                <p>
-                                    El marketing consciente se enfoca en valores éticos, autenticidad y responsabilidad social. Se centra en la transparencia y el bienestar tanto personal como colectivo.
-                                </p>
-                                <p>
-                                    Al priorizar la conexión genuina, la responsabilidad social y el impacto positivo en la sociedad, busca un equilibrio entre el éxito empresarial y el crecimiento personal.
-                                </p>
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="item-2" className="accordionItem my-8">
-                            <AccordionTrigger><span className="md:text-2xl">¿Por qué elegirlo?</span></AccordionTrigger>
-                            <AccordionContent>
-                                <p>
-                                    Elegirlo es optar por una forma de promoción que va más allá de la simple venta de productos o servicios. Al adoptar el enfoque del marketing consciente, te comprometes a construir una marca auténtica y significativa que resuene con tu audiencia de manera genuina. Al priorizar la conexión emocional, puedes establecer relaciones más profundas y duraderas con tus clientes, lo que conduce a una lealtad más sólida y un mayor compromiso.
-                                </p>
-                                <p>
-                                    Además, el marketing consciente te permite diferenciarte de la competencia al destacar tus valores y tu compromiso con el bienestar de la comunidad. Al elegir el marketing consciente, estás contribuyendo a un cambio positivo en la industria y en la sociedad en general, mientras construyes un negocio exitoso y ético.
-                                </p>
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="item-3" className="accordionItem my-8 border-none">
-                            <AccordionTrigger><span className="md:text-2xl">¿En qué se diferencia del marketing tradicional?</span></AccordionTrigger>
-                            <AccordionContent>
-                                <p>
-                                    Mientras que el marketing tradicional se centra principalmente en la venta de productos o servicios mediante estrategias persuasivas y a menudo intrusivas, el marketing consciente prioriza la integridad y la conexión genuina con la audiencia. En lugar de buscar simplemente aumentar las ventas a cualquier costo, el marketing consciente se preocupa por el bienestar tanto de los consumidores como de la sociedad en general.
-                                </p>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
+        <section ref={scope} id="focus" tabIndex={-1} className="group/focus section-pad focus:outline-none">
+            <div className="container">
+                <div data-focus-stage>
+                    <RevealTitle text="Mi enfoque" />
+                    <div className="mt-10 grid gap-y-20 md:mt-12 md:grid-cols-12 md:gap-x-6 md:gap-y-28">
+                        {acts.map(({ id, label, points }) => (
+                            <div key={id} data-focus-act={id} className={ACT_COLUMNS[id]}>
+                                <h3 data-focus-label className="text-subtitle text-muted-foreground">{label}</h3>
+                                <ul className="mt-8 space-y-8 md:mt-10 md:space-y-9">
+                                    {points.map(({ point, note }) => (
+                                        <li key={point} data-focus-item>
+                                            <p data-focus-point className="text-point text-balance text-foreground">{point}</p>
+                                            {note ? (
+                                                <p data-focus-note className="mt-2 max-w-[40ch] text-base text-muted-foreground md:mt-3 md:text-lg">{note}</p>
+                                            ) : null}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </section>

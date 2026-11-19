@@ -1,12 +1,12 @@
 import { createStore } from 'zustand'
-import { ServiceKeys } from '@/components/sections/Servicios'
+import { ServiceKeys } from '@/lib/services'
 
 export type ServiceState = {
     selectedService: ServiceKeys | undefined
 }
 
 export type ServiceActions = {
-    setSelectedService: (Navbar: ServiceKeys) => void
+    setSelectedService: (key: ServiceKeys) => void
 }
 
 export type ServiceStore = ServiceState & ServiceActions
@@ -18,9 +18,9 @@ export const defaultServiceState: ServiceState = {
 export const createServiceStore = () => {
     return createStore<ServiceStore>()((set) => ({
         ...defaultServiceState,
-        setSelectedService: (NavbarItem: ServiceKeys) => set((state) => ({
+        setSelectedService: (key: ServiceKeys) => set((state) => ({
             ...state,
-            selectedService: NavbarItem
+            selectedService: key
         })),
     }))
 }
